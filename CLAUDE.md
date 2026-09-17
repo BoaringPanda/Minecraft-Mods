@@ -51,7 +51,7 @@ block ID):
 - `assets/extra_blocks/items/<id>.json` — the client item, so it renders in inventory/hand
 - `assets/extra_blocks/lang/en_us.json` — `"block.extra_blocks.<id>": "Display Name"`
 - `data/extra_blocks/loot_tables/blocks/<id>.json` — drop itself when broken (otherwise no drop)
-- `data/minecraft/tags/mineable/<tool>.json` — add `"extra_blocks:<id>"` to `pickaxe`/`axe`/
+- `data/minecraft/tags/block/mineable/<tool>.json` — add `"extra_blocks:<id>"` to `pickaxe`/`axe`/
   `shovel`/`hoe` so the intended tool is effective (`values` is a flat list of item IDs)
 
 ## Mixed slabs (combine two different slabs into one block)
@@ -93,7 +93,7 @@ regenerate for every OTHER existing material (both orders):
   modded slab needs checking, and one with direction-dependent textures like sandstone's
   distinct top/side/bottom faces needs its own model rather than reusing this generic pair)
 - add `"extra_blocks:mixed_slab_<bottom>_bottom_<top>_top"` to
-  `data/minecraft/tags/mineable/pickaxe.json` for each new pairing
+  `data/minecraft/tags/block/mineable/pickaxe.json` for each new pairing
 
 The current 16-material list is 16×15 = 240 generated blockstate files. Writing that many by
 hand isn't the move — generate them (a short loop, in whatever tool is to hand) rather than
@@ -161,7 +161,7 @@ right.
 **To add another accessory** (e.g. a soul lantern): add a `register(...)` call in
 `LilyPadAccessories.java` with properties copied from that block's own vanilla values, a merged
 model per the pattern above, and a `variants`-style (not `multipart`) blockstate with the same
-4-entry rotation array. Add to `data/minecraft/tags/mineable/pickaxe.json` only if that accessory
+4-entry rotation array. Add to `data/minecraft/tags/block/mineable/pickaxe.json` only if that accessory
 itself needs a pickaxe.
 
 ## Commands
