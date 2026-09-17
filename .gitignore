@@ -19,7 +19,8 @@ classes/
 # vscode
 
 .settings/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 bin/
 .classpath
 .project
@@ -38,6 +39,3 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
-
-# keep the shared extension recommendations, but not machine-specific settings
-!.vscode/extensions.json
