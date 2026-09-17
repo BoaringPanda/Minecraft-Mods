@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/poplar_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/red_nether_brick_slab_top"
+      }
+    }
+  ]
+}

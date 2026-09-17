@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/cobbled_deepslate_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/mossy_stone_brick_slab_top"
+      }
+    }
+  ]
+}

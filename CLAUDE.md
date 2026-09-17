@@ -68,36 +68,62 @@ click is left alone so vanilla just places the new slab in the adjacent space as
   BlockEntity, no custom renderer needed. `strength`/`sound` are one generic value shared by
   every combo (not per-material); `requiresCorrectToolForDrops()` is always on, per the pickaxe
   rule below.
-- `block/MixedSlabBlocks.java` — the curated `MATERIALS` list and the registration loop.
-  Generates one block per *ordered* pair (order matters — oak-bottom/stone-top ≠
-  stone-bottom/oak-top), skipping a material paired with itself. No `BlockItem` — these are
-  never obtainable directly, only ever the result of combining two slabs.
+- `block/MixedSlabBlocks.java` — the `MATERIALS` list (every vanilla slab, currently 101 - one
+  entry per `assets/minecraft/blockstates/*_slab.json` in the game, id = filename minus
+  `_slab`) and the registration loop. Generates one block per *ordered* pair (order matters —
+  oak-bottom/stone-top ≠ stone-bottom/oak-top), skipping a material paired with itself: 101×100
+  = 10,100 blocks. Each material is resolved to its actual `Block` via a registry lookup on
+  `minecraft:<material>_slab`, **not** a `Blocks.*` constant — wool, concrete and copper slabs
+  aren't individual `Blocks` fields (they're `ColorCollection`/`WeatheringCopperCollection`
+  entries), so a lookup by ID is what handles every material uniformly without needing to know
+  which. No `BlockItem` — these are never obtainable directly, only ever the result of combining
+  two slabs.
 - `block/MixedSlabInteraction.java` — the `UseBlockCallback` that detects the combine click
   and swaps the single slab for the right registered combo block.
 
-**To add a material** (e.g. a modded slab, or a vanilla one not on the list yet): add its
-`Blocks.*_SLAB` constant + a short id to `MATERIALS` in `MixedSlabBlocks.java`, then
-regenerate for every OTHER existing material (both orders):
-- one blockstate file per new pairing at
-  `assets/extra_blocks/blockstates/mixed_slab_<bottom>_bottom_<top>_top.json`:
-  ```json
-  {
-    "multipart": [
-      { "apply": { "model": "minecraft:block/<bottom>_slab" } },
-      { "apply": { "model": "minecraft:block/<top>_slab_top" } }
-    ]
-  }
-  ```
-  (works for any vanilla slab that follows the standard `<material>_slab` /
-  `<material>_slab_top` model naming — true for every material currently on the list; a
-  modded slab needs checking, and one with direction-dependent textures like sandstone's
-  distinct top/side/bottom faces needs its own model rather than reusing this generic pair)
-- add `"extra_blocks:mixed_slab_<bottom>_bottom_<top>_top"` to
-  `data/minecraft/tags/block/mineable/pickaxe.json` for each new pairing
+**Don't assume a slab's model is named `<material>_slab`/`<material>_slab_top` — check.** True
+for most, but not all: waxed copper slabs (`waxed_oxidized_cut_copper_slab`, etc.) reuse their
+*unwaxed* model verbatim (waxing doesn't change appearance), so
+`waxed_oxidized_cut_copper_slab.json`'s own blockstate points at
+`minecraft:block/oxidized_cut_copper_slab` / `..._top`, not at a `waxed_oxidized_...` model that
+doesn't exist. Generating this from an assumed naming pattern silently produces a block that
+looks broken for exactly the materials where the assumption is wrong. Instead, read each real
+material's own blockstate JSON and take its `type=bottom`/`type=top` model paths verbatim:
 
-The current 16-material list is 16×15 = 240 generated blockstate files. Writing that many by
-hand isn't the move — generate them (a short loop, in whatever tool is to hand) rather than
-typing each one out.
+```
+grep -A1 '"type=bottom"' assets/minecraft/blockstates/<material>_slab.json | grep model
+grep -A1 '"type=top"'    assets/minecraft/blockstates/<material>_slab.json | grep model
+```
+
+**To add a material** (a modded slab, or a future vanilla one not on the list yet): add its id
+to `MATERIALS` in `MixedSlabBlocks.java`, then regenerate for every OTHER existing material
+(both orders) - one blockstate file per new pairing at
+`assets/extra_blocks/blockstates/mixed_slab_<bottom>_bottom_<top>_top.json`, using each
+material's *real* extracted bottom/top model paths (see above), e.g.:
+```json
+{
+  "multipart": [
+    { "apply": { "model": "<bottom material's own type=bottom model>" } },
+    { "apply": { "model": "<top material's own type=top model>" } }
+  ]
+}
+```
+and add `"extra_blocks:mixed_slab_<bottom>_bottom_<top>_top"` to
+`data/minecraft/tags/block/mineable/pickaxe.json` for each new pairing.
+
+**This does not reach modded slabs automatically.** `MATERIALS` is a fixed list decided at
+build time, not a live scan of the block registry — a slab added later by installing another
+mod won't get mixed-slab support until it's added here and the game is rebuilt.
+
+At the current 101-material scale (10,100 generated blockstate files, ~700KB tag file), a
+manual per-file loop like the one above is far too slow to run one-by-one - script the
+generation (load each material's id + extracted model paths into parallel arrays/a lookup, loop
+the pairs) rather than looping `grep` per material one at a time.
+
+**Startup time cost:** this scale measurably slows the dev client's first launch after a
+rebuild - about 65s from process start to being in-world in testing (roughly 2× a plain
+Fabric+Fabric-API load), from registering/loading ~10,100 extra blocks and resources. Not a
+correctness problem, just worth knowing before assuming a slow launch is a bug.
 
 ## Lily pad accessories (torch/lantern standing on a lily pad)
 

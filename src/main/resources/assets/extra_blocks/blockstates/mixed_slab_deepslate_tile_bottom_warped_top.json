@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/deepslate_tile_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/warped_slab_top"
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/blackstone_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/polished_diorite_slab_top"
+      }
+    }
+  ]
+}

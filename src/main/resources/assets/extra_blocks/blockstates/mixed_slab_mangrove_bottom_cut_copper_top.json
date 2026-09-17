@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/mangrove_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/cut_copper_slab_top"
+      }
+    }
+  ]
+}

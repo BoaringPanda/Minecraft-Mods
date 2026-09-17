@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/pink_concrete_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/cherry_slab_top"
+      }
+    }
+  ]
+}

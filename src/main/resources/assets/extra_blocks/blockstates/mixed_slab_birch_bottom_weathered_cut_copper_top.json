@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/birch_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/weathered_cut_copper_slab_top"
+      }
+    }
+  ]
+}

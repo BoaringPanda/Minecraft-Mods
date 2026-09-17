@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/brown_concrete_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/andesite_slab_top"
+      }
+    }
+  ]
+}

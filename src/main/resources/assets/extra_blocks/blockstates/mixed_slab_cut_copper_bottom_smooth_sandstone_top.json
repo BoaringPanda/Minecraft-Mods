@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/cut_copper_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/smooth_sandstone_slab_top"
+      }
+    }
+  ]
+}

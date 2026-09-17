@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/mangrove_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/mossy_cobblestone_slab_top"
+      }
+    }
+  ]
+}

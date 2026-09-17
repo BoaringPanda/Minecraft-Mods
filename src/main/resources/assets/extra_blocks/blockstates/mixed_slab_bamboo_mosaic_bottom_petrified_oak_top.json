@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/bamboo_mosaic_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/petrified_oak_slab_top"
+      }
+    }
+  ]
+}

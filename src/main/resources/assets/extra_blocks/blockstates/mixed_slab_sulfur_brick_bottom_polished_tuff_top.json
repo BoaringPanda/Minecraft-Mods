@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/sulfur_brick_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/polished_tuff_slab_top"
+      }
+    }
+  ]
+}

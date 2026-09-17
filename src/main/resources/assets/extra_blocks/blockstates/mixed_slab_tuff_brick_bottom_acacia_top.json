@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/tuff_brick_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/acacia_slab_top"
+      }
+    }
+  ]
+}

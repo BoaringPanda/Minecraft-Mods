@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/jungle_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/prismarine_slab_top"
+      }
+    }
+  ]
+}

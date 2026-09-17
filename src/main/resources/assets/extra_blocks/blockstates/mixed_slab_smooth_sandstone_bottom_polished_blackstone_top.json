@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/smooth_sandstone_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/polished_blackstone_slab_top"
+      }
+    }
+  ]
+}

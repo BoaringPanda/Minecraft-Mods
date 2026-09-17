@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/magenta_wool_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/spruce_slab_top"
+      }
+    }
+  ]
+}

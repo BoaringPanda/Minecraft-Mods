@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/sulfur_brick_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/deepslate_tile_slab_top"
+      }
+    }
+  ]
+}
