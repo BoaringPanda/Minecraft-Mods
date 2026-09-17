@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/lily_pad"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/torch"
+      }
+    }
+  ]
+}

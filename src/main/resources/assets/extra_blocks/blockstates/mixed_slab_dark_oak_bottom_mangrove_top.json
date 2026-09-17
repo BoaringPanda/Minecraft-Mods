@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/dark_oak_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/mangrove_slab_top"
+      }
+    }
+  ]
+}

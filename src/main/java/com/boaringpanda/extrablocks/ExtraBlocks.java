@@ -8,6 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.boaringpanda.extrablocks.block.ExtraBlocksBlocks;
+import com.boaringpanda.extrablocks.block.LilyPadAccessories;
+import com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction;
+import com.boaringpanda.extrablocks.block.MixedSlabBlocks;
+import com.boaringpanda.extrablocks.block.MixedSlabInteraction;
 
 public class ExtraBlocks implements ModInitializer {
 	public static final String MOD_ID = "extra_blocks";
@@ -26,6 +30,10 @@ public class ExtraBlocks implements ModInitializer {
 		LOGGER.info("Hello Fabric world!");
 
 		ExtraBlocksBlocks.initialize();
+		MixedSlabBlocks.initialize();
+		MixedSlabInteraction.initialize();
+		LilyPadAccessories.initialize();
+		LilyPadAccessoryInteraction.initialize();
 	}
 
 	public static Identifier id(String path) {
