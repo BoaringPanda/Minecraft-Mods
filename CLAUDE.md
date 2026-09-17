@@ -119,9 +119,20 @@ looks off in-game, nudge the accessory model's Y in the blockstate (`"apply": {"
 "x"/"y": ...}` doesn't do vertical offsets — that needs a tiny wrapper model with a `"y"`-shifted
 element, not a blockstate-level trick).
 
+**Preserving the lily pad's random rotation:** vanilla `lily_pad.json` picks one of 4 unweighted
+`y: 0/90/180/270` model variants per block, and that pick is a hash of the block's *position*
+only (`BlockBehaviour.getSeed` defaults to `Mth.getSeed(pos)`, ignoring the block/state — checked
+against the compiled game; neither `LilyPadBlock` nor `VegetationBlock` override it). So our
+multipart's first entry uses that exact same 4-variant array (copied verbatim from
+`lily_pad.json`, not simplified to one fixed rotation) — same position, same hash, same rotation
+picked before and after combining. `multipart`'s `apply` accepts an array the same way `variants`
+does (confirmed against vanilla's own `chorus_plant.json`); simplifying this to a single
+unrotated entry is what caused the lily pad to visibly snap to a fixed orientation on combine.
+
 **To add another accessory** (e.g. a soul lantern): add a `register(...)` call in
 `LilyPadAccessories.java` with properties copied from that block's own vanilla values, and a
-`lily_pad_with_<name>.json` blockstate following the pattern above. Add to
+`lily_pad_with_<name>.json` blockstate following the pattern above (multipart, first entry the
+4-variant lily pad array, second the accessory's own model). Add to
 `data/minecraft/tags/mineable/pickaxe.json` only if that accessory itself needs a pickaxe.
 
 ## Commands
