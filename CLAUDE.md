@@ -101,39 +101,63 @@ a placed lily pad's top face with a torch or lantern combines them into one
 `LilyPadAccessoryBlock` occupying the lily pad's own space, instead of the item placing normally
 in the block above.
 
-- `block/custom/LilyPadAccessoryBlock.java` — the block. No baked model of its own; the
-  blockstate JSON's `multipart` layers the *unmodified* vanilla `lily_pad` model with the
-  accessory's own unmodified model. Collision/outline shape is copied from the real vanilla
-  `LilyPadBlock` (`Block.column(14.0, 0.0, 1.5)` — verified from the compiled class, not
-  guessed) so it stands on exactly like a normal lily pad.
+- `block/custom/LilyPadAccessoryBlock.java` — the block. No custom renderer; the blockstate
+  JSON points at one hand-built model per combo (`models/block/lily_pad_with_<name>.json`) whose
+  `elements` are just the vanilla `lily_pad` element and the accessory's own template elements
+  copied in side by side (see "Building the combined model" below - **not** a `multipart` of two
+  separate model files; that was tried and reverted, see the rotation note). Collision/outline
+  shape is copied from the real vanilla `LilyPadBlock` (`Block.column(14.0, 0.0, 1.5)` — verified
+  from the compiled class, not guessed) so it stands on exactly like a normal lily pad.
 - `block/LilyPadAccessories.java` — registers one block per accessory and the
   `Block -> LilyPadAccessoryBlock` lookup. Properties (light level, hardness, tool
   requirement) are copied from the accessory's own vanilla values, not the lily pad's.
 - `block/LilyPadAccessoryInteraction.java` — the `UseBlockCallback` that detects the combine
   click (top face only) and swaps the lily pad for the right combo block.
 
-No manual pixel offset in the model: checked against the actual vanilla files, `torch`/`lantern`
-both render from y=0 of their own cell already, and `lily_pad`'s render plane is at y=0.25 (out
-of 16) — close enough to flush that layering both unmodified already looks right. If it ever
-looks off in-game, nudge the accessory model's Y in the blockstate (`"apply": {"model": ...,
-"x"/"y": ...}` doesn't do vertical offsets — that needs a tiny wrapper model with a `"y"`-shifted
-element, not a blockstate-level trick).
+**Preserving the lily pad's random rotation — why `multipart` doesn't work here:**
+`lily_pad.json`'s blockstate picks one of 4 unweighted `y: 0/90/180/270` variants per block, and
+in isolation that pick is a hash of the block's *position* alone (`BlockBehaviour.getSeed`
+defaults to `Mth.getSeed(pos)`, ignoring the block/state - checked against the compiled game).
+The first attempt at this feature kept the lily pad and the accessory as two separate models
+layered via a `multipart` blockstate, on the theory that reusing the same position would
+reproduce the same pick. It didn't: `MultiPartModel.collectParts` (checked by disassembling the
+compiled game, not guessed) calls `random.nextLong()` *once* up front and re-seeds with that
+derived value for every part, rather than passing the position-derived seed straight through to
+each part's own weighted pick. A plain (non-multipart) `variants` block never takes that detour.
+So a `multipart`-nested weighted pick and a top-level one are both deterministic, but by
+*different* transforms of the same position - they don't agree, and from the outside it looks
+like ~random rotation (in testing, a ~25% match rate - exactly chance across 4 options).
 
-**Preserving the lily pad's random rotation:** vanilla `lily_pad.json` picks one of 4 unweighted
-`y: 0/90/180/270` model variants per block, and that pick is a hash of the block's *position*
-only (`BlockBehaviour.getSeed` defaults to `Mth.getSeed(pos)`, ignoring the block/state — checked
-against the compiled game; neither `LilyPadBlock` nor `VegetationBlock` override it). So our
-multipart's first entry uses that exact same 4-variant array (copied verbatim from
-`lily_pad.json`, not simplified to one fixed rotation) — same position, same hash, same rotation
-picked before and after combining. `multipart`'s `apply` accepts an array the same way `variants`
-does (confirmed against vanilla's own `chorus_plant.json`); simplifying this to a single
-unrotated entry is what caused the lily pad to visibly snap to a fixed orientation on combine.
+The fix is for the combined block to go through the *exact same* code path as a plain lily pad:
+one model, referenced by a plain `variants` block with the identical 4-entry array vanilla uses
+(`assets/extra_blocks/blockstates/lily_pad_with_<name>.json`, mirroring
+`minecraft:blockstates/lily_pad.json` structurally, just pointing at our model id) - no
+`multipart` anywhere. Since both go through the same `SimpleModelSelectors`/`WeightedVariants`
+path with the same input seed, the same position now picks the same index whether or not an
+accessory is on top.
+
+**Building the combined model** (`models/block/lily_pad_with_<name>.json`): copy the `elements`
+array from `minecraft:models/block/lily_pad.json` (one thin quad) and from the accessory's own
+*template* model (`minecraft:models/block/template_torch.json` /
+`.../template_lantern.json` - the template, not `torch.json`/`lantern.json`, which just point at
+the template with concrete textures) into one model's `elements`, giving each its own texture
+variable (`#pad`, `#torch`/`#lantern`) declared in one shared `textures` block. The blockstate's
+per-variant `y` rotation then rotates the *whole* merged model at once - fine here because both
+the torch's and the lantern's own geometry are already rotationally symmetric about Y (checked:
+torch is a centered square post; the lantern's two diagonal loop-handle elements together cover
+both diagonals, so the shape as a whole is unchanged by a 90° turn), so only the lily pad's
+texture orientation actually changes.
+
+No manual pixel offset needed: checked against the actual vanilla files, `template_torch`/
+`template_lantern` both render from y=0 of their own cell already, and `lily_pad`'s own element
+sits at y=0.25 (out of 16) — close enough to flush that copying both in unmodified already looks
+right.
 
 **To add another accessory** (e.g. a soul lantern): add a `register(...)` call in
-`LilyPadAccessories.java` with properties copied from that block's own vanilla values, and a
-`lily_pad_with_<name>.json` blockstate following the pattern above (multipart, first entry the
-4-variant lily pad array, second the accessory's own model). Add to
-`data/minecraft/tags/mineable/pickaxe.json` only if that accessory itself needs a pickaxe.
+`LilyPadAccessories.java` with properties copied from that block's own vanilla values, a merged
+model per the pattern above, and a `variants`-style (not `multipart`) blockstate with the same
+4-entry rotation array. Add to `data/minecraft/tags/mineable/pickaxe.json` only if that accessory
+itself needs a pickaxe.
 
 ## Commands
 Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
