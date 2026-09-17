@@ -29,6 +29,11 @@ import com.boaringpanda.extrablocks.block.custom.LilyPadAccessoryBlock;
  * the accessory's own model - see the existing files for the pattern).
  */
 public class LilyPadAccessories {
+	// Declared first deliberately: register() below needs this to already exist when
+	// the LILY_PAD_WITH_* fields' initializers run, and static fields initialize in
+	// textual declaration order.
+	private static final Map<Block, LilyPadAccessoryBlock> BY_ACCESSORY = new HashMap<>();
+
 	/** Matches torch's own vanilla properties: instant break, no tool needed, light 14. */
 	public static final LilyPadAccessoryBlock LILY_PAD_WITH_TORCH = register(
 			"lily_pad_with_torch",
@@ -49,8 +54,6 @@ public class LilyPadAccessories {
 					.strength(3.5f)
 					.requiresCorrectToolForDrops()
 	);
-
-	private static final Map<Block, LilyPadAccessoryBlock> BY_ACCESSORY = new HashMap<>();
 
 	public static void initialize() {
 	}
