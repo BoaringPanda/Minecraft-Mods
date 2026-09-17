@@ -7,6 +7,8 @@ import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.boaringpanda.extrablocks.block.ExtraBlocksBlocks;
+
 public class ExtraBlocks implements ModInitializer {
 	public static final String MOD_ID = "extra_blocks";
 
@@ -22,6 +24,8 @@ public class ExtraBlocks implements ModInitializer {
 		// Proceed with mild caution.
 
 		LOGGER.info("Hello Fabric world!");
+
+		ExtraBlocksBlocks.initialize();
 	}
 
 	public static Identifier id(String path) {

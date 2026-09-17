@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "extra_blocks:block/testblock1"
+    }
+  }
+}

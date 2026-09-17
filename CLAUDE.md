@@ -28,6 +28,27 @@ rendering or GUI = `src/client`.
   or they will not be applied. Prefer the Fabric API event hooks over a mixin when one exists.
 - **Tabs, not spaces** (matches the Fabric codestyle).
 
+## Registering blocks/items
+
+Follow the pattern in `block/ExtraBlocksBlocks.java` (one static field per block, a private
+`register()` helper that does `Registry.register` for both the block and its `BlockItem`,
+plus a public `initialize()` that's called once from `ExtraBlocks.onInitialize()` — that
+call is what forces the class to load and the registration to actually run).
+
+Per-block assets needed for a block to look and behave right in-game (all keyed by the same
+block ID, e.g. `testblock1`):
+
+- `assets/extra_blocks/blockstates/<id>.json` — which model to render
+- `assets/extra_blocks/models/block/<id>.json` — usually `"parent": "minecraft:block/cube_all"`
+  + a texture reference
+- `assets/extra_blocks/textures/block/<id>.png` — the actual texture; missing = purple/black
+  checkerboard placeholder, everything else still works
+- `assets/extra_blocks/items/<id>.json` — the client item, so it renders in inventory/hand
+- `assets/extra_blocks/lang/en_us.json` — `"block.extra_blocks.<id>": "Display Name"`
+- `data/extra_blocks/loot_tables/blocks/<id>.json` — drop itself when broken (otherwise no drop)
+- `data/minecraft/tags/mineable/<tool>.json` — add `"extra_blocks:<id>"` to `pickaxe`/`axe`/
+  `shovel`/`hoe` so the intended tool is effective (`values` is a flat list of item IDs)
+
 ## Commands
 Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
 
