@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "extra_blocks",
+	"version": "${version}",
+	"name": "Extra Blocks",
+	"description": "Adds extra blocks to Minecraft.",
+	"authors": [
+		"BoaringPanda"
+	],
+	"contact": {
+		"sources": "https://github.com/BoaringPanda/extra-blocks"
+	},
+	"license": "MIT",
+	"icon": "assets/extra_blocks/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.boaringpanda.extrablocks.ExtraBlocks"
+		],
+		"client": [
+			"com.boaringpanda.extrablocks.client.ExtraBlocksClient"
+		]
+	},
+	"mixins": [
+		"extra_blocks.mixins.json",
+		{
+			"config": "extra_blocks.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
