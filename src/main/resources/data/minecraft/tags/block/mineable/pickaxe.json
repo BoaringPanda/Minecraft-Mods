@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "extra_blocks:lily_pad_with_lantern",
     "extra_blocks:mixed_slab_oak_bottom_spruce_top",
     "extra_blocks:mixed_slab_oak_bottom_birch_top",
     "extra_blocks:mixed_slab_oak_bottom_jungle_top",

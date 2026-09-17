@@ -44,15 +44,18 @@ public class LilyPadAccessories {
 					.strength(0.0f)
 	);
 
-	/** Matches lantern's own vanilla properties: needs a pickaxe, light 15. */
+	/**
+	 * Deliberately not matching lantern's own vanilla properties (needs a
+	 * pickaxe, strength 3.5) - anything standing on a lily pad should break
+	 * instantly with no tool required, same as {@link #LILY_PAD_WITH_TORCH}.
+	 */
 	public static final LilyPadAccessoryBlock LILY_PAD_WITH_LANTERN = register(
 			"lily_pad_with_lantern",
 			Blocks.LANTERN,
 			BlockBehaviour.Properties.of()
 					.sound(SoundType.LILY_PAD)
 					.lightLevel(state -> 15)
-					.strength(3.5f)
-					.requiresCorrectToolForDrops()
+					.strength(0.0f)
 	);
 
 	public static void initialize() {

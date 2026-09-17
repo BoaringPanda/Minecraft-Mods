@@ -114,8 +114,9 @@ in the block above.
   shape is copied from the real vanilla `LilyPadBlock` (`Block.column(14.0, 0.0, 1.5)` — verified
   from the compiled class, not guessed) so it stands on exactly like a normal lily pad.
 - `block/LilyPadAccessories.java` — registers one block per accessory and the
-  `Block -> LilyPadAccessoryBlock` lookup. Properties (light level, hardness, tool
-  requirement) are copied from the accessory's own vanilla values, not the lily pad's.
+  `Block -> LilyPadAccessoryBlock` lookup. Light level is copied from the accessory's own
+  vanilla value; hardness and tool requirement are *not* (see below - anything on a lily pad
+  is instant-break, no tool required, regardless of what the accessory itself normally needs).
 - `block/LilyPadAccessoryInteraction.java` — the `UseBlockCallback` that detects the combine
   click (top face only) and swaps the lily pad for the right combo block.
 
@@ -159,10 +160,16 @@ sits at y=0.25 (out of 16) — close enough to flush that copying both in unmodi
 right.
 
 **To add another accessory** (e.g. a soul lantern): add a `register(...)` call in
-`LilyPadAccessories.java` with properties copied from that block's own vanilla values, a merged
-model per the pattern above, and a `variants`-style (not `multipart`) blockstate with the same
-4-entry rotation array. Add to `data/minecraft/tags/block/mineable/pickaxe.json` only if that accessory
-itself needs a pickaxe.
+`LilyPadAccessories.java`, a merged model per the pattern above, and a `variants`-style (not
+`multipart`) blockstate with the same 4-entry rotation array.
+
+Properties are a deliberate exception to "copy the accessory's own vanilla values", not the rule:
+anything standing on a lily pad breaks instantly with no tool required (`strength(0.0f)`, no
+`requiresCorrectToolForDrops()`), regardless of what the accessory itself normally needs when
+placed on solid ground - lantern's own vanilla pickaxe requirement is deliberately dropped for
+this reason. Match that (`strength(0.0f)`, no tool requirement, no tag entry) rather than the
+new accessory's own harvesting rules. Light level and sound are still worth copying from the
+accessory, though — those aren't part of this exception.
 
 ## Commands
 Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
