@@ -30,13 +30,18 @@ rendering or GUI = `src/client`.
 
 ## Registering blocks/items
 
-Follow the pattern in `block/ExtraBlocksBlocks.java` (one static field per block, a private
-`register()` helper that does `Registry.register` for both the block and its `BlockItem`,
-plus a public `initialize()` that's called once from `ExtraBlocks.onInitialize()` — that
-call is what forces the class to load and the registration to actually run).
+For a plain standalone block with an item (one a player can hold and place from their
+inventory): one static field per block, a private `register()` helper that does
+`Registry.register` for both the block and its `BlockItem`, plus a public `initialize()` that's
+called once from `ExtraBlocks.onInitialize()` — that call is what forces the class to load and
+the registration to actually run. `block/MixedSlabBlocks.java`'s `register()` is close to this
+shape, minus the `BlockItem` half — these combo blocks are deliberately never held/placed
+directly, so there's no current example in this repo that registers both; add the `BlockItem`
+half back in following the pattern fabric-docs uses (`Registry.register` on
+`BuiltInRegistries.ITEM` with a `new BlockItem(block, ...)`) if a future block needs one.
 
 Per-block assets needed for a block to look and behave right in-game (all keyed by the same
-block ID, e.g. `testblock1`):
+block ID):
 
 - `assets/extra_blocks/blockstates/<id>.json` — which model to render
 - `assets/extra_blocks/models/block/<id>.json` — usually `"parent": "minecraft:block/cube_all"`
