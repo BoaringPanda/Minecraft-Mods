@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "extra_blocks:block/lily_pad_with_potted_oxeye_daisy" },
+      { "model": "extra_blocks:block/lily_pad_with_potted_oxeye_daisy", "y": 90 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_oxeye_daisy", "y": 180 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_oxeye_daisy", "y": 270 }
+    ]
+  }
+}

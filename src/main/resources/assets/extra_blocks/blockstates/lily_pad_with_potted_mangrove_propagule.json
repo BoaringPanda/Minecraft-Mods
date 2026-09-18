@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "extra_blocks:block/lily_pad_with_potted_mangrove_propagule" },
+      { "model": "extra_blocks:block/lily_pad_with_potted_mangrove_propagule", "y": 90 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_mangrove_propagule", "y": 180 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_mangrove_propagule", "y": 270 }
+    ]
+  }
+}

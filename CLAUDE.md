@@ -146,6 +146,19 @@ in the block above.
 - `block/LilyPadAccessoryInteraction.java` — the `UseBlockCallback` that detects the combine
   click (top face only) and swaps the lily pad for the right combo block.
 
+**Every combo block needs the lily pad's green tint registered separately, client-side** -
+`client/block/LilyPadAccessoryColors.java`, called from `ExtraBlocksClient`. The lily pad model's
+`tintindex` is per-*model*, but the actual tint *color* is looked up per-*Block instance* by the
+renderer, so a new combo block with no registration for it just renders with no tint at all (a
+flat white/grey pad instead of green) - this happened for real, more than once, when a hand-typed
+list of blocks there fell behind as more accessories were added. Fixed structurally, not just
+patched: `LilyPadAccessories.all()` returns every registered combo block regardless of category,
+and `LilyPadAccessoryColors` iterates that instead of naming blocks - so a new accessory is
+covered automatically as long as it's registered through the normal `register`/`registerSimple`/
+etc. helpers (which all funnel into `BY_ACCESSORY` or `POTTED`, both included in `all()`). The
+one exception is the potted fern, which needs a *second* tint index for its own color - see the
+flower pot section below for why that one still needs its own separate registration call.
+
 **Preserving the lily pad's random rotation — why `multipart` doesn't work here:**
 `lily_pad.json`'s blockstate picks one of 4 unweighted `y: 0/90/180/270` variants per block, and
 in isolation that pick is a hash of the block's *position* alone (`BlockBehaviour.getSeed`
@@ -267,24 +280,65 @@ are more of them since blockstate properties multiply:
 Always placed/combined at count 1, unlit, non-waterlogged (`LilyPadAccessoryInteraction.combine`
 sets this explicitly rather than trusting `defaultBlockState()`).
 
-## Signs and the flower pot on a lily pad (blank/empty, not writable/plantable)
+## Signs on a lily pad (blank/not writable)
 
-These are back to plain `LilyPadAccessoryBlock`s, same technique as torch/lantern - **not**
-`SignBlock`/`FlowerPotBlock` subclasses, and deliberately so: a sign's text and a potted plant
-are both real per-instance data (BlockEntity for signs, block-per-plant-type for pots), which was
-explicitly descoped (see "Where this stops working" below). Since we're not preserving that data,
-there's no need for the real 16-value `rotation` blockstate property either - these use one fixed
-model, just like end rod's fixed "facing=up".
+These are plain `LilyPadAccessoryBlock`s, same technique as torch/lantern - **not** `SignBlock`
+subclasses, and deliberately so: a sign's text is real per-instance BlockEntity data, explicitly
+descoped (see "Where this stops working" below). Since we're not preserving that data, there's no
+need for the real 16-value `rotation` blockstate property either - one fixed model, just like end
+rod's fixed "facing=up".
 
-- Signs: `models/block/lily_pad_with_<wood>_sign.json`, one per wood type (13 - all the wood
-  slab materials plus bamboo and poplar), using vanilla's `template_sign_rot_0` elements (post +
-  board) - **keep the board element's `"rotation": {"angle": 0.0001, ...}`** when copying it in;
-  that's not a typo in the vanilla file, it's a deliberate near-zero rotation forcing the
-  renderer to treat the board's two faces distinctly instead of as a z-fighting-prone flat
-  double-sided quad.
-- Flower pot: `models/block/lily_pad_with_flower_pot.json`, vanilla's own `flower_pot.json`
+`models/block/lily_pad_with_<wood>_sign.json`, one per wood type (13 - all the wood slab
+materials plus bamboo and poplar), using vanilla's `template_sign_rot_0` elements (post + board) -
+**keep the board element's `"rotation": {"angle": 0.0001, ...}`** when copying it in; that's not a
+typo in the vanilla file, it's a deliberate near-zero rotation forcing the renderer to treat the
+board's two faces distinctly instead of as a z-fighting-prone flat double-sided quad.
+
+## The flower pot on a lily pad (real potting, only with what a real pot accepts)
+
+Unlike signs, this one *does* work close to the real thing: right-clicking the empty
+`lily_pad_with_flower_pot` with a plant swaps it for the matching potted combo (39 of them - every
+plant a real flower pot accepts), exactly mirroring vanilla's own rule (`FlowerPotBlock.useItemOn`,
+checked by disassembly): `POTTED_BY_CONTENT.getOrDefault(heldBlock, AIR)` - if the held item isn't
+a real plant/pot pairing (sugarcane, say), nothing happens and the click falls through to normal
+placement, same as vanilla's own `TRY_WITH_EMPTY_HAND` case. What's still descoped: you can't
+later swap the plant for a different one (matches vanilla - breaking is the only way), and it's
+still a plain `LilyPadAccessoryBlock`-family class, not a real `FlowerPotBlock`, so nothing here
+is BlockEntity-backed.
+
+- `block/custom/LilyPadPottedPlantBlock.java` (extends `LilyPadAccessoryBlock`) - only
+  difference from the plain class: a real potted plant drops *two* items (the pot and the plant),
+  not one, so this adds the flower pot item on top of what the parent's `playerDestroy` already
+  drops (lily pad + the plant, via `accessory`).
+- `block/LilyPadAccessories.java`'s `POTTED_PLANTS` map and `registerPotted` - deliberately
+  **not** added to `BY_ACCESSORY` (the map the initial lily-pad combine step reads): a potted
+  plant is only reachable by planting into an already-placed empty pot, never directly onto a
+  bare lily pad. `LilyPadAccessoryInteraction.plant()` is the separate step that checks
+  `existingState.getBlock() == LILY_PAD_WITH_FLOWER_POT` first.
+- Empty pot model: `models/block/lily_pad_with_flower_pot.json`, vanilla's own `flower_pot.json`
   elements (5 - four rim pieces + a dirt-topped block) copied in verbatim, texture vars
-  `#flowerpot`/`#dirt` kept as named (only `#pad` is our own addition).
+  `#flowerpot`/`#dirt` kept as named (only `#pad` is our own addition). Every potted-plant model
+  reuses these same 5 elements plus the specific plant's own (most plants' own vanilla model
+  already includes copies of these 5 - reuse the *whole* model's elements verbatim rather than
+  re-adding the rim yourself, or the pot renders doubled).
+
+**Don't assume the plant's block id matches the combo/texture naming - check `getPotted()`'s
+actual mapping, not the potted block's own name.** Two real gotchas found doing this: the plant
+you hold to get `potted_azalea_bush` is `azalea` (not `azalea_bush` - that name only exists for
+the potted model/texture, `azalea_bush`/`flowering_azalea_bush` aren't real placeable blocks);
+and `crimson_roots`/`warped_roots` keep their own block id but use a *different* texture file
+(`crimson_roots_pot`/`warped_roots_pot`) than their standalone appearance. Neither is guessable
+from the name - check `assets/minecraft/models/block/potted_<x>.json`'s own `textures` block, and
+verify the plant id by finding which real block a `FlowerPotBlock` instance's `getPotted()`
+actually returns (or just check `assets/minecraft/blockstates/<id>.json` exists as a normal
+placeable block, which `azalea_bush` doesn't).
+
+**Fern needs a second, separate tint index.** Its plant element uses `tintindex: 1` (not 0, which
+is already the lily pad's own), registered as its own two-entry `BlockColorRegistry.register`
+call in `LilyPadAccessoryColors` (`constant(...)` at index 0, `BlockTintSources.grass()` at index
+1, matching vanilla's own registration for `Blocks.FERN`) - excluded from the shared one-entry
+call every other combo uses, since registering the same block twice would just overwrite the
+first with the second rather than combining them.
 
 ## Where this stops working: player heads and banners
 

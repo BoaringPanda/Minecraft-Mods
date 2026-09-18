@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "extra_blocks:block/lily_pad_with_potted_torchflower" },
+      { "model": "extra_blocks:block/lily_pad_with_potted_torchflower", "y": 90 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_torchflower", "y": 180 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_torchflower", "y": 270 }
+    ]
+  }
+}

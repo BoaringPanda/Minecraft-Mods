@@ -1,6 +1,9 @@
 package com.boaringpanda.extrablocks.block;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +23,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import com.boaringpanda.extrablocks.ExtraBlocks;
 import com.boaringpanda.extrablocks.block.custom.LilyPadAccessoryBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadCandleBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadPottedPlantBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadSeaPickleBlock;
 
 /**
@@ -182,7 +186,10 @@ public class LilyPadAccessories {
 		}
 	}
 
-	/** Always empty - can't be planted into afterward, see CLAUDE.md. */
+	/**
+	 * Starts empty - see {@link LilyPadAccessoryInteraction} for how it gets planted
+	 * into (only with whatever items go into a real flower pot normally, nothing else).
+	 */
 	public static final LilyPadAccessoryBlock LILY_PAD_WITH_FLOWER_POT = register(
 			"lily_pad_with_flower_pot",
 			Blocks.FLOWER_POT,
@@ -191,11 +198,68 @@ public class LilyPadAccessories {
 					.strength(0.0f)
 	);
 
+	/**
+	 * plant Block -> the potted combo for it. Built from the *real* vanilla
+	 * plant/pot pairing, not a guess: {@code combo suffix} is usually the
+	 * plant's own id, but not always - e.g. the plant you actually pot to get
+	 * "potted_azalea_bush" is {@code azalea}, not {@code azalea_bush} (that
+	 * name only exists for the potted model/texture) - checked against the
+	 * game's own files rather than assumed, since one of these being wrong
+	 * would otherwise be a hard-to-notice mismatch (right item, wrong combo,
+	 * or vice versa).
+	 */
+	private static final Map<String, String> POTTED_PLANTS = new LinkedHashMap<>();
+
+	static {
+		for (String plain : new String[] {
+				"acacia_sapling", "allium", "azure_bluet", "birch_sapling", "blue_orchid",
+				"brown_mushroom", "cherry_sapling", "closed_eyeblossom", "cornflower",
+				"crimson_fungus", "crimson_roots", "dandelion", "dark_oak_sapling", "dead_bush",
+				"golden_dandelion", "jungle_sapling", "lily_of_the_valley", "oak_sapling",
+				"orange_tulip", "oxeye_daisy", "pale_oak_sapling", "pink_tulip", "poplar_sapling",
+				"poppy", "red_mushroom", "red_tulip", "spruce_sapling", "torchflower",
+				"warped_fungus", "warped_roots", "white_tulip", "wither_rose",
+				"fern", "open_eyeblossom", "bamboo", "cactus", "mangrove_propagule"
+		}) {
+			POTTED_PLANTS.put(plain, plain);
+		}
+		POTTED_PLANTS.put("azalea", "azalea_bush");
+		POTTED_PLANTS.put("flowering_azalea", "flowering_azalea_bush");
+	}
+
+	private static final Map<Block, LilyPadPottedPlantBlock> POTTED = new HashMap<>();
+
+	static {
+		for (Map.Entry<String, String> entry : POTTED_PLANTS.entrySet()) {
+			registerPotted(entry.getKey(), entry.getValue());
+		}
+	}
+
 	public static void initialize() {
 	}
 
 	private static void registerSimple(String name, Block accessory) {
 		register(name, accessory, BlockBehaviour.Properties.of().sound(SoundType.LILY_PAD).strength(0.0f));
+	}
+
+	private static void registerPotted(String plantId, String comboSuffix) {
+		Block plant = resolve(plantId);
+		Identifier id = ExtraBlocks.id("lily_pad_with_potted_" + comboSuffix);
+		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
+
+		LilyPadPottedPlantBlock block = new LilyPadPottedPlantBlock(
+				BlockBehaviour.Properties.of()
+						.sound(SoundType.LILY_PAD)
+						.strength(0.0f)
+						.setId(key),
+				plant
+		);
+
+		Registry.register(BuiltInRegistries.BLOCK, id, block);
+		// Deliberately not added to BY_ACCESSORY: potted plants are only reachable
+		// by planting into an already-placed lily_pad_with_flower_pot, never by
+		// combining a plant item directly onto a bare lily pad.
+		POTTED.put(plant, block);
 	}
 
 	private static Block resolve(String materialPath) {
@@ -255,9 +319,33 @@ public class LilyPadAccessories {
 		return BY_ACCESSORY.get(accessory);
 	}
 
+	/**
+	 * Every registered combo block, regardless of accessory - every one of
+	 * them reuses the lily pad's own model (and its {@code tintindex}), so
+	 * this is what the client-side tint registration iterates instead of
+	 * listing them out by hand and risking missing one, which is exactly
+	 * what happened the first few times more accessories were added here
+	 * without updating that list to match.
+	 */
+	public static Collection<Block> all() {
+		// POTTED is separate from BY_ACCESSORY (see registerPotted - potted plants
+		// are deliberately unreachable by combining directly onto a bare lily pad),
+		// but every one of these blocks reuses the lily pad's own model regardless,
+		// so both need the tint registration.
+		List<Block> combined = new ArrayList<>(BY_ACCESSORY.values());
+		combined.addAll(POTTED.values());
+		return combined;
+	}
+
 	/** The registered candle combo for this exact candle color, or null if {@code candle} isn't a candle. */
 	@Nullable
 	public static LilyPadCandleBlock candleFor(Block candle) {
 		return CANDLES.get(candle);
+	}
+
+	/** The registered potted-plant combo for this exact plant, or null if it's not something a real flower pot accepts. */
+	@Nullable
+	public static LilyPadPottedPlantBlock pottedFor(Block plant) {
+		return POTTED.get(plant);
 	}
 }

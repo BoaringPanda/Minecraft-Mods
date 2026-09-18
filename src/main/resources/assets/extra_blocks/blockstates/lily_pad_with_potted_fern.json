@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "extra_blocks:block/lily_pad_with_potted_fern" },
+      { "model": "extra_blocks:block/lily_pad_with_potted_fern", "y": 90 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_fern", "y": 180 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_fern", "y": 270 }
+    ]
+  }
+}

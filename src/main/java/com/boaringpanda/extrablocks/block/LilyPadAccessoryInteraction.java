@@ -63,11 +63,43 @@ public class LilyPadAccessoryInteraction {
 			return tryStack(level, pos, existingState, player, heldStack, SeaPickleBlock.PICKLES, Blocks.SEA_PICKLE);
 		}
 
+		if (existingState.getBlock() == LilyPadAccessories.LILY_PAD_WITH_FLOWER_POT) {
+			return plant(level, pos, heldBlock, player, heldStack);
+		}
+
 		if (!existingState.is(Blocks.LILY_PAD)) {
 			return InteractionResult.PASS;
 		}
 
 		return combine(level, pos, heldBlock, player, heldStack);
+	}
+
+	/**
+	 * Right-clicking the empty flower pot combo with a plant it actually
+	 * accepts (checked via {@link LilyPadAccessories#pottedFor}, which is
+	 * only ever populated with real plant/pot pairings - never, say,
+	 * sugarcane, which a real flower pot doesn't accept either).
+	 */
+	private static InteractionResult plant(Level level, BlockPos pos, Block heldBlock, Player player, ItemStack heldStack) {
+		Block potted = LilyPadAccessories.pottedFor(heldBlock);
+		if (potted == null) {
+			// Not something a real flower pot accepts - fall through to
+			// normal placement, same as vanilla's own TRY_WITH_EMPTY_HAND.
+			return InteractionResult.PASS;
+		}
+
+		if (level.isClientSide()) {
+			return InteractionResult.SUCCESS;
+		}
+
+		level.setBlockAndUpdate(pos, potted.defaultBlockState());
+		level.playSound(null, pos, heldBlock.defaultBlockState().getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
+
+		if (!player.isCreative()) {
+			heldStack.shrink(1);
+		}
+
+		return InteractionResult.SUCCESS;
 	}
 
 	private static InteractionResult combine(Level level, BlockPos pos, Block accessory, Player player, ItemStack heldStack) {

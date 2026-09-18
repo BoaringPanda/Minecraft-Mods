@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "extra_blocks:block/lily_pad_with_potted_white_tulip" },
+      { "model": "extra_blocks:block/lily_pad_with_potted_white_tulip", "y": 90 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_white_tulip", "y": 180 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_white_tulip", "y": 270 }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "extra_blocks:block/lily_pad_with_potted_lily_of_the_valley" },
+      { "model": "extra_blocks:block/lily_pad_with_potted_lily_of_the_valley", "y": 90 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_lily_of_the_valley", "y": 180 },
+      { "model": "extra_blocks:block/lily_pad_with_potted_lily_of_the_valley", "y": 270 }
+    ]
+  }
+}
