@@ -282,49 +282,102 @@ are more of them since blockstate properties multiply:
 Always placed/combined at count 1, unlit, non-waterlogged (`LilyPadAccessoryInteraction.combine`
 sets this explicitly rather than trusting `defaultBlockState()`).
 
-## Signs on a lily pad (blank/not writable, but real player-facing rotation)
+## Signs on a lily pad (real writable text, real player-facing rotation)
 
-Blank/not writable - same as before, and deliberately so: a sign's text is real per-instance
-BlockEntity data, explicitly descoped (see "Where this stops working" below). But rotation *is*
-real, unlike every other accessory here: a sign placed on a lily pad now gets the same 16-value
-`rotation` a sign placed on any other block would, matching wherever the player was facing, not
-one fixed look. This needed its own block class, `block/custom/LilyPadSignBlock.java` - not a
-plain `LilyPadAccessoryBlock` - because it has to declare and set a real blockstate property
-instead of just picking one fixed model.
+Real, writable text, and a real 16-value `rotation` matching wherever the player was facing when
+they placed it - same as a sign placed on any other block, not one fixed look and not blank. This
+is the mod's first (and so far only) use of a real `BlockEntity`.
 
-- **Reuse `StandingSignBlock.ROTATION` directly** (`createBlockStateDefinition` just does
-  `builder.add(StandingSignBlock.ROTATION)`) rather than declaring a duplicate `IntegerProperty` -
-  it's a public static field on the real vanilla class, no reason to redeclare it.
-- **Setting it**: this block never goes through the normal `BlockPlaceContext`-driven placement
-  pipeline that computes a real sign's rotation automatically (it's placed by
-  `LilyPadAccessoryInteraction.combine` swapping the lily pad directly), so that combine step sets
-  it explicitly - `RotationSegment.convertToSegment(player.getYRot() + 180.0F)`, the *exact* vanilla
+**`block/custom/LilyPadSignBlock.java` extends the real vanilla `StandingSignBlock` directly** -
+same "subclass the real vanilla block" pattern as `LilyPadCandleBlock`/`LilyPadSeaPickleBlock` -
+to inherit `ROTATION`/`WATERLOGGED`, and (critically) the real text-edit interaction and
+dye/glow-ink/wax handling (`useWithoutItem`/`useItemOn`), instead of reimplementing any of it. Its
+constructor computes `WoodType.getWoodType(accessory)` (actually `SignBlock.getWoodType(accessory)`
+- a public static helper) and passes that to the `StandingSignBlock(WoodType, Properties)` super
+constructor.
+
+**Why a custom `BlockEntityType` is required, not optional**: vanilla's own `BlockEntityType.SIGN`
+is a frozen `Set<Block>` allow-list of the 26 literal vanilla sign blocks - confirmed by disassembly,
+`isValid(state)` is a plain `Set.contains(state.getBlock())`, never an `instanceof` check. No custom
+block can ever satisfy it, no matter what it extends. `block/LilyPadSignBlockEntities.java`
+registers its own `BlockEntityType<LilyPadSignBlockEntity>` (a plain public constructor,
+`new BlockEntityType<>(factory, validBlocks)` - there's no builder in this version), with all 13
+registered `LilyPadSignBlock` instances (`LilyPadAccessories.SIGN_BLOCKS`) as its valid blocks.
+**Load-order matters here**: that valid-blocks set must be fully populated before this class loads,
+so `ExtraBlocks.onInitialize()` calls `LilyPadAccessories.initialize()` before
+`LilyPadSignBlockEntities.initialize()` - get the order backwards and it silently registers an
+incomplete (possibly empty) valid-blocks set, no crash, just broken block-entity loading for
+whichever signs registered after it.
+
+`block/custom/LilyPadSignBlockEntity.java` just extends vanilla's `SignBlockEntity`, pointed at our
+type instead of `SIGN` (mirrors how vanilla's own `HangingSignBlockEntity` forwards to
+`SignBlockEntity`'s typed constructor with `HANGING_SIGN` instead) - text storage/persistence, the
+edit-lock, click commands are all inherited unchanged, no overrides needed.
+
+**Three things the inherited `StandingSignBlock` behavior gets wrong for a lily pad, all overridden
+on `LilyPadSignBlock`:**
+- `canSurvive` - the inherited version requires a solid block below; a lily pad floats on water
+  (not solid), and every other accessory combo already "always survives" (default `Block`
+  behavior) - override to unconditionally `return true`, matching that instead of the real sign's
+  rule. Skipping this is a real regression, not just a missed nice-to-have: the next water update
+  below the lily pad would otherwise silently pop the whole combo to air, bypassing
+  `LilyPadAccessoryBreaking` entirely (no drop, no particles, it just vanishes).
+- `newBlockEntity` - the inherited version constructs a plain vanilla `SignBlockEntity` typed to
+  vanilla's own frozen `BlockEntityType.SIGN`, which this block can never satisfy - override to
+  return `new LilyPadSignBlockEntity(pos, state)`.
+- `getTicker` - the inherited version checks reference-equality against vanilla's own
+  `BlockEntityType.SIGN` and would otherwise always return `null` for our type, silently skipping
+  `SignBlockEntity.tick`'s stale-edit-lock cleanup forever - override using the same
+  `createTickerHelper(type, LilyPadSignBlockEntities.LILY_PAD_SIGN, SignBlockEntity::tick)` pattern
+  `SignBlock` itself uses.
+
+**Rotation and opening the text editor** happen in `LilyPadAccessoryInteraction.combine`, since this
+block is swapped in directly rather than placed through the normal `BlockPlaceContext` pipeline that
+would compute both automatically for a real sign:
+- Rotation: `RotationSegment.convertToSegment(player.getYRot() + 180.0F)`, the *exact* vanilla
   formula, checked by disassembling `StandingSignBlock.getStateForPlacement` and
   `UseOnContext.getRotation()` rather than guessed (the `+ 180` matters - it's the player's own
   facing rotated to match which way the sign's text side ends up pointing).
-- **Trade-off worth knowing**: every other accessory's blockstate keeps the lily pad's own
-  position-seeded rotation (see "Preserving the lily pad's random rotation" above) by rotating the
-  *whole* merged model with the same 4-entry array vanilla's plain lily pad uses. Signs can't do
-  that anymore - the rotation now has to reflect the player's facing, not the position hash - so
-  the lily pad's texture orientation under a sign follows the sign's facing instead. Not a bug;
-  there's no way to satisfy both "real sign rotation" and "lily pad rotation looks the same as an
-  un-topped one at this exact spot" at once, and real rotation was what was actually asked for.
+- Opening the editor: call `signBlock.setPlacedBy(level, pos, placedState, player, heldStack)`
+  directly right after `setBlockAndUpdate` - `SignBlock.setPlacedBy` (public) already does exactly
+  the right thing (server-side check, not-waxed check, editable-text check, then opens the editor
+  for the placer), and takes a `LivingEntity`, so `Player` satisfies it with no adapting needed.
+  Reuse it rather than reimplementing its checks.
+- Right-clicking an *already-placed* lily-pad sign needs no dedicated branch in `onUseBlock` at
+  all: it already falls through to `PASS` (no branch matches an existing `LilyPadSignBlock`), and
+  Fabric's `UseBlockCallback` returning `PASS` lets vanilla's own block dispatch
+  (`useWithoutItem`/`useItemOn`, inherited once `LilyPadSignBlock` extends `StandingSignBlock`) run
+  afterward - confirmed by checking the Fabric mixin that fires this event only overrides the
+  result when non-`PASS`.
 
-**Building the models**: same merged-model technique, but now 4 base geometries × 4 blockstate `y`
-values = 16 rotation values per wood, not one fixed model. Vanilla's own `oak_sign.json`
-blockstate (checked directly, not guessed) confirms the exact scheme: `rotation=N` uses model
-`..._rot_(N % 4)` with `y: 90 * (N / 4)` (omitted when that's 0) - e.g. `rotation=6` is
-`..._rot_2` with `y: 90`, `rotation=11` is `..._rot_3` with `y: 180`. So each wood needs:
-- 4 merged models, `models/block/lily_pad_with_<wood>_sign_rot_0.json` through `_rot_3.json`,
-  each combining the lily pad's own thin element with vanilla's `template_sign_rot_0` through
-  `_rot_3` elements (post + board, each rotated by 0°/-22.5°/-45°/-67.5° via an inline element
-  `"rotation"` around origin `[8,0,8]`) - **keep `rot_0`'s board element's
-  `"rotation": {"angle": 0.0001, ...}`** when copying it in; that's not a typo in the vanilla file,
-  it's a deliberate near-zero rotation forcing the renderer to treat the board's two faces
-  distinctly instead of as a z-fighting-prone flat double-sided quad.
-- 1 blockstate file, `blockstates/lily_pad_with_<wood>_sign.json`, with all 16 `rotation=N`
-  variants mapped per the formula above (no `multipart`, no random-pick `variants` array - a
-  sign's rotation is an exact player-chosen value, not something to hash from position).
+**Rendering**: `ExtraBlocksClient` reuses vanilla's own `StandingSignRenderer` directly for the new
+`BlockEntityType`, via `BlockEntityRendererRegistry.register` (Fabric API - deprecated in this
+version with no replacement shipped yet, but still the only working entrypoint for late
+registration into vanilla's renderer map; the warning is expected, not a mistake). No custom
+renderer class was needed: `StandingSignRenderer`/`AbstractSignRenderer` only draw the sign's
+*text* (`SubmitNodeCollector.submitText(...)`, confirmed by disassembly - real vanilla signs never
+draw their own post/board mesh procedurally either) - the wood geometry is 100% the ordinary baked
+block model, same as every other block, so vanilla's renderer works unmodified against our
+`LilyPadSignBlockEntity` (it only needs `SignBlockEntity`, which we extend).
+
+**Building the models - fully baked rotation, no blockstate `"y"`:** a real sign's own blockstate
+(vanilla's `oak_sign.json`, checked directly) maps `rotation=N` to 4 base models (`_rot_(N % 4)`)
+*plus* a whole-model `"y": 90 * (N / 4)` transform. That works for a plain sign, but **breaks here**:
+our merged model also bakes in the lily pad's own quad element (`#pad`, `tintindex: 0`), and that
+`"y"` transform rotates the *entire* model, including the pad's quad, which has no way to
+counter-rotate within the same file - the pad's texture visibly spun to match whatever the sign's
+facing was. The fix: bake all 16 rotation values directly into 16 distinct models per wood, each
+with a single combined angle (`"rotation": {"angle": -22.5 * N, "axis": "y", "origin": [8,0,8]}`,
+same key already used up to `-67.5°` in earlier iterations of this feature - proof it accepts a
+continuous angle, not a restricted enum) applied to *both* the post and board elements, and leave
+the lily pad's own quad element completely untouched (no `"rotation"` key at all) in every one of
+the 16 models. The blockstate then maps `rotation=0..15` straight to 16 models with **no `"y"` key
+anywhere** - full decoupling. `N=0` keeps the original near-zero `0.0001°` on the board only (not
+the post), the same deliberate z-fighting workaround as before; `N=1..15` apply their angle to both
+elements. Cost: the pad's texture is now pinned to one fixed, unrotated look under every sign
+regardless of position - a real loss of the position-seeded variety every other accessory keeps,
+but that variety was already gone the moment sign rotation became player-facing-driven, so this
+loses nothing further, it just removes the visible "wobble" that whole-model rotation caused.
 
 ## The flower pot on a lily pad (real potting, only with what a real pot accepts)
 

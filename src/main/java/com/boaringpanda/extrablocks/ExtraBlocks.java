@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.boaringpanda.extrablocks.block.LilyPadAccessories;
 import com.boaringpanda.extrablocks.block.LilyPadAccessoryBreaking;
 import com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction;
+import com.boaringpanda.extrablocks.block.LilyPadSignBlockEntities;
 import com.boaringpanda.extrablocks.block.MixedSlabBlocks;
 import com.boaringpanda.extrablocks.block.MixedSlabInteraction;
 
@@ -32,6 +33,8 @@ public class ExtraBlocks implements ModInitializer {
 		MixedSlabBlocks.initialize();
 		MixedSlabInteraction.initialize();
 		LilyPadAccessories.initialize();
+		// Must come after LilyPadAccessories: reads its fully-populated SIGN_BLOCKS list.
+		LilyPadSignBlockEntities.initialize();
 		LilyPadAccessoryInteraction.initialize();
 		LilyPadAccessoryBreaking.initialize();
 	}

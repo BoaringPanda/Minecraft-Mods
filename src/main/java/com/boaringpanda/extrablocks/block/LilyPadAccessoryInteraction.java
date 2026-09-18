@@ -132,6 +132,14 @@ public class LilyPadAccessoryInteraction {
 		level.setBlockAndUpdate(pos, placedState);
 		level.playSound(null, pos, accessory.defaultBlockState().getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
 
+		if (combined instanceof LilyPadSignBlock signBlock) {
+			// Reuses vanilla's own setPlacedBy (not-waxed/editable-text checks, opens
+			// the text editor for the placer) rather than reimplementing it - this
+			// block is swapped in directly instead of placed via a BlockPlaceContext,
+			// so setPlacedBy never fires on its own the way it would for a real sign.
+			signBlock.setPlacedBy(level, pos, placedState, player, heldStack);
+		}
+
 		if (!player.isCreative()) {
 			heldStack.shrink(1);
 		}

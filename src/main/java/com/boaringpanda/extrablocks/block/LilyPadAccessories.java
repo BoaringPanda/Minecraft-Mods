@@ -33,10 +33,11 @@ import com.boaringpanda.extrablocks.block.custom.LilyPadSignBlock;
  * (and, for candles/sea pickles, stacks) one in-world.
  * <p>
  * Most accessories are a {@link LilyPadAccessoryBlock} - purely decorative,
- * a single fixed appearance, no BlockEntity. Candles and sea pickles are
- * different: they're {@link LilyPadCandleBlock}/{@link LilyPadSeaPickleBlock},
- * which extend the *real* vanilla {@code CandleBlock}/{@code SeaPickleBlock}
- * to get real stacking/lighting/extinguishing behaviour, not just a picture -
+ * a single fixed appearance, no BlockEntity. Candles, sea pickles, and signs are
+ * different: they're {@link LilyPadCandleBlock}/{@link LilyPadSeaPickleBlock}/
+ * {@link LilyPadSignBlock}, which extend the *real* vanilla
+ * {@code CandleBlock}/{@code SeaPickleBlock}/{@code StandingSignBlock} to get
+ * real stacking/lighting/extinguishing/text behaviour, not just a picture -
  * see those classes' own docs for what's inherited and what isn't.
  * <p>
  * To support another simple (decorative-only) accessory, add a
@@ -183,11 +184,10 @@ public class LilyPadAccessories {
 	public static final LilyPadSeaPickleBlock LILY_PAD_WITH_SEA_PICKLE = registerSeaPickle();
 
 	/**
-	 * Blank, non-writable - see CLAUDE.md for why: a sign's text is real
-	 * BlockEntity data, out of scope for the "simple fixed version" this is.
-	 * Rotation, unlike text, IS preserved - a real 16-value rotation matching
-	 * wherever the player was facing when they placed it, same as a sign on
-	 * any other block; see {@link LilyPadSignBlock} and
+	 * Real, writable text - see CLAUDE.md for how: {@link LilyPadSignBlock} extends the real
+	 * vanilla {@code StandingSignBlock} directly, with its own {@link LilyPadSignBlockEntities}
+	 * type backing it. Rotation is a real 16-value rotation matching wherever the player was
+	 * facing when they placed it, same as a sign on any other block; see
 	 * {@link LilyPadAccessoryInteraction#combine} for how.
 	 * <p>
 	 * Hardness 1 matches a real sign's vanilla value, but
@@ -201,6 +201,13 @@ public class LilyPadAccessories {
 			"acacia", "bamboo", "birch", "cherry", "crimson", "dark_oak", "jungle",
 			"mangrove", "oak", "pale_oak", "poplar", "spruce", "warped"
 	);
+
+	/**
+	 * Every registered {@link LilyPadSignBlock}, for {@link LilyPadSignBlockEntities} to build its
+	 * {@code BlockEntityType}'s valid-blocks set from - see that class for why a dedicated type (and
+	 * thus this list) is needed at all.
+	 */
+	static final List<LilyPadSignBlock> SIGN_BLOCKS = new ArrayList<>();
 
 	static {
 		for (String wood : SIGN_WOODS) {
@@ -311,6 +318,7 @@ public class LilyPadAccessories {
 
 		Registry.register(BuiltInRegistries.BLOCK, id, block);
 		BY_ACCESSORY.put(accessory, block);
+		SIGN_BLOCKS.add(block);
 	}
 
 	private static void registerCandle(String candleId) {

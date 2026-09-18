@@ -9,41 +9,58 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import com.boaringpanda.extrablocks.block.LilyPadSignBlockEntities;
+
 /**
- * A sign (any of the 13 wood types) standing on a lily pad. Blank/not
- * writable, same simplification as every other decorative accessory - but
- * unlike those, it has a real 16-value rotation, matching a sign placed on
- * any other block, rather than one fixed orientation.
+ * A real, writable sign (any of the 13 wood types) standing on a lily pad. Extends the real vanilla
+ * {@code StandingSignBlock} directly - same "subclass the real vanilla block" pattern as
+ * {@link LilyPadCandleBlock}/{@link LilyPadSeaPickleBlock} - to inherit the real text-edit
+ * interaction, dye/glow-ink/wax handling ({@code useWithoutItem}/{@code useItemOn}), and the
+ * {@code ROTATION}/{@code WATERLOGGED} properties, instead of reimplementing any of it.
  * <p>
- * Reuses {@link StandingSignBlock#ROTATION} directly rather than declaring a
- * duplicate property - see {@link com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction}
- * for how it's set from the placing player's facing (the exact vanilla
- * formula, {@code RotationSegment.convertToSegment(player.getYRot() + 180)},
- * checked by disassembly rather than guessed), since this isn't placed
- * through the normal {@code BlockPlaceContext}-driven pipeline that would
- * compute it for a real sign automatically.
+ * Rotation is set explicitly by {@link com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction#combine}
+ * using the exact vanilla formula ({@code RotationSegment.convertToSegment(player.getYRot() + 180)},
+ * checked by disassembling {@code StandingSignBlock.getStateForPlacement}), since this block is
+ * swapped in directly rather than placed through the normal {@code BlockPlaceContext} pipeline that
+ * would compute it automatically. That same method also calls {@code setPlacedBy} directly afterward
+ * to open the text editor for the placer, reusing vanilla's own {@code SignBlock.setPlacedBy} rather
+ * than reimplementing its not-waxed/editable-text checks.
  * <p>
- * Trade-off worth knowing: because the rotation now needs to reflect where
- * the player was facing, the merged model's "y" transform is driven by that
- * instead of the lily pad's own position-based pick every other accessory
- * preserves (see the rotation notes on {@code LilyPadAccessories}) - the
- * pad's texture orientation under a sign follows the sign's facing, not
- * "whatever a plain lily pad would show at this position".
+ * Three things the inherited {@code StandingSignBlock} behavior would get wrong for a lily pad and
+ * must be overridden:
+ * <ul>
+ *   <li>{@link #canSurvive} - the inherited version requires a solid block below, but a lily pad
+ *       floats on water (not solid); every other accessory combo already "always survives" (the
+ *       default, unmodified {@code Block} behavior), so this matches that instead of the real
+ *       sign's rule.</li>
+ *   <li>{@link #newBlockEntity} - the inherited version constructs a plain vanilla
+ *       {@code SignBlockEntity} typed to vanilla's own frozen {@code BlockEntityType.SIGN}, which
+ *       this block can never satisfy (see {@link LilyPadSignBlockEntities}) - must return our own
+ *       {@link LilyPadSignBlockEntity} instead.</li>
+ *   <li>{@link #getTicker} - the inherited version checks reference-equality against vanilla's own
+ *       {@code BlockEntityType.SIGN} and would otherwise always return {@code null} for our type,
+ *       silently skipping {@code SignBlockEntity.tick}'s stale-edit-lock cleanup forever.</li>
+ * </ul>
  */
-public class LilyPadSignBlock extends Block implements LilyPadCombo {
+public class LilyPadSignBlock extends StandingSignBlock implements LilyPadCombo {
 	private final Block accessory;
 
 	public LilyPadSignBlock(Properties properties, Block accessory) {
-		super(properties);
+		super(SignBlock.getWoodType(accessory), properties);
 		this.accessory = accessory;
 	}
 
@@ -57,11 +74,6 @@ public class LilyPadSignBlock extends Block implements LilyPadCombo {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-		builder.add(StandingSignBlock.ROTATION);
-	}
-
-	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return LilyPadShape.SHAPE;
 	}
@@ -69,6 +81,21 @@ public class LilyPadSignBlock extends Block implements LilyPadCombo {
 	@Override
 	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return LilyPadShape.SHAPE;
+	}
+
+	@Override
+	protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+		return true;
+	}
+
+	@Override
+	public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+		return new LilyPadSignBlockEntity(pos, state);
+	}
+
+	@Override
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+		return createTickerHelper(type, LilyPadSignBlockEntities.LILY_PAD_SIGN, SignBlockEntity::tick);
 	}
 
 	@Override
