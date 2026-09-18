@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.boaringpanda.extrablocks.block.LilyPadAccessories;
+import com.boaringpanda.extrablocks.block.LilyPadAccessoryBreaking;
 import com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction;
 import com.boaringpanda.extrablocks.block.MixedSlabBlocks;
 import com.boaringpanda.extrablocks.block.MixedSlabInteraction;
@@ -32,6 +33,7 @@ public class ExtraBlocks implements ModInitializer {
 		MixedSlabInteraction.initialize();
 		LilyPadAccessories.initialize();
 		LilyPadAccessoryInteraction.initialize();
+		LilyPadAccessoryBreaking.initialize();
 	}
 
 	public static Identifier id(String path) {

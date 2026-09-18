@@ -1,5 +1,7 @@
 package com.boaringpanda.extrablocks.block.custom;
 
+import java.util.List;
+
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
@@ -22,8 +24,15 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * <p>
  * Never placed directly - see {@link com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction}
  * for how it's created by right-clicking a placed lily pad with a torch or lantern.
+ * <p>
+ * {@code playerDestroy} below (dropping both the lily pad and the accessory, block
+ * gone entirely) is only reached for non-player destruction (explosions, fire,
+ * pistons). A player mining it normally goes through
+ * {@link com.boaringpanda.extrablocks.block.LilyPadAccessoryBreaking} instead, which
+ * intercepts *before* any of this runs and removes just the accessory, leaving a
+ * plain lily pad behind - see {@link #accessoryDrops} for what that drops.
  */
-public class LilyPadAccessoryBlock extends Block {
+public class LilyPadAccessoryBlock extends Block implements LilyPadCombo {
 	private final Block accessory;
 
 	public LilyPadAccessoryBlock(Properties properties, Block accessory) {
@@ -33,6 +42,11 @@ public class LilyPadAccessoryBlock extends Block {
 
 	public Block accessory() {
 		return this.accessory;
+	}
+
+	@Override
+	public List<ItemStack> accessoryDrops(BlockState state) {
+		return List.of(new ItemStack(this.accessory));
 	}
 
 	@Override
@@ -52,7 +66,9 @@ public class LilyPadAccessoryBlock extends Block {
 		boolean shouldDrop = !player.isCreative() && (!state.requiresCorrectToolForDrops() || tool.isCorrectToolForDrops(state));
 		if (shouldDrop) {
 			popResource(level, pos, new ItemStack(Blocks.LILY_PAD));
-			popResource(level, pos, new ItemStack(this.accessory));
+			for (ItemStack drop : accessoryDrops(state)) {
+				popResource(level, pos, drop);
+			}
 		}
 	}
 }

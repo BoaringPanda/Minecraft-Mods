@@ -60,9 +60,16 @@ public class LilyPadAccessories {
 	);
 
 	/**
-	 * Deliberately not matching lantern's own vanilla properties (needs a
-	 * pickaxe, strength 3.5) - anything standing on a lily pad should break
-	 * instantly with no tool required, same as {@link #LILY_PAD_WITH_TORCH}.
+	 * Hardness 3.5 matches lantern's real vanilla value, but
+	 * `requiresCorrectToolForDrops()` is a deliberate choice, not vanilla
+	 * fidelity - checked against the wiki, and a real lantern actually drops
+	 * with *any* tool, a pickaxe is only faster. Gating it behind a pickaxe
+	 * anyway (and soul/copper lantern the same way, for consistency within
+	 * the category even though real soul/copper lanterns don't gate either)
+	 * matches what was actually asked for: removing something from a lily
+	 * pad should need "the right tool" the way a player expects, not
+	 * necessarily the exact vanilla rule for that one block. Needs
+	 * `mineable/pickaxe` too, in `data/minecraft/tags/block/mineable/pickaxe.json`.
 	 */
 	public static final LilyPadAccessoryBlock LILY_PAD_WITH_LANTERN = register(
 			"lily_pad_with_lantern",
@@ -70,7 +77,8 @@ public class LilyPadAccessories {
 			BlockBehaviour.Properties.of()
 					.sound(SoundType.LILY_PAD)
 					.lightLevel(state -> 15)
-					.strength(0.0f)
+					.strength(3.5f)
+					.requiresCorrectToolForDrops()
 	);
 
 	public static final LilyPadAccessoryBlock LILY_PAD_WITH_SOUL_TORCH = register(
@@ -97,7 +105,8 @@ public class LilyPadAccessories {
 			BlockBehaviour.Properties.of()
 					.sound(SoundType.LILY_PAD)
 					.lightLevel(state -> 10)
-					.strength(0.0f)
+					.strength(3.5f)
+					.requiresCorrectToolForDrops()
 	);
 
 	// COPPER_LANTERN is a WeatheringCopperCollection<Block>, not a Blocks.* field - resolved
@@ -108,7 +117,8 @@ public class LilyPadAccessories {
 			BlockBehaviour.Properties.of()
 					.sound(SoundType.LILY_PAD)
 					.lightLevel(state -> 15)
-					.strength(0.0f)
+					.strength(3.5f)
+					.requiresCorrectToolForDrops()
 	);
 
 	/**
@@ -174,6 +184,13 @@ public class LilyPadAccessories {
 	/**
 	 * Blank, non-writable - see CLAUDE.md for why: a sign's text is real
 	 * BlockEntity data, out of scope for the "simple fixed version" this is.
+	 * <p>
+	 * Hardness 1 matches a real sign's vanilla value, but
+	 * `requiresCorrectToolForDrops()` is a deliberate choice, not vanilla
+	 * fidelity - a real sign actually drops with any tool, an axe is only
+	 * faster (checked against the wiki). See {@link #LILY_PAD_WITH_LANTERN}
+	 * for the same reasoning. Needs `mineable/axe` too, in
+	 * `data/minecraft/tags/block/mineable/axe.json`.
 	 */
 	private static final List<String> SIGN_WOODS = List.of(
 			"acacia", "bamboo", "birch", "cherry", "crimson", "dark_oak", "jungle",
@@ -182,7 +199,14 @@ public class LilyPadAccessories {
 
 	static {
 		for (String wood : SIGN_WOODS) {
-			registerSimple("lily_pad_with_" + wood + "_sign", resolve(wood + "_sign"));
+			register(
+					"lily_pad_with_" + wood + "_sign",
+					resolve(wood + "_sign"),
+					BlockBehaviour.Properties.of()
+							.sound(SoundType.LILY_PAD)
+							.strength(1.0f)
+							.requiresCorrectToolForDrops()
+			);
 		}
 	}
 
@@ -238,10 +262,6 @@ public class LilyPadAccessories {
 	public static void initialize() {
 	}
 
-	private static void registerSimple(String name, Block accessory) {
-		register(name, accessory, BlockBehaviour.Properties.of().sound(SoundType.LILY_PAD).strength(0.0f));
-	}
-
 	private static void registerPotted(String plantId, String comboSuffix) {
 		Block plant = resolve(plantId);
 		Identifier id = ExtraBlocks.id("lily_pad_with_potted_" + comboSuffix);
@@ -286,7 +306,7 @@ public class LilyPadAccessories {
 				BlockBehaviour.Properties.of()
 						.sound(SoundType.LILY_PAD)
 						.lightLevel(CandleBlock.LIGHT_EMISSION)
-						.strength(0.0f)
+						.strength(0.1f) // matches a real candle's hardness; no tool requirement, same as vanilla
 						.setId(key),
 				accessory
 		);

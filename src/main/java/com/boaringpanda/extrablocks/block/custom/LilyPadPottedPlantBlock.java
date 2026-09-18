@@ -1,14 +1,10 @@
 package com.boaringpanda.extrablocks.block.custom;
 
-import org.jetbrains.annotations.Nullable;
+import java.util.List;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -18,8 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * <p>
  * Only different from the plain {@link LilyPadAccessoryBlock} in what it drops:
  * a real potted plant drops both the flower pot *and* the plant when broken, not
- * just one item, so this adds the flower pot on top of what the parent class
- * already drops (the plant, via its {@code accessory} field, plus the lily pad).
+ * just the one item {@code accessoryDrops} would otherwise return.
  */
 public class LilyPadPottedPlantBlock extends LilyPadAccessoryBlock {
 	public LilyPadPottedPlantBlock(Properties properties, Block plant) {
@@ -27,11 +22,7 @@ public class LilyPadPottedPlantBlock extends LilyPadAccessoryBlock {
 	}
 
 	@Override
-	public void playerDestroy(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
-		super.playerDestroy(level, player, pos, state, blockEntity, tool);
-
-		if (!player.isCreative()) {
-			popResource(level, pos, new ItemStack(Blocks.FLOWER_POT));
-		}
+	public List<ItemStack> accessoryDrops(BlockState state) {
+		return List.of(new ItemStack(this.accessory()), new ItemStack(Blocks.FLOWER_POT));
 	}
 }

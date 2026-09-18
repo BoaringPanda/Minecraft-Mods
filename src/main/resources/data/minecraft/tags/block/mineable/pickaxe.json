@@ -1,6 +1,9 @@
 {
   "replace": false,
   "values": [
+    "extra_blocks:lily_pad_with_lantern",
+    "extra_blocks:lily_pad_with_soul_lantern",
+    "extra_blocks:lily_pad_with_copper_lantern",
     "extra_blocks:mixed_slab_acacia_bottom_andesite_top",
     "extra_blocks:mixed_slab_acacia_bottom_bamboo_top",
     "extra_blocks:mixed_slab_acacia_bottom_bamboo_mosaic_top",

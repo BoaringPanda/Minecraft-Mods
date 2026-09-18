@@ -1,5 +1,7 @@
 package com.boaringpanda.extrablocks.block.custom;
 
+import java.util.List;
+
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
@@ -30,9 +32,14 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * explicitly by {@link com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction}
  * instead, same as the initial lily-pad-to-pickle combine.
  */
-public class LilyPadSeaPickleBlock extends SeaPickleBlock {
+public class LilyPadSeaPickleBlock extends SeaPickleBlock implements LilyPadCombo {
 	public LilyPadSeaPickleBlock(Properties properties) {
 		super(properties);
+	}
+
+	@Override
+	public List<ItemStack> accessoryDrops(BlockState state) {
+		return List.of(new ItemStack(Blocks.SEA_PICKLE, state.getValue(PICKLES)));
 	}
 
 	@Override
@@ -59,7 +66,9 @@ public class LilyPadSeaPickleBlock extends SeaPickleBlock {
 
 		if (!player.isCreative()) {
 			popResource(level, pos, new ItemStack(Blocks.LILY_PAD));
-			popResource(level, pos, new ItemStack(Blocks.SEA_PICKLE, state.getValue(PICKLES)));
+			for (ItemStack drop : accessoryDrops(state)) {
+				popResource(level, pos, drop);
+			}
 		}
 	}
 }

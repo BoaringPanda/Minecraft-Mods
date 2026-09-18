@@ -340,6 +340,50 @@ call in `LilyPadAccessoryColors` (`constant(...)` at index 0, `BlockTintSources.
 call every other combo uses, since registering the same block twice would just overwrite the
 first with the second rather than combining them.
 
+## Breaking a lily pad accessory: two stages, real tool per accessory
+
+Breaking a combo doesn't destroy the whole thing in one hit - the first hit removes just the
+accessory (dropping it, leaving a plain lily pad behind); only a *second* hit, now on an ordinary
+lily pad with no code of ours involved, removes that too. Which tool actually works, and whether
+the wrong one still lets the accessory drop, varies by accessory - matching what a player expects
+for that real thing (pickaxe for lanterns, axe for signs, no tool needed for candles/torches/end
+rod/sea pickle/flower pot/potted plants), not a single blanket rule.
+
+- `block/LilyPadAccessoryBreaking.java` - hooks `PlayerBlockBreakEvents.BEFORE`, **not**
+  `Block.playerWillDestroy`. Checked by disassembly before writing any of this: `playerWillDestroy`'s
+  return value is captured by the caller but never written back to the world - the block gets
+  removed to air immediately afterward regardless of what it returns - so it's structurally
+  useless for "become something else instead of vanishing." `PlayerBlockBreakEvents.BEFORE`
+  returning `false`, by contrast, is confirmed (same way - disassembling the Fabric API mixin that
+  implements it) to skip vanilla's *entire* destroy sequence before any of it runs: no removal, no
+  drops, no XP. That clean slate is what gets substituted with "drop just the accessory, set the
+  block to a plain lily pad, done."
+- `block/custom/LilyPadCombo.java` - a small interface (`accessoryDrops(BlockState)`) every combo
+  block implements, since they don't share a common superclass to hang this on (`LilyPadAccessoryBlock`
+  directly, `LilyPadCandleBlock extends CandleBlock`, `LilyPadSeaPickleBlock extends SeaPickleBlock`).
+  Lets `LilyPadAccessoryBreaking` treat all of them the same way.
+- Mining *speed* (and whether a tool is required at all for the drop) is unrelated to that class -
+  it's governed entirely by each combo's own `strength()`/`requiresCorrectToolForDrops()`/mineable
+  tag in `LilyPadAccessories`, same as any other block. `PlayerBlockBreakEvents.BEFORE` only fires
+  once mining has already finished (confirmed by where the Fabric mixin injects - inside
+  `ServerPlayerGameMode.destroyBlock`, called only after mining reaches 100%), so it has no say in
+  *how long* that took.
+
+**Don't assume hardness implies a tool is required for drops - checked the wiki per accessory,
+several surprised me.** Real vanilla candles (hardness 0.1), signs (hardness 1, axe is *fastest*),
+end rods, sea pickles and flower pots all drop with literally any tool or bare hands - the named
+tool is only ever a speed bonus, never a requirement. Even lanterns - soul and copper lantern
+*and* the regular one - work the same way: "any tool, pickaxe is fastest," not "pickaxe or
+nothing." So `requiresCorrectToolForDrops()` on `LILY_PAD_WITH_LANTERN`/`SOUL_LANTERN`/
+`COPPER_LANTERN` (pickaxe) and on every sign (axe) is a **deliberate deviation from vanilla
+fidelity**, not a mistake - it's what was actually asked for (removing something should require
+"the right tool," pickaxe for lanterns, axe for signs), applied consistently across each whole
+category rather than block-by-block. Hardness values themselves *do* match vanilla exactly
+(lantern family 3.5, sign 1, candle 0.1, everything else 0) - only the tool-gating is the
+deliberate part. Keep this distinction in mind before assuming any other accessory needs the same
+treatment - candles/torches/end rod/sea pickle/flower pot/potted plants are *correctly* left
+without `requiresCorrectToolForDrops()`, matching real vanilla exactly, not an oversight.
+
 ## Where this stops working: player heads and banners
 
 **Not built** - right-clicking a lily pad with a player head or banner currently does nothing

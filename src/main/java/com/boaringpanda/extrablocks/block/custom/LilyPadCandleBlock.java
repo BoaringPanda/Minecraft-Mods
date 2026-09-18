@@ -1,5 +1,7 @@
 package com.boaringpanda.extrablocks.block.custom;
 
+import java.util.List;
+
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
@@ -23,7 +25,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * Extends the real {@link CandleBlock} to inherit its {@code CANDLES}/
  * {@code LIT}/{@code WATERLOGGED} blockstate properties and (via the
  * {@code minecraft:candles} block tag it's registered into, see
- * {@link LilyPadCandlesAndPickle}) flint-and-steel lighting, for free.
+ * {@link com.boaringpanda.extrablocks.block.LilyPadAccessories}) flint-and-steel lighting, for free.
  * <p>
  * What it does NOT inherit: vanilla's own "click with another candle to add
  * one" check compares the held item against {@code this.asItem()}, which is
@@ -32,7 +34,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * {@link com.boaringpanda.extrablocks.block.LilyPadAccessoryInteraction},
  * the same way the initial lily-pad-to-candle combine is.
  */
-public class LilyPadCandleBlock extends CandleBlock {
+public class LilyPadCandleBlock extends CandleBlock implements LilyPadCombo {
 	/** The real vanilla candle block for this color - used for drops and for matching the held item when stacking. */
 	private final Block accessory;
 
@@ -43,6 +45,11 @@ public class LilyPadCandleBlock extends CandleBlock {
 
 	public Block accessory() {
 		return this.accessory;
+	}
+
+	@Override
+	public List<ItemStack> accessoryDrops(BlockState state) {
+		return List.of(new ItemStack(this.accessory, state.getValue(CANDLES)));
 	}
 
 	@Override
@@ -68,7 +75,9 @@ public class LilyPadCandleBlock extends CandleBlock {
 
 		if (!player.isCreative()) {
 			popResource(level, pos, new ItemStack(Blocks.LILY_PAD));
-			popResource(level, pos, new ItemStack(this.accessory, state.getValue(CANDLES)));
+			for (ItemStack drop : accessoryDrops(state)) {
+				popResource(level, pos, drop);
+			}
 		}
 	}
 }
