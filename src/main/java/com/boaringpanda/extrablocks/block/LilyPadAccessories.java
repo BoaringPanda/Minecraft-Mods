@@ -25,6 +25,7 @@ import com.boaringpanda.extrablocks.block.custom.LilyPadAccessoryBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadCandleBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadPottedPlantBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadSeaPickleBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadSignBlock;
 
 /**
  * Registers a combo block for each supported "lily pad + accessory"
@@ -184,6 +185,10 @@ public class LilyPadAccessories {
 	/**
 	 * Blank, non-writable - see CLAUDE.md for why: a sign's text is real
 	 * BlockEntity data, out of scope for the "simple fixed version" this is.
+	 * Rotation, unlike text, IS preserved - a real 16-value rotation matching
+	 * wherever the player was facing when they placed it, same as a sign on
+	 * any other block; see {@link LilyPadSignBlock} and
+	 * {@link LilyPadAccessoryInteraction#combine} for how.
 	 * <p>
 	 * Hardness 1 matches a real sign's vanilla value, but
 	 * `requiresCorrectToolForDrops()` is a deliberate choice, not vanilla
@@ -199,14 +204,7 @@ public class LilyPadAccessories {
 
 	static {
 		for (String wood : SIGN_WOODS) {
-			register(
-					"lily_pad_with_" + wood + "_sign",
-					resolve(wood + "_sign"),
-					BlockBehaviour.Properties.of()
-							.sound(SoundType.LILY_PAD)
-							.strength(1.0f)
-							.requiresCorrectToolForDrops()
-			);
+			registerSign(wood);
 		}
 	}
 
@@ -295,6 +293,24 @@ public class LilyPadAccessories {
 		BY_ACCESSORY.put(accessory, block);
 
 		return block;
+	}
+
+	private static void registerSign(String wood) {
+		Block accessory = resolve(wood + "_sign");
+		Identifier id = ExtraBlocks.id("lily_pad_with_" + wood + "_sign");
+		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
+
+		LilyPadSignBlock block = new LilyPadSignBlock(
+				BlockBehaviour.Properties.of()
+						.sound(SoundType.LILY_PAD)
+						.strength(1.0f)
+						.requiresCorrectToolForDrops()
+						.setId(key),
+				accessory
+		);
+
+		Registry.register(BuiltInRegistries.BLOCK, id, block);
+		BY_ACCESSORY.put(accessory, block);
 	}
 
 	private static void registerCandle(String candleId) {

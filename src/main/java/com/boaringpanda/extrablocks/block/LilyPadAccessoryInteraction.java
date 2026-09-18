@@ -13,14 +13,17 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.SeaPickleBlock;
+import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.phys.BlockHitResult;
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 
 import com.boaringpanda.extrablocks.block.custom.LilyPadCandleBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadSeaPickleBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadSignBlock;
 
 /**
  * Lets a player put a supported accessory on a placed lily pad by
@@ -119,6 +122,11 @@ public class LilyPadAccessoryInteraction {
 			placedState = placedState.setValue(CandleBlock.CANDLES, 1).setValue(CandleBlock.LIT, false);
 		} else if (combined instanceof LilyPadSeaPickleBlock) {
 			placedState = placedState.setValue(SeaPickleBlock.PICKLES, 1).setValue(SeaPickleBlock.WATERLOGGED, false);
+		} else if (combined instanceof LilyPadSignBlock) {
+			// Exact vanilla formula for a placed standing sign's rotation, checked
+			// by disassembling StandingSignBlock.getStateForPlacement - not guessed.
+			int rotation = RotationSegment.convertToSegment(player.getYRot() + 180.0F);
+			placedState = placedState.setValue(StandingSignBlock.ROTATION, rotation);
 		}
 
 		level.setBlockAndUpdate(pos, placedState);

@@ -211,8 +211,10 @@ this reason. Match that (`strength(0.0f)`, no tool requirement, no tag entry) ra
 new accessory's own harvesting rules. Light level and sound are still worth copying from the
 accessory, though — those aren't part of this exception. Currently registered this way: torch,
 soul torch, copper torch, lantern, soul lantern, copper lantern, redstone torch (always the "lit"
-look - see below), end rod (always "facing=up" - it's already the base, unrotated model), the 13
-wood signs (blank, no text - see below), and the flower pot (always empty - see below).
+look - see below), end rod (always "facing=up" - it's already the base, unrotated model), and the
+flower pot (always empty - see below). The 13 wood signs used to be here too (one fixed model,
+riding the lily pad's own rotation) but aren't anymore - see the signs section below for why they
+now need their own block class instead.
 
 **Verify light levels rather than guess them** - checked each of these against the wiki before
 using it, since getting one wrong is an easy, easy-to-miss mistake: torch/end rod 14, copper
@@ -280,19 +282,49 @@ are more of them since blockstate properties multiply:
 Always placed/combined at count 1, unlit, non-waterlogged (`LilyPadAccessoryInteraction.combine`
 sets this explicitly rather than trusting `defaultBlockState()`).
 
-## Signs on a lily pad (blank/not writable)
+## Signs on a lily pad (blank/not writable, but real player-facing rotation)
 
-These are plain `LilyPadAccessoryBlock`s, same technique as torch/lantern - **not** `SignBlock`
-subclasses, and deliberately so: a sign's text is real per-instance BlockEntity data, explicitly
-descoped (see "Where this stops working" below). Since we're not preserving that data, there's no
-need for the real 16-value `rotation` blockstate property either - one fixed model, just like end
-rod's fixed "facing=up".
+Blank/not writable - same as before, and deliberately so: a sign's text is real per-instance
+BlockEntity data, explicitly descoped (see "Where this stops working" below). But rotation *is*
+real, unlike every other accessory here: a sign placed on a lily pad now gets the same 16-value
+`rotation` a sign placed on any other block would, matching wherever the player was facing, not
+one fixed look. This needed its own block class, `block/custom/LilyPadSignBlock.java` - not a
+plain `LilyPadAccessoryBlock` - because it has to declare and set a real blockstate property
+instead of just picking one fixed model.
 
-`models/block/lily_pad_with_<wood>_sign.json`, one per wood type (13 - all the wood slab
-materials plus bamboo and poplar), using vanilla's `template_sign_rot_0` elements (post + board) -
-**keep the board element's `"rotation": {"angle": 0.0001, ...}`** when copying it in; that's not a
-typo in the vanilla file, it's a deliberate near-zero rotation forcing the renderer to treat the
-board's two faces distinctly instead of as a z-fighting-prone flat double-sided quad.
+- **Reuse `StandingSignBlock.ROTATION` directly** (`createBlockStateDefinition` just does
+  `builder.add(StandingSignBlock.ROTATION)`) rather than declaring a duplicate `IntegerProperty` -
+  it's a public static field on the real vanilla class, no reason to redeclare it.
+- **Setting it**: this block never goes through the normal `BlockPlaceContext`-driven placement
+  pipeline that computes a real sign's rotation automatically (it's placed by
+  `LilyPadAccessoryInteraction.combine` swapping the lily pad directly), so that combine step sets
+  it explicitly - `RotationSegment.convertToSegment(player.getYRot() + 180.0F)`, the *exact* vanilla
+  formula, checked by disassembling `StandingSignBlock.getStateForPlacement` and
+  `UseOnContext.getRotation()` rather than guessed (the `+ 180` matters - it's the player's own
+  facing rotated to match which way the sign's text side ends up pointing).
+- **Trade-off worth knowing**: every other accessory's blockstate keeps the lily pad's own
+  position-seeded rotation (see "Preserving the lily pad's random rotation" above) by rotating the
+  *whole* merged model with the same 4-entry array vanilla's plain lily pad uses. Signs can't do
+  that anymore - the rotation now has to reflect the player's facing, not the position hash - so
+  the lily pad's texture orientation under a sign follows the sign's facing instead. Not a bug;
+  there's no way to satisfy both "real sign rotation" and "lily pad rotation looks the same as an
+  un-topped one at this exact spot" at once, and real rotation was what was actually asked for.
+
+**Building the models**: same merged-model technique, but now 4 base geometries × 4 blockstate `y`
+values = 16 rotation values per wood, not one fixed model. Vanilla's own `oak_sign.json`
+blockstate (checked directly, not guessed) confirms the exact scheme: `rotation=N` uses model
+`..._rot_(N % 4)` with `y: 90 * (N / 4)` (omitted when that's 0) - e.g. `rotation=6` is
+`..._rot_2` with `y: 90`, `rotation=11` is `..._rot_3` with `y: 180`. So each wood needs:
+- 4 merged models, `models/block/lily_pad_with_<wood>_sign_rot_0.json` through `_rot_3.json`,
+  each combining the lily pad's own thin element with vanilla's `template_sign_rot_0` through
+  `_rot_3` elements (post + board, each rotated by 0°/-22.5°/-45°/-67.5° via an inline element
+  `"rotation"` around origin `[8,0,8]`) - **keep `rot_0`'s board element's
+  `"rotation": {"angle": 0.0001, ...}`** when copying it in; that's not a typo in the vanilla file,
+  it's a deliberate near-zero rotation forcing the renderer to treat the board's two faces
+  distinctly instead of as a z-fighting-prone flat double-sided quad.
+- 1 blockstate file, `blockstates/lily_pad_with_<wood>_sign.json`, with all 16 `rotation=N`
+  variants mapped per the formula above (no `multipart`, no random-pick `variants` array - a
+  sign's rotation is an exact player-chosen value, not something to hash from position).
 
 ## The flower pot on a lily pad (real potting, only with what a real pot accepts)
 
