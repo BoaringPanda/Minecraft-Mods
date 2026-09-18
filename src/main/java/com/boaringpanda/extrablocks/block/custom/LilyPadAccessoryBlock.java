@@ -24,9 +24,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * for how it's created by right-clicking a placed lily pad with a torch or lantern.
  */
 public class LilyPadAccessoryBlock extends Block {
-	/** The real vanilla lily pad's own collision shape - a slightly inset, thin platform. */
-	private static final VoxelShape SHAPE = Block.column(14.0, 0.0, 1.5);
-
 	private final Block accessory;
 
 	public LilyPadAccessoryBlock(Properties properties, Block accessory) {
@@ -40,12 +37,12 @@ public class LilyPadAccessoryBlock extends Block {
 
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		return SHAPE;
+		return LilyPadShape.SHAPE;
 	}
 
 	@Override
 	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		return SHAPE;
+		return LilyPadShape.SHAPE;
 	}
 
 	@Override

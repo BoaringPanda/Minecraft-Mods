@@ -185,9 +185,10 @@ No manual pixel offset needed: checked against the actual vanilla files, `templa
 sits at y=0.25 (out of 16) — close enough to flush that copying both in unmodified already looks
 right.
 
-**To add another accessory** (e.g. a soul lantern): add a `register(...)` call in
-`LilyPadAccessories.java`, a merged model per the pattern above, and a `variants`-style (not
-`multipart`) blockstate with the same 4-entry rotation array.
+**To add another purely-decorative accessory** (a `LilyPadAccessoryBlock` - see "Where this stops
+working" below for which ones qualify): add a `register(...)` call in `LilyPadAccessories.java`,
+a merged model per the pattern above, and a `variants`-style (not `multipart`) blockstate with
+the same 4-entry rotation array.
 
 Properties are a deliberate exception to "copy the accessory's own vanilla values", not the rule:
 anything standing on a lily pad breaks instantly with no tool required (`strength(0.0f)`, no
@@ -195,7 +196,111 @@ anything standing on a lily pad breaks instantly with no tool required (`strengt
 placed on solid ground - lantern's own vanilla pickaxe requirement is deliberately dropped for
 this reason. Match that (`strength(0.0f)`, no tool requirement, no tag entry) rather than the
 new accessory's own harvesting rules. Light level and sound are still worth copying from the
-accessory, though — those aren't part of this exception.
+accessory, though — those aren't part of this exception. Currently registered this way: torch,
+soul torch, copper torch, lantern, soul lantern, copper lantern, redstone torch (always the "lit"
+look - see below), end rod (always "facing=up" - it's already the base, unrotated model), the 13
+wood signs (blank, no text - see below), and the flower pot (always empty - see below).
+
+**Verify light levels rather than guess them** - checked each of these against the wiki before
+using it, since getting one wrong is an easy, easy-to-miss mistake: torch/end rod 14, copper
+torch 14 (copper doesn't oxidize on a torch - "used as fuel, not the base", per the wiki), lantern/
+copper lantern 15 (copper lantern's brightness is oxidation-independent, unlike copper bulbs),
+soul torch/soul lantern 10, redstone torch 7.
+
+**Redstone torch is decorative only, not a real circuit component.** A real one inverts based on
+whether the block below is powered; this one is always the "lit" model
+(`minecraft:block/redstone_torch`, the 7-element glowing-tip version - not
+`redstone_torch_off`'s plain stick). Making it a real power source was explicitly descoped when
+this was built (see the git history for that decision) - if that ever changes, it needs real
+`BlockState`/neighbor-update logic, not just a texture swap.
+
+## Candles and sea pickles on a lily pad (real stacking, not just a picture)
+
+Unlike the purely-decorative accessories above, candles and sea pickles keep their real vanilla
+behavior - stacking up to 4, lighting/extinguishing (candles), and the dead/alive appearance
+(sea pickles) - because `LilyPadCandleBlock extends CandleBlock` and
+`LilyPadSeaPickleBlock extends SeaPickleBlock` directly (`block/custom/`), inheriting their real
+`CANDLES`/`LIT`/`PICKLES`/`WATERLOGGED` blockstate properties instead of having none.
+
+**What subclassing gets you for free, and what it doesn't - check method bodies, don't assume:**
+disassembling the compiled game (not guessing) showed:
+- Lighting with flint and steel/fire charge: **free**. `FlintAndSteelItem.useOn` calls the public
+  static `CandleBlock.canLight(state)`, which checks `state.is(BlockTags.CANDLES, ...)` - a *tag*
+  check, not `instanceof`/exact-class. Our combo blocks just need to be in
+  `data/minecraft/tags/block/candles.json` (added, `replace: false`) for this to work.
+- Extinguishing by hand: **free**. `CandleBlock.useItemOn`'s empty-hand branch only checks
+  `state.getValue(LIT)` and calls the public static `AbstractCandleBlock.extinguish(...)` - no
+  reference to `this` at all.
+- **Stacking another candle/pickle by right-clicking with one: *not* free**, despite looking like
+  the same kind of check. `CandleBlock`/`SeaPickleBlock.canBeReplaced` compares the held item
+  against `this.asItem()` - and a block with no registered `BlockItem` has `asItem() == AIR`, so
+  it can never match a real candle/pickle item. Worse, even overriding just `canBeReplaced` isn't
+  enough on its own: the vanilla `BlockItem` placement pipeline would then call
+  `getStateForPlacement` on the *held item's own* block (the real vanilla candle), which checks
+  `existingState.is(this)` - false, since `existingState` is our combo, not that real block -  so
+  it would compute a *fresh* placement and silently replace our combo (losing the lily pad
+  underneath) instead of incrementing it. Stacking is instead handled entirely by our own
+  `LilyPadAccessoryInteraction`, matching by `instanceof LilyPadCandleBlock`/
+  `LilyPadSeaPickleBlock` + `accessory() == heldBlock`, short-circuiting before any of that
+  vanilla logic runs - see `tryStack` there.
+
+**Light level for candles**: `CandleBlock.LIGHT_EMISSION` is a public static
+`ToIntFunction<BlockState>` that already implements the real "scales with lit candle count"
+formula - reuse it directly (`.lightLevel(CandleBlock.LIGHT_EMISSION)`) rather than picking a
+fixed number. Sea pickles aren't a light source in vanilla; no `lightLevel` call needed.
+
+**Building the models**: same merged-model technique as the decorative accessories, but there
+are more of them since blockstate properties multiply:
+- Candles: `models/block/lily_pad_with_<color>_<count>_<lit|unlit>.json` - 17 colors (16 dye
+  colors + plain `candle`) × 4 counts × 2 lit states = 136 files, using vanilla's own
+  `template_candle`/`template_two_candles`/`template_three_candles`/`template_four_candles`
+  elements (color/lit is *only* a texture swap - same 4 element sets reused for all 136 - so
+  don't regenerate the geometry per color, generate it once per count and just vary the
+  `textures` block). No random rotation needed on top - unlike lily pads, candles have no
+  position-seeded rotation of their own to preserve, so the blockstate is a plain
+  `"candles=N,lit=B"` → 4-entry-rotated-model map (rotation still comes from the lily pad half).
+- Sea pickles: `models/block/lily_pad_with_sea_pickle_<1-4>_<wet|dry>.json` - 8 files, using
+  vanilla's `sea_pickle`/`two_sea_pickles`/`three_sea_pickles`/`four_sea_pickles` (alive/glowing)
+  and `dead_sea_pickle`/`two_dead_sea_pickles`/etc. (dry) elements - genuinely different geometry
+  per state here (dead ones drop the glow-tendril elements), not just a texture swap.
+
+Always placed/combined at count 1, unlit, non-waterlogged (`LilyPadAccessoryInteraction.combine`
+sets this explicitly rather than trusting `defaultBlockState()`).
+
+## Signs and the flower pot on a lily pad (blank/empty, not writable/plantable)
+
+These are back to plain `LilyPadAccessoryBlock`s, same technique as torch/lantern - **not**
+`SignBlock`/`FlowerPotBlock` subclasses, and deliberately so: a sign's text and a potted plant
+are both real per-instance data (BlockEntity for signs, block-per-plant-type for pots), which was
+explicitly descoped (see "Where this stops working" below). Since we're not preserving that data,
+there's no need for the real 16-value `rotation` blockstate property either - these use one fixed
+model, just like end rod's fixed "facing=up".
+
+- Signs: `models/block/lily_pad_with_<wood>_sign.json`, one per wood type (13 - all the wood
+  slab materials plus bamboo and poplar), using vanilla's `template_sign_rot_0` elements (post +
+  board) - **keep the board element's `"rotation": {"angle": 0.0001, ...}`** when copying it in;
+  that's not a typo in the vanilla file, it's a deliberate near-zero rotation forcing the
+  renderer to treat the board's two faces distinctly instead of as a z-fighting-prone flat
+  double-sided quad.
+- Flower pot: `models/block/lily_pad_with_flower_pot.json`, vanilla's own `flower_pot.json`
+  elements (5 - four rim pieces + a dirt-topped block) copied in verbatim, texture vars
+  `#flowerpot`/`#dirt` kept as named (only `#pad` is our own addition).
+
+## Where this stops working: player heads and banners
+
+**Not built** - right-clicking a lily pad with a player head or banner currently does nothing
+(falls through to normal placement). Checked why before attempting anything: `minecraft:models/
+block/skull.json` and `.../banner.json` are both **completely empty** - no `elements` at all,
+just a placeholder particle texture. Unlike signs/flower pots (which have real static geometry
+for the blank/plain form, with only the *extra* data - text, pattern - being BlockEntity-driven),
+heads and banners have **no static geometry to copy at any fidelity**, not even a generic/blank
+one - the entire visible shape is drawn procedurally by a `BlockEntityRenderer` reading stored
+per-instance data (whose player's profile; the banner's base color and pattern layers - even the
+banner's *base color* isn't in any model, only in its BlockEntity). Copying "just the simple
+part" the way signs/flower pots allowed isn't available here; going the multipart-`BlockEntity`
+route is a much bigger undertaking than everything else in this feature combined, and wasn't
+something the earlier decision to keep this feature static-model-only anticipated needing to
+weigh for these two specifically. Get a decision from the user before starting that.
 
 ## Commands
 Run from the project root. `JAVA_HOME` must point at the JDK 25 install.

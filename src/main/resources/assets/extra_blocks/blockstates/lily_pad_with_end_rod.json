@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "extra_blocks:block/lily_pad_with_end_rod"
+      },
+      {
+        "model": "extra_blocks:block/lily_pad_with_end_rod",
+        "y": 90
+      },
+      {
+        "model": "extra_blocks:block/lily_pad_with_end_rod",
+        "y": 180
+      },
+      {
+        "model": "extra_blocks:block/lily_pad_with_end_rod",
+        "y": 270
+      }
+    ]
+  }
+}

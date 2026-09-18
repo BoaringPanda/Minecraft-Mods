@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "extra_blocks:block/lily_pad_with_copper_torch"
+      },
+      {
+        "model": "extra_blocks:block/lily_pad_with_copper_torch",
+        "y": 90
+      },
+      {
+        "model": "extra_blocks:block/lily_pad_with_copper_torch",
+        "y": 180
+      },
+      {
+        "model": "extra_blocks:block/lily_pad_with_copper_torch",
+        "y": 270
+      }
+    ]
+  }
+}
