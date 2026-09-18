@@ -1,20 +1,100 @@
 {
   "variants": {
-    "rotation=0": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_0" },
-    "rotation=1": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_1" },
-    "rotation=2": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_2" },
-    "rotation=3": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_3" },
-    "rotation=4": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_4" },
-    "rotation=5": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_5" },
-    "rotation=6": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_6" },
-    "rotation=7": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_7" },
-    "rotation=8": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_8" },
-    "rotation=9": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_9" },
-    "rotation=10": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_10" },
-    "rotation=11": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_11" },
-    "rotation=12": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_12" },
-    "rotation=13": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_13" },
-    "rotation=14": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_14" },
-    "rotation=15": { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_15" }
+    "rotation=0": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_0_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_0_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_0_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_0_pad_3" }
+    ],
+    "rotation=1": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_1_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_1_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_1_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_1_pad_3" }
+    ],
+    "rotation=2": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_2_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_2_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_2_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_2_pad_3" }
+    ],
+    "rotation=3": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_3_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_3_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_3_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_3_pad_3" }
+    ],
+    "rotation=4": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_4_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_4_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_4_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_4_pad_3" }
+    ],
+    "rotation=5": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_5_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_5_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_5_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_5_pad_3" }
+    ],
+    "rotation=6": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_6_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_6_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_6_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_6_pad_3" }
+    ],
+    "rotation=7": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_7_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_7_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_7_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_7_pad_3" }
+    ],
+    "rotation=8": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_8_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_8_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_8_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_8_pad_3" }
+    ],
+    "rotation=9": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_9_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_9_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_9_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_9_pad_3" }
+    ],
+    "rotation=10": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_10_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_10_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_10_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_10_pad_3" }
+    ],
+    "rotation=11": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_11_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_11_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_11_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_11_pad_3" }
+    ],
+    "rotation=12": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_12_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_12_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_12_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_12_pad_3" }
+    ],
+    "rotation=13": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_13_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_13_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_13_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_13_pad_3" }
+    ],
+    "rotation=14": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_14_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_14_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_14_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_14_pad_3" }
+    ],
+    "rotation=15": [
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_15_pad_0" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_15_pad_1" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_15_pad_2" },
+      { "model": "extra_blocks:block/lily_pad_with_pale_oak_sign_rot_15_pad_3" }
+    ]
   }
 }
