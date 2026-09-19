@@ -3,7 +3,7 @@
 	"package": "com.boaringpanda.extrablocks.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"ExtraBlocksMixin"
+		"PoiTypesInvoker"
 	],
 	"injectors": {
 		"defaultRequire": 1

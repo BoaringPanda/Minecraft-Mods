@@ -3,7 +3,7 @@
 	"package": "com.boaringpanda.extrablocks.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"ExtraBlocksClientMixin"
+		"ClientLevelMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

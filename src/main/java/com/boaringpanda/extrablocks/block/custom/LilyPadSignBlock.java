@@ -5,14 +5,14 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -21,9 +21,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import com.boaringpanda.extrablocks.block.LilyPadSignBlockEntities;
+import com.boaringpanda.extrablocks.block.LilyPadTarget;
 
 /**
  * A real, writable sign (any of the 13 wood types) standing on a lily pad. Extends the real vanilla
@@ -59,28 +61,56 @@ import com.boaringpanda.extrablocks.block.LilyPadSignBlockEntities;
 public class LilyPadSignBlock extends StandingSignBlock implements LilyPadCombo {
 	private final Block accessory;
 
+	/** The sign is aimable (so it can be clicked and mined on its own) but, like any sign, not solid. */
+	private final LilyPadShapes shapes;
+
 	public LilyPadSignBlock(Properties properties, Block accessory) {
 		super(SignBlock.getWoodType(accessory), properties);
 		this.accessory = accessory;
-	}
-
-	public Block accessory() {
-		return this.accessory;
+		this.shapes = LilyPadShapes.of(
+				super.getShape(this.defaultBlockState(), EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty()),
+				Shapes.empty()
+		);
 	}
 
 	@Override
-	public List<ItemStack> accessoryDrops(BlockState state) {
+	public List<ItemStack> accessoryDrops(BlockState state, @Nullable BlockEntity blockEntity) {
 		return List.of(new ItemStack(this.accessory));
 	}
 
 	@Override
+	public VoxelShape accessoryShape(BlockState state) {
+		return this.shapes.accessory();
+	}
+
+	@Override
+	public BlockState accessoryState(BlockState state) {
+		return this.accessory.defaultBlockState();
+	}
+
+	@Override
+	public void spawnDestroyByEntityParticles(Level level, @Nullable Entity entity, BlockPos pos, BlockState state) {
+		LilyPadTarget.spawnDestroyParticles(this, level, entity, pos, state);
+	}
+
+	@Override
+	protected ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData) {
+		return new ItemStack(this.accessory);
+	}
+
+	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		return LilyPadShape.SHAPE;
+		return LilyPadTarget.outline(this, state, pos, context, this.shapes.outline());
 	}
 
 	@Override
 	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		return LilyPadShape.SHAPE;
+		return this.shapes.collision();
+	}
+
+	@Override
+	protected float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+		return LilyPadTarget.destroyProgress(this, state, player, pos, super.getDestroyProgress(state, player, level, pos));
 	}
 
 	@Override
@@ -96,18 +126,5 @@ public class LilyPadSignBlock extends StandingSignBlock implements LilyPadCombo 
 	@Override
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
 		return createTickerHelper(type, LilyPadSignBlockEntities.LILY_PAD_SIGN, SignBlockEntity::tick);
-	}
-
-	@Override
-	public void playerDestroy(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
-		super.playerDestroy(level, player, pos, state, blockEntity, tool);
-
-		boolean shouldDrop = !player.isCreative() && (!state.requiresCorrectToolForDrops() || tool.isCorrectToolForDrops(state));
-		if (shouldDrop) {
-			popResource(level, pos, new ItemStack(Blocks.LILY_PAD));
-			for (ItemStack drop : accessoryDrops(state)) {
-				popResource(level, pos, drop);
-			}
-		}
 	}
 }

@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "extra_blocks:lily_pad_with_lightning_rod",
+    "extra_blocks:lily_pad_with_waxed_lightning_rod",
+    "extra_blocks:lily_pad_with_exposed_lightning_rod",
+    "extra_blocks:lily_pad_with_waxed_exposed_lightning_rod",
+    "extra_blocks:lily_pad_with_weathered_lightning_rod",
+    "extra_blocks:lily_pad_with_waxed_weathered_lightning_rod",
+    "extra_blocks:lily_pad_with_oxidized_lightning_rod",
+    "extra_blocks:lily_pad_with_waxed_oxidized_lightning_rod"
+  ]
+}

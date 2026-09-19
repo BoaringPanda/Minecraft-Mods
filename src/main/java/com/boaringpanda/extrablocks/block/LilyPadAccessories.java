@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -14,18 +15,31 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.entity.BlockEntityTypes;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.PushReaction;
+
+import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 
 import com.boaringpanda.extrablocks.ExtraBlocks;
 import com.boaringpanda.extrablocks.block.custom.LilyPadAccessoryBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadBannerBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadCandleBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadLightningRodBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadPottedPlantBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadRedstoneTorchBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadSeaPickleBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadSignBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadSkullBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadWeatheringAccessoryBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadWeatheringLightningRodBlock;
+import com.boaringpanda.extrablocks.mixin.PoiTypesInvoker;
 
 /**
  * Registers a combo block for each supported "lily pad + accessory"
@@ -38,7 +52,10 @@ import com.boaringpanda.extrablocks.block.custom.LilyPadSignBlock;
  * {@link LilyPadSignBlock}, which extend the *real* vanilla
  * {@code CandleBlock}/{@code SeaPickleBlock}/{@code StandingSignBlock} to get
  * real stacking/lighting/extinguishing/text behaviour, not just a picture -
- * see those classes' own docs for what's inherited and what isn't.
+ * see those classes' own docs for what's inherited and what isn't. Heads and
+ * banners ({@link LilyPadSkullBlock}/{@link LilyPadBannerBlock}) extend the real
+ * {@code SkullBlock}/{@code BannerBlock} too, and go one step further: vanilla's
+ * own renderer draws them, from a vanilla block entity.
  * <p>
  * To support another simple (decorative-only) accessory, add a
  * {@code register(...)} call below and a matching merged model + blockstate
@@ -111,32 +128,42 @@ public class LilyPadAccessories {
 					.requiresCorrectToolForDrops()
 	);
 
-	// COPPER_LANTERN is a WeatheringCopperCollection<Block>, not a Blocks.* field - resolved
-	// by registry lookup below, same as the wool/concrete/copper materials in MixedSlabBlocks.
-	public static final LilyPadAccessoryBlock LILY_PAD_WITH_COPPER_LANTERN = register(
-			"lily_pad_with_copper_lantern",
-			resolve("copper_lantern"),
-			BlockBehaviour.Properties.of()
-					.sound(SoundType.LILY_PAD)
-					.lightLevel(state -> 15)
-					.strength(3.5f)
-					.requiresCorrectToolForDrops()
+	// The copper lantern in every oxidation stage, plus the waxed version of each. These are
+	// WeatheringCopperCollection entries, not Blocks.* fields - resolved by registry lookup, same as
+	// the wool/concrete/copper materials in MixedSlabBlocks. Each variant is its own combo so that
+	// placing and dropping give back exactly the item that was used. Brightness is 15 at every stage
+	// (unlike copper bulbs, a copper lantern's light doesn't change with oxidation).
+	private static final List<String> COPPER_LANTERN_IDS = List.of(
+			"copper_lantern",
+			"exposed_copper_lantern",
+			"weathered_copper_lantern",
+			"oxidized_copper_lantern",
+			"waxed_copper_lantern",
+			"waxed_exposed_copper_lantern",
+			"waxed_weathered_copper_lantern",
+			"waxed_oxidized_copper_lantern"
 	);
 
+	static {
+		for (String lanternId : COPPER_LANTERN_IDS) {
+			register(
+					"lily_pad_with_" + lanternId,
+					resolve(lanternId),
+					BlockBehaviour.Properties.of()
+							.sound(SoundType.LILY_PAD)
+							.lightLevel(state -> 15)
+							.strength(3.5f)
+							.requiresCorrectToolForDrops()
+			);
+		}
+	}
+
 	/**
-	 * Always the "lit" appearance - a real redstone torch inverts based on
-	 * whether the block below is powered, but this one is purely decorative
-	 * (see CLAUDE.md for why: replicating that as a real circuit component
-	 * was explicitly out of scope).
+	 * Always lit, and a real power source: it gives the same signal a lit redstone torch on a
+	 * solid block does (see {@link LilyPadRedstoneTorchBlock}). A real one turns off when the block
+	 * below is powered, but that block is water here, so there is nothing to invert.
 	 */
-	public static final LilyPadAccessoryBlock LILY_PAD_WITH_REDSTONE_TORCH = register(
-			"lily_pad_with_redstone_torch",
-			Blocks.REDSTONE_TORCH,
-			BlockBehaviour.Properties.of()
-					.sound(SoundType.LILY_PAD)
-					.lightLevel(state -> 7)
-					.strength(0.0f)
-	);
+	public static final LilyPadRedstoneTorchBlock LILY_PAD_WITH_REDSTONE_TORCH = registerRedstoneTorch();
 
 	/** Always the "facing=up" orientation - the model that's already just the base end rod model. */
 	public static final LilyPadAccessoryBlock LILY_PAD_WITH_END_ROD = register(
@@ -173,8 +200,6 @@ public class LilyPadAccessories {
 			"black_candle"
 	);
 
-	private static final Map<Block, LilyPadCandleBlock> CANDLES = new HashMap<>();
-
 	static {
 		for (String candleId : CANDLE_IDS) {
 			registerCandle(candleId);
@@ -190,12 +215,10 @@ public class LilyPadAccessories {
 	 * facing when they placed it, same as a sign on any other block; see
 	 * {@link LilyPadAccessoryInteraction#combine} for how.
 	 * <p>
-	 * Hardness 1 matches a real sign's vanilla value, but
-	 * `requiresCorrectToolForDrops()` is a deliberate choice, not vanilla
-	 * fidelity - a real sign actually drops with any tool, an axe is only
-	 * faster (checked against the wiki). See {@link #LILY_PAD_WITH_LANTERN}
-	 * for the same reasoning. Needs `mineable/axe` too, in
-	 * `data/minecraft/tags/block/mineable/axe.json`.
+	 * Hardness 1 matches a real sign's vanilla value, and like a real sign it drops with any
+	 * tool - an axe is only faster (checked against the wiki). That needs `mineable/axe` too,
+	 * in `data/minecraft/tags/block/mineable/axe.json`. (Unlike the lantern family, which
+	 * deliberately still requires a pickaxe - see {@link #LILY_PAD_WITH_LANTERN}.)
 	 */
 	private static final List<String> SIGN_WOODS = List.of(
 			"acacia", "bamboo", "birch", "cherry", "crimson", "dark_oak", "jungle",
@@ -213,6 +236,108 @@ public class LilyPadAccessories {
 		for (String wood : SIGN_WOODS) {
 			registerSign(wood);
 		}
+	}
+
+	/**
+	 * Every head that stands on a block - the seven in vanilla's {@code minecraft:skulls} tag, player
+	 * heads included. Unlike the accessories above, a head isn't merged into the lily pad's model:
+	 * the combo's model is just the plain lily pad, and vanilla's own head renderer draws the head on
+	 * top, reading the skin, rotation and animation from a vanilla block entity (see
+	 * {@link LilyPadSkullBlock} for how that works).
+	 * <p>
+	 * Hardness 1 is a real head's own, and like a real head it drops with any tool.
+	 */
+	private static final List<String> SKULL_IDS = List.of(
+			"skeleton_skull",
+			"wither_skeleton_skull",
+			"zombie_head",
+			"player_head",
+			"creeper_head",
+			"dragon_head",
+			"piglin_head"
+	);
+
+	static {
+		for (String skullId : SKULL_IDS) {
+			registerSkull(skullId);
+		}
+	}
+
+	/**
+	 * Every banner colour's own block id. {@code Blocks.BANNER} is a {@code ColorCollection}, so these
+	 * are resolved by id like the copper lanterns. Built the same way as the heads, with vanilla's own
+	 * banner renderer (see {@link LilyPadBannerBlock}).
+	 * <p>
+	 * Hardness 1 is a real banner's own. Like a real banner it drops with any tool, and an axe is faster
+	 * because these are in the {@code minecraft:banners} tag, which vanilla's {@code mineable/axe} includes.
+	 */
+	private static final List<String> BANNER_IDS = List.of(
+			"white_banner",
+			"orange_banner",
+			"magenta_banner",
+			"light_blue_banner",
+			"yellow_banner",
+			"lime_banner",
+			"pink_banner",
+			"gray_banner",
+			"light_gray_banner",
+			"cyan_banner",
+			"purple_banner",
+			"blue_banner",
+			"brown_banner",
+			"green_banner",
+			"red_banner",
+			"black_banner"
+	);
+
+	static {
+		for (String bannerId : BANNER_IDS) {
+			registerBanner(bannerId);
+		}
+	}
+
+	/**
+	 * The four copper stages of the lightning rod. Each is registered with its waxed version, as working
+	 * rods (see {@link LilyPadLightningRodBlock}). Hardness 3 and "only drops to a pickaxe" are a real rod's
+	 * own (checked in {@code Blocks}' bytecode). The stone-or-better tier comes from the
+	 * {@code minecraft:lightning_rods} tag, which vanilla's {@code needs_stone_tool} includes.
+	 */
+	private static final List<String> LIGHTNING_ROD_STAGES = List.of(
+			"lightning_rod",
+			"exposed_lightning_rod",
+			"weathered_lightning_rod",
+			"oxidized_lightning_rod"
+	);
+
+	static {
+		for (String stage : LIGHTNING_ROD_STAGES) {
+			registerLightningRod(stage);
+			registerLightningRod("waxed_" + stage);
+		}
+		registerCopperAging(LIGHTNING_ROD_STAGES);
+	}
+
+	/**
+	 * The four copper stages of the chain, each registered with its waxed version, plus the regular chain
+	 * (26.3 calls it {@code iron_chain}). Decorative: the chain stands upright on the pad, as one placed on
+	 * top of a block does. Hardness 5 and "only drops to a pickaxe" are a real chain's own (checked in
+	 * {@code Blocks}' bytecode). The pickaxe comes from the {@code minecraft:chains} tag, which vanilla's
+	 * {@code mineable/pickaxe} includes.
+	 */
+	private static final List<String> COPPER_CHAIN_STAGES = List.of(
+			"copper_chain",
+			"exposed_copper_chain",
+			"weathered_copper_chain",
+			"oxidized_copper_chain"
+	);
+
+	static {
+		registerChain("iron_chain");
+		for (String stage : COPPER_CHAIN_STAGES) {
+			registerChain(stage);
+			registerChain("waxed_" + stage);
+		}
+		registerCopperAging(COPPER_CHAIN_STAGES);
 	}
 
 	/**
@@ -302,6 +427,25 @@ public class LilyPadAccessories {
 		return block;
 	}
 
+	private static LilyPadRedstoneTorchBlock registerRedstoneTorch() {
+		Identifier id = ExtraBlocks.id("lily_pad_with_redstone_torch");
+		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
+
+		LilyPadRedstoneTorchBlock block = new LilyPadRedstoneTorchBlock(
+				BlockBehaviour.Properties.of()
+						.sound(SoundType.LILY_PAD)
+						.lightLevel(state -> 7)
+						.strength(0.0f)
+						.setId(key),
+				Blocks.REDSTONE_TORCH
+		);
+
+		Registry.register(BuiltInRegistries.BLOCK, id, block);
+		BY_ACCESSORY.put(Blocks.REDSTONE_TORCH, block);
+
+		return block;
+	}
+
 	private static void registerSign(String wood) {
 		Block accessory = resolve(wood + "_sign");
 		Identifier id = ExtraBlocks.id("lily_pad_with_" + wood + "_sign");
@@ -311,7 +455,6 @@ public class LilyPadAccessories {
 				BlockBehaviour.Properties.of()
 						.sound(SoundType.LILY_PAD)
 						.strength(1.0f)
-						.requiresCorrectToolForDrops()
 						.setId(key),
 				accessory
 		);
@@ -319,6 +462,112 @@ public class LilyPadAccessories {
 		Registry.register(BuiltInRegistries.BLOCK, id, block);
 		BY_ACCESSORY.put(accessory, block);
 		SIGN_BLOCKS.add(block);
+	}
+
+	/**
+	 * {@code addValidBlock} (Fabric API) lets the combo use vanilla's own head block entity type, whose
+	 * valid-blocks set would otherwise refuse it, and with it vanilla's own head renderer. It's done here,
+	 * with the registration, so it can't be missed or run in the wrong order.
+	 */
+	private static void registerSkull(String skullId) {
+		Block accessory = resolve(skullId);
+		Identifier id = ExtraBlocks.id("lily_pad_with_" + skullId);
+		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
+
+		LilyPadSkullBlock block = new LilyPadSkullBlock(
+				BlockBehaviour.Properties.of()
+						.sound(SoundType.LILY_PAD)
+						.strength(1.0f)
+						.pushReaction(PushReaction.POPPED) // what vanilla uses for both a lily pad and a head
+						.setId(key),
+				accessory
+		);
+
+		Registry.register(BuiltInRegistries.BLOCK, id, block);
+		BY_ACCESSORY.put(accessory, block);
+		BlockEntityTypes.SKULL.addValidBlock(block);
+	}
+
+	/** Same as {@link #registerSkull}, with vanilla's banner block entity type. */
+	private static void registerBanner(String bannerId) {
+		Block accessory = resolve(bannerId);
+		Identifier id = ExtraBlocks.id("lily_pad_with_" + bannerId);
+		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
+
+		LilyPadBannerBlock block = new LilyPadBannerBlock(
+				BlockBehaviour.Properties.of()
+						.sound(SoundType.LILY_PAD)
+						.strength(1.0f)
+						.pushReaction(PushReaction.POPPED)
+						.setId(key),
+				accessory
+		);
+
+		Registry.register(BuiltInRegistries.BLOCK, id, block);
+		BY_ACCESSORY.put(accessory, block);
+		BlockEntityTypes.BANNER.addValidBlock(block);
+	}
+
+	/**
+	 * Each state is also registered as vanilla's {@code minecraft:lightning_rod} point of interest - the only way
+	 * lightning finds a rod (see {@link LilyPadLightningRodBlock}). The unwaxed stages are the aging subclass,
+	 * just as vanilla's own unwaxed rods are its {@code WeatheringCopper} ones.
+	 */
+	private static void registerLightningRod(String rodId) {
+		Block accessory = resolve(rodId);
+		Identifier id = ExtraBlocks.id("lily_pad_with_" + rodId);
+		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
+
+		BlockBehaviour.Properties properties = BlockBehaviour.Properties.of()
+				.sound(SoundType.LILY_PAD)
+				.strength(3.0f)
+				.requiresCorrectToolForDrops()
+				.setId(key);
+		LilyPadLightningRodBlock block = accessory instanceof WeatheringCopper
+				? new LilyPadWeatheringLightningRodBlock(properties, accessory)
+				: new LilyPadLightningRodBlock(properties, accessory);
+
+		Registry.register(BuiltInRegistries.BLOCK, id, block);
+		BY_ACCESSORY.put(accessory, block);
+		PoiTypesInvoker.invokeRegisterBlockStates(
+				BuiltInRegistries.POINT_OF_INTEREST_TYPE.getOrThrow(PoiTypes.LIGHTNING_ROD),
+				Set.copyOf(block.getStateDefinition().getPossibleStates())
+		);
+	}
+
+	/** The unwaxed copper stages are the aging subclass; the regular chain and the waxed ones don't age. */
+	private static void registerChain(String chainId) {
+		Block accessory = resolve(chainId);
+		Identifier id = ExtraBlocks.id("lily_pad_with_" + chainId);
+		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
+
+		BlockBehaviour.Properties properties = BlockBehaviour.Properties.of()
+				.sound(SoundType.LILY_PAD)
+				.strength(5.0f)
+				.requiresCorrectToolForDrops()
+				.setId(key);
+		LilyPadAccessoryBlock block = accessory instanceof WeatheringCopper
+				? new LilyPadWeatheringAccessoryBlock(properties, accessory)
+				: new LilyPadAccessoryBlock(properties, accessory);
+
+		Registry.register(BuiltInRegistries.BLOCK, id, block);
+		BY_ACCESSORY.put(accessory, block);
+	}
+
+	/**
+	 * Hands one copper family's combos to vanilla's own aging through Fabric's {@code OxidizableBlocksRegistry}:
+	 * each stage ages into the next, and each can be waxed into its {@code waxed_} combo. Vanilla then does the
+	 * rest - random ticks, honeycomb, axe scraping and wax removal, and lightning resetting a struck rod to fresh
+	 * copper. {@code stages} are vanilla ids, oldest last; all the combos must be registered already.
+	 */
+	private static void registerCopperAging(List<String> stages) {
+		for (int i = 0; i < stages.size(); i++) {
+			Block combo = get(resolve(stages.get(i)));
+			if (i + 1 < stages.size()) {
+				OxidizableBlocksRegistry.registerNextStage(combo, get(resolve(stages.get(i + 1))));
+			}
+			OxidizableBlocksRegistry.registerWaxable(combo, get(resolve("waxed_" + stages.get(i))));
+		}
 	}
 
 	private static void registerCandle(String candleId) {
@@ -337,7 +586,6 @@ public class LilyPadAccessories {
 
 		Registry.register(BuiltInRegistries.BLOCK, id, block);
 		BY_ACCESSORY.put(accessory, block);
-		CANDLES.put(accessory, block);
 	}
 
 	private static LilyPadSeaPickleBlock registerSeaPickle() {
@@ -379,12 +627,6 @@ public class LilyPadAccessories {
 		List<Block> combined = new ArrayList<>(BY_ACCESSORY.values());
 		combined.addAll(POTTED.values());
 		return combined;
-	}
-
-	/** The registered candle combo for this exact candle color, or null if {@code candle} isn't a candle. */
-	@Nullable
-	public static LilyPadCandleBlock candleFor(Block candle) {
-		return CANDLES.get(candle);
 	}
 
 	/** The registered potted-plant combo for this exact plant, or null if it's not something a real flower pot accepts. */

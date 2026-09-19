@@ -29,6 +29,22 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Only for the prodClient/prodServer tasks below: the one Fabric API jar, exactly as a player downloads it
+	// (not transitive, or its modules would load a second time next to the copies already inside it).
+	productionRuntimeMods("net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}") {
+		transitive = false
+	}
+}
+
+// Run the finished jar the way a player or a server owner would: the real build output plus the real Fabric
+// API jar, launched like a normal install instead of the dev setup that runClient/runServer use.
+tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+	runDir = layout.projectDirectory.dir("run/prod-client")
+}
+
+tasks.register("prodServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
+	runDir = layout.projectDirectory.dir("run/prod-server")
 }
 
 processResources {

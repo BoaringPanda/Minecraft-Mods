@@ -9,11 +9,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractSkullBlock;
+import net.minecraft.world.level.block.BannerBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.SeaPickleBlock;
+import net.minecraft.world.level.block.SkullBlock;
 import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.RotationSegment;
@@ -21,9 +25,11 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 
+import com.boaringpanda.extrablocks.block.custom.LilyPadBannerBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadCandleBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadSeaPickleBlock;
 import com.boaringpanda.extrablocks.block.custom.LilyPadSignBlock;
+import com.boaringpanda.extrablocks.block.custom.LilyPadSkullBlock;
 
 /**
  * Lets a player put a supported accessory on a placed lily pad by
@@ -127,9 +133,24 @@ public class LilyPadAccessoryInteraction {
 			// by disassembling StandingSignBlock.getStateForPlacement - not guessed.
 			int rotation = RotationSegment.convertToSegment(player.getYRot() + 180.0F);
 			placedState = placedState.setValue(StandingSignBlock.ROTATION, rotation);
+		} else if (combined instanceof LilyPadSkullBlock) {
+			// Exact vanilla formulas, from SkullBlock/AbstractSkullBlock.getStateForPlacement (checked by
+			// disassembly): a head faces the player's own yaw - no +180, unlike a sign or banner - and
+			// starts powered if something next to it already is.
+			int rotation = RotationSegment.convertToSegment(player.getYRot());
+			placedState = placedState
+					.setValue(SkullBlock.ROTATION, rotation)
+					.setValue(AbstractSkullBlock.POWERED, level.hasNeighborSignal(pos));
+		} else if (combined instanceof LilyPadBannerBlock) {
+			// Same formula as a sign, from BannerBlock.getStateForPlacement.
+			int rotation = RotationSegment.convertToSegment(player.getYRot() + 180.0F);
+			placedState = placedState.setValue(BannerBlock.ROTATION, rotation);
 		}
 
 		level.setBlockAndUpdate(pos, placedState);
+		if (placedState.hasBlockEntity()) {
+			copyItemData(level, player, pos, heldStack);
+		}
 		level.playSound(null, pos, accessory.defaultBlockState().getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
 
 		if (combined instanceof LilyPadSignBlock signBlock) {
@@ -145,6 +166,24 @@ public class LilyPadAccessoryInteraction {
 		}
 
 		return InteractionResult.SUCCESS;
+	}
+
+	/**
+	 * Puts the held item's data (a head's skin, a banner's patterns, a custom name) onto the combo's
+	 * freshly placed block entity - what BlockItem.place does for every block entity (checked by
+	 * disassembly), which a combo never goes through. Vanilla's own helper for the second half is
+	 * private, so it's repeated here. It runs before the stack shrinks, so the data is still on it,
+	 * and in the same tick as the placement, so the chunk update that sends the new block to clients
+	 * carries the data too.
+	 */
+	private static void copyItemData(Level level, Player player, BlockPos pos, ItemStack heldStack) {
+		BlockItem.updateCustomBlockEntityTag(level, player, pos, heldStack);
+
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if (blockEntity != null) {
+			blockEntity.applyComponentsFromItemStack(heldStack);
+			blockEntity.setChanged();
+		}
 	}
 
 	private static InteractionResult tryStack(

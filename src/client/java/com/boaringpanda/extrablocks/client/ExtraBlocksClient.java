@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 
 import com.boaringpanda.extrablocks.block.LilyPadSignBlockEntities;
 import com.boaringpanda.extrablocks.client.block.LilyPadAccessoryColors;
+import com.boaringpanda.extrablocks.client.block.LilyPadBreakPrediction;
 
 public class ExtraBlocksClient implements ClientModInitializer {
 	@Override
@@ -18,6 +19,7 @@ public class ExtraBlocksClient implements ClientModInitializer {
 		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
 
 		LilyPadAccessoryColors.initialize();
+		LilyPadBreakPrediction.initialize();
 
 		// Reuses vanilla's own sign renderer directly - it only draws the dynamic text overlay
 		// (SubmitNodeCollector.submitText), never the post/board mesh, which is 100% the ordinary

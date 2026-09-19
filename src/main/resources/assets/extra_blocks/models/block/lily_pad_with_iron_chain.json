@@ -1,0 +1,37 @@
+{
+  "textures": {
+    "particle": "block/lily_pad",
+    "pad": "block/lily_pad",
+    "chain": "block/iron_chain"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0.25, 0 ],
+      "to": [ 16, 0.25, 16 ],
+      "faces": {
+        "down": { "uv": [ 0, 16, 16, 0 ], "texture": "#pad", "tintindex": 0 },
+        "up":   { "uv": [ 0, 0, 16, 16 ], "texture": "#pad", "tintindex": 0 }
+      }
+    },
+    {
+      "from": [ 6.5, 0, 8 ],
+      "to": [ 9.5, 16, 8 ],
+      "rotation": { "origin": [ 8, 8, 8 ], "axis": "y", "angle": 45 },
+      "shade_direction_override": "up",
+      "faces": {
+        "north": { "uv": [ 3, 0, 0, 16 ], "texture": "#chain" },
+        "south": { "uv": [ 0, 0, 3, 16 ], "texture": "#chain" }
+      }
+    },
+    {
+      "from": [ 8, 0, 6.5 ],
+      "to": [ 8, 16, 9.5 ],
+      "rotation": { "origin": [ 8, 8, 8 ], "axis": "y", "angle": 45 },
+      "shade_direction_override": "up",
+      "faces": {
+        "west": { "uv": [ 6, 0, 3, 16 ], "texture": "#chain" },
+        "east": { "uv": [ 3, 0, 6, 16 ], "texture": "#chain" }
+      }
+    }
+  ]
+}

@@ -24,8 +24,18 @@ rendering or GUI = `src/client`.
 - Build an `Identifier` with the helper `ExtraBlocks.id("some_path")` rather than by hand.
 - Assets live under `src/main/resources/assets/extra_blocks/`.
 - Data (recipes, loot tables, tags) under `src/main/resources/data/extra_blocks/`.
-- Mixins must be listed in `extra_blocks.mixins.json` / `extra_blocks.client.mixins.json`
-  or they will not be applied. Prefer the Fabric API event hooks over a mixin when one exists.
+- The mod has two mixins:
+  - `client/mixin/ClientLevelMixin` (client-only) makes mining particles and hit sounds come from the part of
+    a lily pad combo being mined. See "Particles, sounds and middle-click come from the part you aim at".
+    Its config is `src/client/resources/extra_blocks.client.mixins.json`.
+  - `mixin/PoiTypesInvoker` (common) lets lily-pad lightning rods register as vanilla's lightning-rod point
+    of interest. See "Lightning rods and chains on a lily pad". Its config is
+    `src/main/resources/extra_blocks.mixins.json`.
+
+  Neither has a Fabric hook to use instead, and both sections explain why. Both configs are listed under
+  `"mixins"` in `fabric.mod.json`, the client one with `"environment": "client"`. A new config has to be
+  listed there too, or it won't be applied. Prefer the Fabric API event hooks over a mixin when one exists.
+  MixinExtras (`@ModifyExpressionValue`, `@Local`, ...) comes with Fabric Loader and is already on the classpath.
 - **Tabs, not spaces** (matches the Fabric codestyle).
 
 ## Registering blocks/items
@@ -210,9 +220,10 @@ placed on solid ground - lantern's own vanilla pickaxe requirement is deliberate
 this reason. Match that (`strength(0.0f)`, no tool requirement, no tag entry) rather than the
 new accessory's own harvesting rules. Light level and sound are still worth copying from the
 accessory, though — those aren't part of this exception. Currently registered this way: torch,
-soul torch, copper torch, lantern, soul lantern, copper lantern, redstone torch (always the "lit"
-look - see below), end rod (always "facing=up" - it's already the base, unrotated model), and the
-flower pot (always empty - see below). The 13 wood signs used to be here too (one fixed model,
+soul torch, copper torch, lantern, soul lantern, copper lantern (all 8 variants: 4 oxidation stages + their waxed versions, one combo each so the exact item drops back, textures in `models/block/lily_pad_with_<variant>.json`, waxed reusing the unwaxed texture), redstone torch (always lit, a real
+power source - see below), end rod (always "facing=up" - it's already the base, unrotated model), and the
+flower pot (always empty - see below). Chains are decorative too, but registered separately because the copper
+ones age (see the lightning rods and chains section). The 13 wood signs used to be here too (one fixed model,
 riding the lily pad's own rotation) but aren't anymore - see the signs section below for why they
 now need their own block class instead.
 
@@ -222,12 +233,47 @@ torch 14 (copper doesn't oxidize on a torch - "used as fuel, not the base", per 
 copper lantern 15 (copper lantern's brightness is oxidation-independent, unlike copper bulbs),
 soul torch/soul lantern 10, redstone torch 7.
 
-**Redstone torch is decorative only, not a real circuit component.** A real one inverts based on
-whether the block below is powered; this one is always the "lit" model
-(`minecraft:block/redstone_torch`, the 7-element glowing-tip version - not
-`redstone_torch_off`'s plain stick). Making it a real power source was explicitly descoped when
-this was built (see the git history for that decision) - if that ever changes, it needs real
-`BlockState`/neighbor-update logic, not just a texture swap.
+**Redstone torch is a real power source, but always lit.** `block/custom/LilyPadRedstoneTorchBlock`
+(extends `LilyPadAccessoryBlock`) copies the signal rules of vanilla's lit `RedstoneTorchBlock`, checked
+by disassembly: weak 15 to every side except the one it stands on (`getSignal` returns 0 for
+`Direction.UP`, i.e. when asked by the block below), strong 15 to the block above (`getDirectSignal`
+answers only for `Direction.DOWN`), `isSignalSource` true. `onPlace` and `affectNeighborsAfterRemoval`
+(skipped when moved by a piston) notify all six neighbours via `updateNeighborsAt` with an
+`ExperimentalRedstoneUtils` orientation, as vanilla does - both fire for our combo<->lily pad swaps, since
+`LevelChunk.setBlockState` calls `affectNeighborsAfterRemoval` whenever the block type changes. What is *not*
+copied: a real torch turns off when the block below is powered (the `LIT` property, the burnout counter, the
+2-tick delay); here that block is water, which can't be powered, so the model stays the lit one
+(`minecraft:block/redstone_torch`, the 7-element glowing-tip version - not `redstone_torch_off`'s plain
+stick) and there is no state. Also not copied: the redstone dust particles vanilla spawns in `animateTick`.
+
+## Shapes on a lily pad combo (what you bump into, aim at, and click)
+
+Each combo has three shapes, built once in its constructor (`block/custom/LilyPadShapes`):
+- `accessory` - the item on its own, from the *real accessory block's* `getShape`. Used only to tell
+  "aiming at the item" from "aiming at the pad" (see the breaking section).
+- `outline` - pad + item: `getShape`, what the crosshair can hit and the wireframe draws.
+- `collision` - pad + the real accessory's own `getCollisionShape`: `getCollisionShape`. Vanilla blocks
+  with no collision (torches, signs, banners, `noCollision()` - checked in `Blocks`' bytecode) report an empty
+  shape, so those combos are solid only as far as the pad. Lantern, end rod, candles, sea pickle,
+  flower pots and heads do have collision, so they get it. No per-block list to maintain.
+
+So a torch or sign is *aimable* (needed to click or mine it on its own) without being *solid*. That is
+also what makes right-clicking a sign edit it: the crosshair now lands on the sign, `onUseBlock` returns
+`PASS` for an existing sign, and vanilla's inherited `SignBlock` handling runs.
+
+- `LilyPadAccessoryBlock` computes them from `shapeSource.defaultBlockState()`. Usually the accessory
+  itself; `LilyPadPottedPlantBlock` passes `Blocks.FLOWER_POT` instead (its `accessory` is the plant, but a
+  potted plant's shape is the pot's).
+- Candles and sea pickles change shape with their count, so `LilyPadCandleBlock`/`LilyPadSeaPickleBlock`
+  precompute 4 (via `super.getShape`) and index by `CANDLES`/`PICKLES`; outline == collision.
+- `LilyPadSignBlock` builds its `accessory`/`outline` from `super.getShape` (vanilla's fixed post box) and an
+  empty collision.
+- `LilyPadSkullBlock`/`LilyPadBannerBlock` build theirs from the real vanilla head's or banner's default state,
+  **not** `super.getShape` (see the heads and banners section for why).
+- **Candle rotation caveat:** the blockstate spins the whole model 0/90/180/270 by the pad's position-seeded pick,
+  which Java can't cheaply reproduce, and 2-4 candles aren't square. So candle shapes are the union of all four
+  90-degree turns (`Shapes.rotateHorizontal`) - a few pixels generous, never wrong-way-round. Sea pickle shapes
+  are square, so they need no such workaround.
 
 ## Candles and sea pickles on a lily pad (real stacking, not just a picture)
 
@@ -296,10 +342,12 @@ constructor computes `WoodType.getWoodType(accessory)` (actually `SignBlock.getW
 - a public static helper) and passes that to the `StandingSignBlock(WoodType, Properties)` super
 constructor.
 
-**Why a custom `BlockEntityType` is required, not optional**: vanilla's own `BlockEntityType.SIGN`
+**Why signs have their own `BlockEntityType`**: vanilla's own `BlockEntityTypes.SIGN`
 is a frozen `Set<Block>` allow-list of the 26 literal vanilla sign blocks - confirmed by disassembly,
-`isValid(state)` is a plain `Set.contains(state.getBlock())`, never an `instanceof` check. No custom
-block can ever satisfy it, no matter what it extends. `block/LilyPadSignBlockEntities.java`
+`isValid(state)` is a plain `Set.contains(state.getBlock())`, never an `instanceof` check. So no custom
+block satisfies it on its own, whatever it extends. Fabric API's `addValidBlock` can add one; heads
+and banners do that (see their section). Signs were built before that was found and keep their own type,
+which works just as well. `block/LilyPadSignBlockEntities.java`
 registers its own `BlockEntityType<LilyPadSignBlockEntity>` (a plain public constructor,
 `new BlockEntityType<>(factory, validBlocks)` - there's no builder in this version), with all 13
 registered `LilyPadSignBlock` instances (`LilyPadAccessories.SIGN_BLOCKS`) as its valid blocks.
@@ -432,14 +480,51 @@ call in `LilyPadAccessoryColors` (`constant(...)` at index 0, `BlockTintSources.
 call every other combo uses, since registering the same block twice would just overwrite the
 first with the second rather than combining them.
 
-## Breaking a lily pad accessory: two stages, real tool per accessory
+## Breaking a lily pad accessory: aim at the item or at the pad
 
-Breaking a combo doesn't destroy the whole thing in one hit - the first hit removes just the
-accessory (dropping it, leaving a plain lily pad behind); only a *second* hit, now on an ordinary
-lily pad with no code of ours involved, removes that too. Which tool actually works, and whether
-the wrong one still lets the accessory drop, varies by accessory - matching what a player expects
-for that real thing (pickaxe for lanterns, axe for signs, no tool needed for candles/torches/end
-rod/sea pickle/flower pot/potted plants), not a single blanket rule.
+What a break removes depends on where the crosshair is (`block/LilyPadTarget`):
+- **Aiming at the accessory:** removes just the accessory (dropping it, leaving a plain lily pad behind).
+  Mining time and tool rules are the accessory's own; a *second* hit, now on an ordinary lily pad with no
+  code of ours involved, removes that too. Which tool actually works, and whether the wrong one still lets
+  the accessory drop, varies by accessory. Only the lantern family, chains and lightning rods need a pickaxe
+  (stone or better for rods, as in vanilla). Signs, banners, heads, candles, torches, end rod, sea pickle,
+  flower pot and potted plants drop with any tool (an axe is just faster for signs and banners), matching
+  vanilla.
+- **Aiming at the lily pad:** breaks the pad, which takes the accessory with it. Instant, no tool needed,
+  and both drop, like a torch popping off when its block is broken. In creative only the accessory drops (not
+  the pad) - it isn't "mined", it loses its support, so it drops even there.
+
+**How aim is worked out:** the server is never told where on a block the player was aiming when they break
+it (`ServerboundPlayerActionPacket` carries only the position). So `LilyPadTarget.aimedAtAccessory` casts the
+player's own view ray (`eye -> eye + view * (blockInteractionRange + 1)`) against the pad shape and the
+accessory shape separately with `VoxelShape.clip` and takes the nearer hit (falling back to "accessory" if
+neither is hit, e.g. lag - the old behavior). The same test runs on the client and the server so they agree.
+
+**The breaker's client predicts the pad staying** (`client/block/LilyPadBreakPrediction`). A client doesn't wait
+for the server when its player breaks a block: `MultiPlayerGameMode.destroyBlock` predicts the result, and the
+prediction is always "the whole block becomes air". The server's lily pad only arrives a tick later, so on its
+own the pad blinks out and back in.
+- Fabric's `ClientPlayerBlockBreakEvents.AFTER` fires right after that predicted removal (it's injected before
+  `Block.destroy`, while the prediction is still open). For an accessory-only break, by the same aim test, it
+  puts the lily pad straight back with `UPDATE_ALL_IMMEDIATE`.
+- Nothing redraws when the server answers. The server's block update goes out in the level tick, before the
+  acknowledgement goes out in the connection tick, so the acknowledgement syncs to the lily pad already shown.
+- The blink only became visible once break particles came from the accessory. The old green lily-pad burst
+  had covered it.
+
+**Instant pad = a `getDestroyProgress` override.** Mining time is per block state, not per part, so each combo
+class overrides the protected `getDestroyProgress` to return `1.0F` when the pad is aimed at, else the
+normal value (`LilyPadTarget.destroyProgress`). Both `ClientPlayerGameMode` and `ServerPlayerGameMode` call it.
+**Only the aimed part is outlined.** The game uses the same `getShape` call both to cast the crosshair ray and
+to draw the wireframe (`LevelExtractor.extractBlockOutline` -> `state.getShape(level, pos,
+CollisionContext.of(camera entity))`), and passes the looking player as the context. So each combo's `getShape`
+goes through `LilyPadTarget.outline`, which - when the context is an `EntityCollisionContext` for a `Player` -
+returns just the accessory shape or just the pad shape for the aimed part (the whole pad + item outline for any
+other caller, or when the ray hits neither part). Because the ray cast then only ever sees that one part, the
+crosshair and the wireframe can't disagree. Known limits: the aim test uses the player's current eye position and
+view, while the game's own ray uses the frame-interpolated ones, so right on the boundary between pad and item the
+wireframe can briefly pick the wrong part; and if the client and server disagree by a hair about which part is
+aimed at when breaking, the break is rolled back and re-synced.
 
 - `block/LilyPadAccessoryBreaking.java` - hooks `PlayerBlockBreakEvents.BEFORE`, **not**
   `Block.playerWillDestroy`. Checked by disassembly before writing any of this: `playerWillDestroy`'s
@@ -448,12 +533,15 @@ rod/sea pickle/flower pot/potted plants), not a single blanket rule.
   useless for "become something else instead of vanishing." `PlayerBlockBreakEvents.BEFORE`
   returning `false`, by contrast, is confirmed (same way - disassembling the Fabric API mixin that
   implements it) to skip vanilla's *entire* destroy sequence before any of it runs: no removal, no
-  drops, no XP. That clean slate is what gets substituted with "drop just the accessory, set the
-  block to a plain lily pad, done."
-- `block/custom/LilyPadCombo.java` - a small interface (`accessoryDrops(BlockState)`) every combo
+  drops, no XP. That clean slate is what gets substituted with our own outcome (accessory only, or
+  pad + accessory, per the aim test above).
+- `block/custom/LilyPadCombo.java` - a small interface (`accessoryDrops(BlockState)`, `accessoryShape(BlockState)`) every combo
   block implements, since they don't share a common superclass to hang this on (`LilyPadAccessoryBlock`
   directly, `LilyPadCandleBlock extends CandleBlock`, `LilyPadSeaPickleBlock extends SeaPickleBlock`).
   Lets `LilyPadAccessoryBreaking` treat all of them the same way.
+- Because that hook cancels vanilla's destroy sequence for every combo, `Block.playerDestroy` (its only caller is
+  `ServerPlayerGameMode.destroyBlock`, checked by scanning the game jar) is never reached for a player break -
+  so the `LilyPad*Block` classes deliberately don't override it.
 - Mining *speed* (and whether a tool is required at all for the drop) is unrelated to that class -
   it's governed entirely by each combo's own `strength()`/`requiresCorrectToolForDrops()`/mineable
   tag in `LilyPadAccessories`, same as any other block. `PlayerBlockBreakEvents.BEFORE` only fires
@@ -466,31 +554,184 @@ several surprised me.** Real vanilla candles (hardness 0.1), signs (hardness 1, 
 end rods, sea pickles and flower pots all drop with literally any tool or bare hands - the named
 tool is only ever a speed bonus, never a requirement. Even lanterns - soul and copper lantern
 *and* the regular one - work the same way: "any tool, pickaxe is fastest," not "pickaxe or
-nothing." So `requiresCorrectToolForDrops()` on `LILY_PAD_WITH_LANTERN`/`SOUL_LANTERN`/
-`COPPER_LANTERN` (pickaxe) and on every sign (axe) is a **deliberate deviation from vanilla
-fidelity**, not a mistake - it's what was actually asked for (removing something should require
-"the right tool," pickaxe for lanterns, axe for signs), applied consistently across each whole
-category rather than block-by-block. Hardness values themselves *do* match vanilla exactly
-(lantern family 3.5, sign 1, candle 0.1, everything else 0) - only the tool-gating is the
-deliberate part. Keep this distinction in mind before assuming any other accessory needs the same
-treatment - candles/torches/end rod/sea pickle/flower pot/potted plants are *correctly* left
+nothing." So `requiresCorrectToolForDrops()` on the lantern family (`LILY_PAD_WITH_LANTERN`/`SOUL_LANTERN`/all 8
+copper lantern variants, pickaxe) is a **deliberate deviation from vanilla fidelity**, not a mistake -
+it's what was asked for (removing a lantern should require "the right tool"). Signs were gated behind an
+axe the same way at first, but that was reverted: a sign dropped nothing by hand, which read as a bug, so
+signs now match vanilla (any tool drops, axe is faster via `mineable/axe`). Hardness values themselves *do* match vanilla exactly
+(lantern family 3.5, chain 5, lightning rod 3, sign/head/banner 1, candle 0.1, everything else 0) - only the
+lantern tool-gating is the deliberate part. Chains and lightning rods need a pickaxe because real ones do.
+Keep this distinction in mind before assuming any other accessory needs the same
+treatment - signs/banners/heads/candles/torches/end rod/sea pickle/flower pot/potted plants are *correctly* left
 without `requiresCorrectToolForDrops()`, matching real vanilla exactly, not an oversight.
 
-## Where this stops working: player heads and banners
+## Particles, sounds and middle-click come from the part you aim at
 
-**Not built** - right-clicking a lily pad with a player head or banner currently does nothing
-(falls through to normal placement). Checked why before attempting anything: `minecraft:models/
-block/skull.json` and `.../banner.json` are both **completely empty** - no `elements` at all,
-just a placeholder particle texture. Unlike signs/flower pots (which have real static geometry
-for the blank/plain form, with only the *extra* data - text, pattern - being BlockEntity-driven),
-heads and banners have **no static geometry to copy at any fidelity**, not even a generic/blank
-one - the entire visible shape is drawn procedurally by a `BlockEntityRenderer` reading stored
-per-instance data (whose player's profile; the banner's base color and pattern layers - even the
-banner's *base color* isn't in any model, only in its BlockEntity). Copying "just the simple
-part" the way signs/flower pots allowed isn't available here; going the multipart-`BlockEntity`
-route is a much bigger undertaking than everything else in this feature combined, and wasn't
-something the earlier decision to keep this feature static-model-only anticipated needing to
-weigh for these two specifically. Get a decision from the user before starting that.
+A combo's own state looks and sounds like a lily pad: its model's particle texture, its green tint and its
+`SoundType.LILY_PAD`. Any effect that reads that state therefore shows lily-pad bits and makes lily-pad noises,
+even when the thing being broken is a sign. So effects use **the real vanilla state of the aimed part**
+instead:
+- `LilyPadCombo.accessoryState(state)` gives the accessory on its own:
+  - `shapeSource.defaultBlockState()` for the decorative ones, which for potted plants is the flower pot,
+    whose particles and sound real potted plants share;
+  - the vanilla candle or sea pickle with the same count (and lit state), since the count decides where the
+    particles appear;
+  - the vanilla sign, head or banner.
+- `LilyPadTarget.partState` picks between that and a plain `Blocks.LILY_PAD` state by aim. Aiming at neither
+  counts as the accessory, as for breaking.
+
+Heads show soul-sand particles and banners oak planks. That's vanilla: it's what `skull.json`/`banner.json` name.
+
+The three effect paths, all checked by disassembly:
+- **Break burst on the breaker's screen:** the client predicts the break. `MultiPlayerGameMode.destroyBlock`
+  calls `playerWillDestroy`, then `spawnDestroyByEntityParticles`, which every combo overrides to call
+  `LilyPadTarget.spawnDestroyParticles`. That sends level event `2001` with the accessory's state when only
+  the accessory went, or the pad's **and** the accessory's when the pad went. `Level.destroyBlock`
+  (`spawnDestroyParticles`, no entity) lands there too and gets both.
+- **Break burst for everyone else:** `LilyPadAccessoryBreaking.playBreakEffects` calls the same
+  `spawnDestroyByEntityParticles`. On the server, `levelEvent(player, ...)` sends it to everyone nearby except
+  the breaker, who already had it. **Don't use `globalLevelEvent` for this.** Clients ignore `2001` as a
+  global event (`LevelEventHandler.globalLevelEvent` only handles 1023/1028/1038), which is how other
+  players used to see and hear nothing.
+- **Cracks and hit sound while mining:** 26.3 sends these as level events `2019`/`2020` from
+  `ServerPlayerGameMode.tick()`, to everyone nearby. The first hit comes from
+  `MultiPlayerGameMode.startDestroyBlock`. Both end in `ClientLevel.addBreakingBlockEffects`, which reads the
+  state at the position. `ClientLevelMixin` swaps in `LilyPadTarget.partState(...)` with the local player's
+  aim.
+  - **Why a mixin:** the only related Fabric hook, `FabricBlockStateModel.particleMaterial`, swaps just the
+    texture and would need every combo model wrapped. It wouldn't fix the hit sound, and the combo's green
+    tint would still be applied to the particles.
+  - **Limit:** the events don't say who is mining. When someone else mines a combo, your client uses your own
+    aim if you're looking at it, otherwise the accessory.
+
+**Middle-click (pick block):**
+- Every combo's `getCloneItemStack` returns the accessory's item, following vanilla's own rules: one candle,
+  one sea pickle, and the plant for a potted plant (as `FlowerPotBlock` does).
+- `LilyPadAccessoryPicking` (Fabric's `PlayerPickItemEvents.BLOCK`, which gets the server player) returns a
+  lily pad when the pad is aimed at, and `null` otherwise. `null` lets vanilla run the combo's
+  `getCloneItemStack` and then its ctrl+pick data copy, which is how a player head keeps its skin. Fabric skips
+  that copy for a stack the event returns itself, so the accessory must not come from the event.
+
+## Lightning rods and chains on a lily pad (working rods; copper keeps aging)
+
+All 8 lightning rods (4 copper stages, plus waxed), the regular chain (26.3 calls it `iron_chain`) and all 8
+copper chains. Registered by `registerLightningRod`/`registerChain` in `LilyPadAccessories`, from vanilla ids.
+Models are the pad element plus the vanilla template's own elements: `template_lightning_rod`,
+`template_chain`. Both templates look the same when turned 90°, so the pad's rotation can turn the whole
+model. Waxed blockstates point at the unwaxed models, as vanilla's do.
+
+**Chains are decorative:** `LilyPadAccessoryBlock`, standing upright as a chain placed on top of a block does.
+They're in `minecraft:chains`, which vanilla's `mineable/pickaxe` includes, and nothing else reads that tag at
+runtime.
+
+**Lightning rods work** (`block/custom/LilyPadLightningRodBlock extends LightningRodBlock`).
+- It inherits everything a rod does: `POWERED`, `onLightningStrike` (glow, redstone pulse, spark event,
+  unpowered 8 ticks later), the redstone signals and the thunderstorm sparks. None of that checks the block's
+  identity, and `LightningBolt.powerLightningRod` powers anything `instanceof LightningRodBlock`.
+- **How lightning finds a rod:** `ServerLevel.findLightningRod` searches for the `PoiTypes.LIGHTNING_ROD` point
+  of interest within 128 blocks, on the highest block of its column, and strikes the block above.
+- **Registering the combos as that point of interest:**
+  - which states count comes only from `PoiTypes.TYPE_BY_STATE` (nothing reads `PoiType.matchingStates`);
+  - that map is filled by the private `PoiTypes.registerBlockStates`;
+  - Fabric's `PoiHelper` can only create new types;
+  - so `mixin/PoiTypesInvoker` (a static `@Invoker`) lets `registerLightningRod` add every state of each rod
+    combo to vanilla's lightning-rod type.
+- **The rods must be in `minecraft:lightning_rods`,** not just for the tool rule (`mineable/pickaxe` plus
+  `needs_stone_tool`):
+  - `ServerLevel.tickThunder` checks that tag under a strike. Without it, the strike can become a
+    skeleton-horse trap whose bolt is visual only and never powers the rod.
+  - The Channeling enchantment checks the same tag to let a trident call lightning on a rod.
+
+**Copper stages keep aging, through vanilla's own code** (Fabric's `OxidizableBlocksRegistry`):
+- `registerCopperAging` registers two kinds of pairs:
+  - next-stage pairs (`registerNextStage`, into `WeatheringCopper.NEXT_BY_BLOCK`, which Fabric makes mutable,
+    and it also refreshes the random-tick cache);
+  - waxable pairs (`registerWaxable`, into `HoneycombItem.WAXABLES`).
+- Vanilla then handles aging, honeycomb, the axe's scrape and wax-off, and lightning resetting a struck unwaxed
+  rod to fresh copper (`LightningBolt.clearCopperOnLightningStrike`).
+- The unwaxed stages are `LilyPadWeatheringLightningRodBlock`/`LilyPadWeatheringAccessoryBlock`, which mirror
+  vanilla's `WeatheringLightningRodBlock`/`WeatheringCopperChainBlock`:
+  - `getAge()` returns the stage;
+  - `randomTick` calls `changeOverTime`;
+  - `isRandomlyTicking` is true only if there's a next stage.
+- Each stage is its own combo, so drops and middle-click give the current stage's item.
+- **The copper lanterns don't age.** They stay whatever stage they were placed as. Registering them the same
+  way with `LilyPadWeatheringAccessoryBlock` is all it would take.
+
+## Heads and banners on a lily pad (vanilla's own renderer and block entity)
+
+All 7 floor heads (the `minecraft:skulls` tag: skeleton, wither skeleton, zombie, player, creeper, dragon,
+piglin) and all 16 standing banners. They behave as they do on a normal block: player skins, 16-way
+rotation, collision (heads), custom names, the dragon/piglin animation when powered, banner patterns, the
+waving flag and map markers.
+
+**Nothing is merged into a model here, the opposite of every other accessory.** `skull.json`/`banner.json`
+are empty (particle texture only), because heads and banners are drawn entirely by vanilla's block entity
+renderers. Those renderers only need the block to *be* a head or a banner (checked by disassembly):
+- `SkullBlockRenderer` reads `((AbstractSkullBlock) block).getType()` and `SkullBlock.ROTATION` (or checks
+  `instanceof WallSkullBlock`).
+- `BannerRenderer` checks `instanceof BannerBlock` and reads `BannerBlock.ROTATION`. It takes the base
+  colour from `BannerBlockEntity.getBaseColor()`, which comes from the block's `getColor()`.
+
+So `block/custom/LilyPadSkullBlock` extends `SkullBlock`, `LilyPadBannerBlock` extends `BannerBlock`, and
+their blockstates (`lily_pad_with_<id>.json`) are verbatim copies of vanilla's `lily_pad.json`: four
+`minecraft:block/lily_pad` variants under `""`. `""` matches every `ROTATION`/`POWERED` state, as in
+vanilla's own `player_head.json`. The pad keeps its position-seeded rotation, and the head or banner rotates
+separately in the renderer. There are no merged models, no custom renderer and no client code; the tint comes
+through `LilyPadAccessories.all()` as usual.
+
+**They use vanilla's own block entity type, through Fabric's `addValidBlock`.** The block entity is a plain
+vanilla `SkullBlockEntity`/`BannerBlockEntity`, from the inherited `newBlockEntity`. Their types are
+`BlockEntityTypes.SKULL`/`BANNER`; in 26.3 the vanilla constants live in `BlockEntityTypes`, not
+`BlockEntityType`. Both have frozen valid-block sets, and the `BlockEntity` constructor throws
+`IllegalStateException` for any block not in them. Fabric API's `addValidBlock` is interface-injected on
+`BlockEntityType`, and its mixin swaps the frozen set for a `HashSet`. `registerSkull`/`registerBanner` call it
+right where each combo is registered. Because the type is vanilla's, vanilla's renderer is already registered
+for it.
+
+What inheriting gets wrong, all overridden:
+- **Shapes** come from `accessory.defaultBlockState()`, **not** `super.getShape` as in the sign.
+  `SkullBlock.getShape` calls the virtual `getCollisionShape`, and our override reads `shapes`, which is still
+  null in the constructor. Taking them from the vanilla block also gives the piglin's 10px box and the dragon's
+  8.5px outline. Banners have no collision, so they're solid only as far as the pad.
+- **Head `getTicker`:** vanilla only animates when `state.is(Blocks.DRAGON_HEAD)`/`PIGLIN_HEAD`/..., which
+  compares against the vanilla block, so a combo would never pass. The override checks the skull type instead.
+  `POWERED` and `neighborChanged` are inherited and work unchanged.
+- **Banner `canSurvive` returns `true`.** A banner needs `isSolid()` below, and its `updateShape` would
+  otherwise turn the combo into air, the same trap as signs.
+- **`getCloneItemStack` (pick-block):**
+  - Heads return the head item. Ctrl+pick in creative makes the server add the block entity's data, the skin.
+  - Banners also apply `collectComponents()`, because vanilla's `BannerBlockEntity.getItem()` builds the item
+    from the block, and our combo has no item.
+
+**Placement** (`LilyPadAccessoryInteraction.combine`):
+- Heads use `RotationSegment.convertToSegment(player.getYRot())`, with **no `+180`**
+  (`SkullBlock.getStateForPlacement`), and `POWERED = level.hasNeighborSignal(pos)`.
+- Banners use `+180`, like signs.
+- `copyItemData` then runs for any combo with a block entity, doing what `BlockItem.place` does:
+  `BlockItem.updateCustomBlockEntityTag`, then `applyComponentsFromItemStack` + `setChanged` (vanilla's own
+  helper for that is private). It runs before the stack shrinks and in the same tick as the placement, so the
+  chunk update that sends the block to clients carries the skin/patterns.
+
+**Drops run vanilla's own loot tables against the block entity** (`block/custom/LilyPadVanillaDrops`). Their
+`copy_components` entries decide what carries over:
+- player head: `profile`, `note_block_sound`, `custom_name`;
+- other heads: `custom_name`;
+- banners: `custom_name`, `item_name`, `tooltip_display`, `banner_patterns`, `rarity`, so an ominous banner
+  keeps its name.
+
+`accessoryDrops(state, blockEntity)` handles the accessory-only break. A `getDrops(state, LootParams.Builder)`
+override returns the lily pad's table plus the accessory's for explosions and pistons. Both of those pass the
+block entity, and the combos use `PushReaction.POPPED`, which is what vanilla uses for lily pads and heads.
+**The other combos have no loot tables and still drop nothing when blown up.** These two are the exception so
+that an explosion can't delete a player head without dropping it.
+
+Breaking the pad takes the head with it, like every other accessory. This was a deliberate choice over
+vanilla's rule that a head needs no support and stays floating.
+
+Banner combos are in `minecraft:banners` (`data/minecraft/tags/block/banners.json`). That makes an axe faster,
+because vanilla's `mineable/axe` includes `#minecraft:banners`, and lets filled maps mark them, because
+`MapItem` checks this tag plus `BannerBlockEntity`.
 
 ## Commands
 Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
@@ -498,12 +739,27 @@ Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
 - `./gradlew build` — compile + produce the jar in `build/libs/`
 - `./gradlew runClient` — launch a dev Minecraft client with the mod loaded
 - `./gradlew runServer` — launch a dev dedicated server
+- `./gradlew prodClient` / `./gradlew prodServer` — run the **finished jar** the way a player or server
+  owner would: the built jar plus the real Fabric API jar (`productionRuntimeMods`, non-transitive), launched
+  like a normal install, in `run/prod-client/` and `run/prod-server/`. This is the check before handing a jar
+  to anyone, since the dev runs load classes straight from the build folders. The server stops at Minecraft's
+  EULA until `run/prod-server/eula.txt` says `eula=true` (https://aka.ms/MinecraftEULA). Accepting it is the
+  user's call, so don't set that yourself.
 - `./gradlew clean` — wipe build output
 
-The distributable jar is `build/libs/extra-blocks-1.0.0.jar`.
+The distributable jar is `build/libs/extra-blocks-<version>.jar`.
 Ignore `*-sources.jar` and anything in `build/devlibs/` — those are not for distribution.
 
+**What a player needs:** Minecraft 26.3, Fabric Loader 0.19.5 or newer, and Fabric API 0.160.7 or newer for
+26.3, plus this jar in their `mods` folder. The official launcher supplies Java itself. To play together,
+every player needs the mod, and so does the server (dedicated servers need Fabric and Fabric API too). A
+LAN world runs on the host's game, so the host needs it as well. Expect a slow first load: about 10,100
+mixed-slab blocks are registered at startup.
+
 ## Version bumps
-Versions live in `gradle.properties`. Check https://fabricmc.net/develop for the current
-set before changing `minecraft_version` / `fabric_api_version` / `loom_version`, and bump
-the `minecraft` and `fabricloader` bounds in `src/main/resources/fabric.mod.json` to match.
+Versions live in `gradle.properties` (`version` is the mod's own). Check https://fabricmc.net/develop for the
+current set before changing `minecraft_version` / `fabric_api_version` / `loom_version`, and bump the
+`minecraft`, `fabricloader` and `fabric-api` bounds in `src/main/resources/fabric.mod.json` to match. The
+`fabric-api` bound is the version built against: the mod uses API added in recent Fabric API releases
+(`addValidBlock`, `PlayerPickItemEvents`, `OxidizableBlocksRegistry`, ...). With a lower bound, an older Fabric
+API makes the game crash instead of saying "update Fabric API".

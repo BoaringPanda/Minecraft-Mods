@@ -2,9 +2,12 @@ package com.boaringpanda.extrablocks.block.custom;
 
 import java.util.List;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -18,11 +21,11 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public class LilyPadPottedPlantBlock extends LilyPadAccessoryBlock {
 	public LilyPadPottedPlantBlock(Properties properties, Block plant) {
-		super(properties, plant);
+		super(properties, plant, Blocks.FLOWER_POT);
 	}
 
 	@Override
-	public List<ItemStack> accessoryDrops(BlockState state) {
+	public List<ItemStack> accessoryDrops(BlockState state, @Nullable BlockEntity blockEntity) {
 		return List.of(new ItemStack(this.accessory()), new ItemStack(Blocks.FLOWER_POT));
 	}
 }
