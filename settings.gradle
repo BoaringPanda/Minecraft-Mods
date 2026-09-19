@@ -9,5 +9,6 @@ pluginManagement {
 	}
 }
 
-// Should match your modid
-rootProject.name = 'extra-blocks'
+// Names the jar (BPsBetterVanillaBuilding-<version>.jar). Deliberately not the mod ID, which stays
+// extra_blocks so existing worlds keep their blocks - see CLAUDE.md.
+rootProject.name = 'BPsBetterVanillaBuilding'

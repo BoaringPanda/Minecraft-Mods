@@ -2,13 +2,13 @@
 	"schemaVersion": 1,
 	"id": "extra_blocks",
 	"version": "${version}",
-	"name": "Extra Blocks",
+	"name": "BP's Better Vanilla Building",
 	"description": "Adds extra blocks to Minecraft.",
 	"authors": [
 		"BoaringPanda"
 	],
 	"contact": {
-		"sources": "https://github.com/BoaringPanda/extra-blocks"
+		"sources": "https://github.com/BoaringPanda/BPsBetterVanillaBuilding"
 	},
 	"license": "MIT",
 	"icon": "assets/extra_blocks/icon.png",

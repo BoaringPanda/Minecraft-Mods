@@ -1,4 +1,4 @@
-# Extra Blocks — Fabric mod
+# BP's Better Vanilla Building — Fabric mod
 
 ## Stack
 - Minecraft **26.3** (date-based versioning; the 1.x scheme ended at 1.21.11)
@@ -20,6 +20,11 @@ Registering blocks/items/recipes = `src/main`. Anything touching `Minecraft.getI
 rendering or GUI = `src/client`.
 
 ## Conventions
+- The mod is called **BP's Better Vanilla Building**. That's the `name` in `fabric.mod.json`, and the jar is
+  `BPsBetterVanillaBuilding-<version>.jar`, named by `rootProject.name` in `settings.gradle`. It started out as
+  "Extra Blocks", and the internal names **deliberately keep that**: the mod ID `extra_blocks`, the `assets/extra_blocks/`
+  folder, the package and the project folder. Worlds store the mod's blocks by ID, so renaming the ID would
+  turn every placed lily pad accessory and mixed slab into air. Only rename it if the user accepts losing them.
 - Mod ID is `extra_blocks` (snake_case). Java package is `com.boaringpanda.extrablocks` (no underscore).
 - Build an `Identifier` with the helper `ExtraBlocks.id("some_path")` rather than by hand.
 - Assets live under `src/main/resources/assets/extra_blocks/`.
@@ -747,7 +752,8 @@ Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
   user's call, so don't set that yourself.
 - `./gradlew clean` — wipe build output
 
-The distributable jar is `build/libs/extra-blocks-<version>.jar`.
+The distributable jar is `build/libs/BPsBetterVanillaBuilding-<mod_version>+<minecraft_version>.jar`
+(e.g. `BPsBetterVanillaBuilding-1.0.0+26.3.jar`).
 Ignore `*-sources.jar` and anything in `build/devlibs/` — those are not for distribution.
 
 **What a player needs:** Minecraft 26.3, Fabric Loader 0.19.5 or newer, and Fabric API 0.160.7 or newer for
@@ -757,7 +763,8 @@ LAN world runs on the host's game, so the host needs it as well. Expect a slow f
 mixed-slab blocks are registered at startup.
 
 ## Version bumps
-Versions live in `gradle.properties` (`version` is the mod's own). Check https://fabricmc.net/develop for the
+Versions live in `gradle.properties`. `mod_version` is the mod's own; `build.gradle` appends `+<minecraft_version>`
+to make the jar's and the game's version (e.g. `1.0.0+26.3`). Check https://fabricmc.net/develop for the
 current set before changing `minecraft_version` / `fabric_api_version` / `loom_version`, and bump the
 `minecraft`, `fabricloader` and `fabric-api` bounds in `src/main/resources/fabric.mod.json` to match. The
 `fabric-api` bound is the version built against: the mod uses API added in recent Fabric API releases
