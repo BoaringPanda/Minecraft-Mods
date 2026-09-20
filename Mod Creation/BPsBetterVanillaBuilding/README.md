@@ -3,8 +3,9 @@
 A **Fabric** mod for Minecraft **26.3** that adds small building touches to vanilla, without a big pile of new
 item types.
 
-> The mod's internal ID is still `extra_blocks`, from its original name "Extra Blocks". That's deliberate:
-> worlds store blocks by ID, so renaming it would turn every placed block into air.
+> The mod's internal ID is `bpsbettervanillabuilding` (Fabric IDs must be lowercase). It used to be
+> `extra_blocks`, from the mod's first name "Extra Blocks", so blocks placed in a world with the v1.0.0 jar
+> turn into air with this version. Worlds started with this version are fine.
 
 ## What it adds
 

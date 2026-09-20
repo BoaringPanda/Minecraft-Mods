@@ -12,9 +12,9 @@
 `splitEnvironmentSourceSets()` is on, so there are two source sets:
 
 - `src/main/` — common code, runs on client **and** dedicated server.
-  Entrypoint: `com.boaringpanda.extrablocks.ExtraBlocks`
+  Entrypoint: `com.boaringpanda.bpsbettervanillabuilding.BPsBetterVanillaBuilding`
 - `src/client/` — client-only code (rendering, screens, keybinds). Never referenced from `src/main`.
-  Entrypoint: `com.boaringpanda.extrablocks.client.ExtraBlocksClient`
+  Entrypoint: `com.boaringpanda.bpsbettervanillabuilding.client.BPsBetterVanillaBuildingClient`
 
 Registering blocks/items/recipes = `src/main`. Anything touching `Minecraft.getInstance()`,
 rendering or GUI = `src/client`.
@@ -22,20 +22,22 @@ rendering or GUI = `src/client`.
 ## Conventions
 - The mod is called **BP's Better Vanilla Building**. That's the `name` in `fabric.mod.json`, and the jar is
   `BPsBetterVanillaBuilding-<version>.jar`, named by `rootProject.name` in `settings.gradle`. It started out as
-  "Extra Blocks", and the internal names **deliberately keep that**: the mod ID `extra_blocks`, the `assets/extra_blocks/`
-  folder, the package and the project folder. Worlds store the mod's blocks by ID, so renaming the ID would
-  turn every placed lily pad accessory and mixed slab into air. Only rename it if the user accepts losing them.
-- Mod ID is `extra_blocks` (snake_case). Java package is `com.boaringpanda.extrablocks` (no underscore).
-- Build an `Identifier` with the helper `ExtraBlocks.id("some_path")` rather than by hand.
-- Assets live under `src/main/resources/assets/extra_blocks/`.
-- Data (recipes, loot tables, tags) under `src/main/resources/data/extra_blocks/`.
+  "Extra Blocks" (mod ID `extra_blocks`). On 2026-09-20 the user renamed everything to match: the mod ID, the
+  `assets/` folder, the Java package, the entrypoint classes and the project folder. Worlds store blocks by ID,
+  so blocks placed in worlds saved with the **v1.0.0** jar (ID `extra_blocks`) turn into air when loaded with
+  this version. The user knew this and accepted it. Don't reintroduce the old ID.
+- Mod ID is `bpsbettervanillabuilding` (all lowercase: Fabric requires that, so it can't be the mixed-case
+  `BPsBetterVanillaBuilding`). Java package is `com.boaringpanda.bpsbettervanillabuilding`.
+- Build an `Identifier` with the helper `BPsBetterVanillaBuilding.id("some_path")` rather than by hand.
+- Assets live under `src/main/resources/assets/bpsbettervanillabuilding/`.
+- Data (recipes, loot tables, tags) under `src/main/resources/data/bpsbettervanillabuilding/`.
 - The mod has two mixins:
   - `client/mixin/ClientLevelMixin` (client-only) makes mining particles and hit sounds come from the part of
     a lily pad combo being mined. See "Particles, sounds and middle-click come from the part you aim at".
-    Its config is `src/client/resources/extra_blocks.client.mixins.json`.
+    Its config is `src/client/resources/bpsbettervanillabuilding.client.mixins.json`.
   - `mixin/PoiTypesInvoker` (common) lets lily-pad lightning rods register as vanilla's lightning-rod point
     of interest. See "Lightning rods and chains on a lily pad". Its config is
-    `src/main/resources/extra_blocks.mixins.json`.
+    `src/main/resources/bpsbettervanillabuilding.mixins.json`.
 
   Neither has a Fabric hook to use instead, and both sections explain why. Both configs are listed under
   `"mixins"` in `fabric.mod.json`, the client one with `"environment": "client"`. A new config has to be
@@ -48,7 +50,7 @@ rendering or GUI = `src/client`.
 For a plain standalone block with an item (one a player can hold and place from their
 inventory): one static field per block, a private `register()` helper that does
 `Registry.register` for both the block and its `BlockItem`, plus a public `initialize()` that's
-called once from `ExtraBlocks.onInitialize()` — that call is what forces the class to load and
+called once from `BPsBetterVanillaBuilding.onInitialize()` — that call is what forces the class to load and
 the registration to actually run. `block/MixedSlabBlocks.java`'s `register()` is close to this
 shape, minus the `BlockItem` half — these combo blocks are deliberately never held/placed
 directly, so there's no current example in this repo that registers both; add the `BlockItem`
@@ -58,15 +60,15 @@ half back in following the pattern fabric-docs uses (`Registry.register` on
 Per-block assets needed for a block to look and behave right in-game (all keyed by the same
 block ID):
 
-- `assets/extra_blocks/blockstates/<id>.json` — which model to render
-- `assets/extra_blocks/models/block/<id>.json` — usually `"parent": "minecraft:block/cube_all"`
+- `assets/bpsbettervanillabuilding/blockstates/<id>.json` — which model to render
+- `assets/bpsbettervanillabuilding/models/block/<id>.json` — usually `"parent": "minecraft:block/cube_all"`
   + a texture reference
-- `assets/extra_blocks/textures/block/<id>.png` — the actual texture; missing = purple/black
+- `assets/bpsbettervanillabuilding/textures/block/<id>.png` — the actual texture; missing = purple/black
   checkerboard placeholder, everything else still works
-- `assets/extra_blocks/items/<id>.json` — the client item, so it renders in inventory/hand
-- `assets/extra_blocks/lang/en_us.json` — `"block.extra_blocks.<id>": "Display Name"`
-- `data/extra_blocks/loot_tables/blocks/<id>.json` — drop itself when broken (otherwise no drop)
-- `data/minecraft/tags/block/mineable/<tool>.json` — add `"extra_blocks:<id>"` to `pickaxe`/`axe`/
+- `assets/bpsbettervanillabuilding/items/<id>.json` — the client item, so it renders in inventory/hand
+- `assets/bpsbettervanillabuilding/lang/en_us.json` — `"block.bpsbettervanillabuilding.<id>": "Display Name"`
+- `data/bpsbettervanillabuilding/loot_tables/blocks/<id>.json` — drop itself when broken (otherwise no drop)
+- `data/minecraft/tags/block/mineable/<tool>.json` — add `"bpsbettervanillabuilding:<id>"` to `pickaxe`/`axe`/
   `shovel`/`hoe` so the intended tool is effective (`values` is a flat list of item IDs)
 
 ## Mixed slabs (combine two different slabs into one block)
@@ -113,7 +115,7 @@ grep -A1 '"type=top"'    assets/minecraft/blockstates/<material>_slab.json | gre
 **To add a material** (a modded slab, or a future vanilla one not on the list yet): add its id
 to `MATERIALS` in `MixedSlabBlocks.java`, then regenerate for every OTHER existing material
 (both orders) - one blockstate file per new pairing at
-`assets/extra_blocks/blockstates/mixed_slab_<bottom>_bottom_<top>_top.json`, using each
+`assets/bpsbettervanillabuilding/blockstates/mixed_slab_<bottom>_bottom_<top>_top.json`, using each
 material's *real* extracted bottom/top model paths (see above), e.g.:
 ```json
 {
@@ -123,7 +125,7 @@ material's *real* extracted bottom/top model paths (see above), e.g.:
   ]
 }
 ```
-and add `"extra_blocks:mixed_slab_<bottom>_bottom_<top>_top"` to
+and add `"bpsbettervanillabuilding:mixed_slab_<bottom>_bottom_<top>_top"` to
 `data/minecraft/tags/block/mineable/pickaxe.json` for each new pairing.
 
 **This does not reach modded slabs automatically.** `MATERIALS` is a fixed list decided at
@@ -162,7 +164,7 @@ in the block above.
   click (top face only) and swaps the lily pad for the right combo block.
 
 **Every combo block needs the lily pad's green tint registered separately, client-side** -
-`client/block/LilyPadAccessoryColors.java`, called from `ExtraBlocksClient`. The lily pad model's
+`client/block/LilyPadAccessoryColors.java`, called from `BPsBetterVanillaBuildingClient`. The lily pad model's
 `tintindex` is per-*model*, but the actual tint *color* is looked up per-*Block instance* by the
 renderer, so a new combo block with no registration for it just renders with no tint at all (a
 flat white/grey pad instead of green) - this happened for real, more than once, when a hand-typed
@@ -190,7 +192,7 @@ like ~random rotation (in testing, a ~25% match rate - exactly chance across 4 o
 
 The fix is for the combined block to go through the *exact same* code path as a plain lily pad:
 one model, referenced by a plain `variants` block with the identical 4-entry array vanilla uses
-(`assets/extra_blocks/blockstates/lily_pad_with_<name>.json`, mirroring
+(`assets/bpsbettervanillabuilding/blockstates/lily_pad_with_<name>.json`, mirroring
 `minecraft:blockstates/lily_pad.json` structurally, just pointing at our model id) - no
 `multipart` anywhere. Since both go through the same `SimpleModelSelectors`/`WeightedVariants`
 path with the same input seed, the same position now picks the same index whether or not an
@@ -357,7 +359,7 @@ registers its own `BlockEntityType<LilyPadSignBlockEntity>` (a plain public cons
 `new BlockEntityType<>(factory, validBlocks)` - there's no builder in this version), with all 13
 registered `LilyPadSignBlock` instances (`LilyPadAccessories.SIGN_BLOCKS`) as its valid blocks.
 **Load-order matters here**: that valid-blocks set must be fully populated before this class loads,
-so `ExtraBlocks.onInitialize()` calls `LilyPadAccessories.initialize()` before
+so `BPsBetterVanillaBuilding.onInitialize()` calls `LilyPadAccessories.initialize()` before
 `LilyPadSignBlockEntities.initialize()` - get the order backwards and it silently registers an
 incomplete (possibly empty) valid-blocks set, no crash, just broken block-entity loading for
 whichever signs registered after it.
@@ -403,7 +405,7 @@ would compute both automatically for a real sign:
   afterward - confirmed by checking the Fabric mixin that fires this event only overrides the
   result when non-`PASS`.
 
-**Rendering**: `ExtraBlocksClient` reuses vanilla's own `StandingSignRenderer` directly for the new
+**Rendering**: `BPsBetterVanillaBuildingClient` reuses vanilla's own `StandingSignRenderer` directly for the new
 `BlockEntityType`, via `BlockEntityRendererRegistry.register` (Fabric API - deprecated in this
 version with no replacement shipped yet, but still the only working entrypoint for late
 registration into vanilla's renderer map; the warning is expected, not a mistake). No custom

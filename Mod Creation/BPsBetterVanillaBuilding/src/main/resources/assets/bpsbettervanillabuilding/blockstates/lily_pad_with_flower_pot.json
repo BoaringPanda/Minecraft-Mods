@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_flower_pot" },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_flower_pot", "y": 90 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_flower_pot", "y": 180 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_flower_pot", "y": 270 }
+    ]
+  }
+}

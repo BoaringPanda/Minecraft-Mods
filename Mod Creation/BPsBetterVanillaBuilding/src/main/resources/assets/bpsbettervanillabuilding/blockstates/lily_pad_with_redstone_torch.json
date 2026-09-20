@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_redstone_torch"
+      },
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_redstone_torch",
+        "y": 90
+      },
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_redstone_torch",
+        "y": 180
+      },
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_redstone_torch",
+        "y": 270
+      }
+    ]
+  }
+}

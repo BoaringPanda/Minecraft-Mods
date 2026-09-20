@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_weathered_copper_lantern"
+      },
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_weathered_copper_lantern",
+        "y": 90
+      },
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_weathered_copper_lantern",
+        "y": 180
+      },
+      {
+        "model": "bpsbettervanillabuilding:block/lily_pad_with_weathered_copper_lantern",
+        "y": 270
+      }
+    ]
+  }
+}

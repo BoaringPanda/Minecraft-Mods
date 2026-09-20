@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "extra_blocks",
+	"id": "bpsbettervanillabuilding",
 	"version": "${version}",
 	"name": "BP's Better Vanilla Building",
 	"description": "Adds extra blocks to Minecraft.",
@@ -11,20 +11,20 @@
 		"sources": "https://github.com/BoaringPanda/BPsBetterVanillaBuilding"
 	},
 	"license": "MIT",
-	"icon": "assets/extra_blocks/icon.png",
+	"icon": "assets/bpsbettervanillabuilding/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.boaringpanda.extrablocks.ExtraBlocks"
+			"com.boaringpanda.bpsbettervanillabuilding.BPsBetterVanillaBuilding"
 		],
 		"client": [
-			"com.boaringpanda.extrablocks.client.ExtraBlocksClient"
+			"com.boaringpanda.bpsbettervanillabuilding.client.BPsBetterVanillaBuildingClient"
 		]
 	},
 	"mixins": [
-		"extra_blocks.mixins.json",
+		"bpsbettervanillabuilding.mixins.json",
 		{
-			"config": "extra_blocks.client.mixins.json",
+			"config": "bpsbettervanillabuilding.client.mixins.json",
 			"environment": "client"
 		}
 	],

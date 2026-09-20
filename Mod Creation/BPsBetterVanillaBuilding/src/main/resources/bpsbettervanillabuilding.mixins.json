@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "com.boaringpanda.bpsbettervanillabuilding.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"PoiTypesInvoker"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

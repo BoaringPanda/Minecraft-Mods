@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_closed_eyeblossom" },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_closed_eyeblossom", "y": 90 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_closed_eyeblossom", "y": 180 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_closed_eyeblossom", "y": 270 }
+    ]
+  }
+}

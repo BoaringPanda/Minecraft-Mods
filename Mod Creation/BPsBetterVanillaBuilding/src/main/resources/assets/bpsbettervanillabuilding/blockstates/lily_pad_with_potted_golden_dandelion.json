@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_golden_dandelion" },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_golden_dandelion", "y": 90 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_golden_dandelion", "y": 180 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_golden_dandelion", "y": 270 }
+    ]
+  }
+}

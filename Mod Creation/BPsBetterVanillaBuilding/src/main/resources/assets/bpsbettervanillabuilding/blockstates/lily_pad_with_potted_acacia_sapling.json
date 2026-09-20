@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_acacia_sapling" },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_acacia_sapling", "y": 90 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_acacia_sapling", "y": 180 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_acacia_sapling", "y": 270 }
+    ]
+  }
+}

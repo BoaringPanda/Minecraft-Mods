@@ -9,6 +9,6 @@ pluginManagement {
 	}
 }
 
-// Names the jar (BPsBetterVanillaBuilding-<version>.jar). Deliberately not the mod ID, which stays
-// extra_blocks so existing worlds keep their blocks - see CLAUDE.md.
+// Names the jar (BPsBetterVanillaBuilding-<version>.jar). The mod ID is the lowercase form of this name
+// (bpsbettervanillabuilding), because Fabric mod IDs can't contain capital letters.
 rootProject.name = 'BPsBetterVanillaBuilding'

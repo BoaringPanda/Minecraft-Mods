@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_cactus" },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_cactus", "y": 90 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_cactus", "y": 180 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_cactus", "y": 270 }
+    ]
+  }
+}

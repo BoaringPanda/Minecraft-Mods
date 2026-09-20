@@ -1,18 +1,18 @@
 {
   "replace": false,
   "values": [
-    "extra_blocks:lily_pad_with_acacia_sign",
-    "extra_blocks:lily_pad_with_bamboo_sign",
-    "extra_blocks:lily_pad_with_birch_sign",
-    "extra_blocks:lily_pad_with_cherry_sign",
-    "extra_blocks:lily_pad_with_crimson_sign",
-    "extra_blocks:lily_pad_with_dark_oak_sign",
-    "extra_blocks:lily_pad_with_jungle_sign",
-    "extra_blocks:lily_pad_with_mangrove_sign",
-    "extra_blocks:lily_pad_with_oak_sign",
-    "extra_blocks:lily_pad_with_pale_oak_sign",
-    "extra_blocks:lily_pad_with_poplar_sign",
-    "extra_blocks:lily_pad_with_spruce_sign",
-    "extra_blocks:lily_pad_with_warped_sign"
+    "bpsbettervanillabuilding:lily_pad_with_acacia_sign",
+    "bpsbettervanillabuilding:lily_pad_with_bamboo_sign",
+    "bpsbettervanillabuilding:lily_pad_with_birch_sign",
+    "bpsbettervanillabuilding:lily_pad_with_cherry_sign",
+    "bpsbettervanillabuilding:lily_pad_with_crimson_sign",
+    "bpsbettervanillabuilding:lily_pad_with_dark_oak_sign",
+    "bpsbettervanillabuilding:lily_pad_with_jungle_sign",
+    "bpsbettervanillabuilding:lily_pad_with_mangrove_sign",
+    "bpsbettervanillabuilding:lily_pad_with_oak_sign",
+    "bpsbettervanillabuilding:lily_pad_with_pale_oak_sign",
+    "bpsbettervanillabuilding:lily_pad_with_poplar_sign",
+    "bpsbettervanillabuilding:lily_pad_with_spruce_sign",
+    "bpsbettervanillabuilding:lily_pad_with_warped_sign"
   ]
 }

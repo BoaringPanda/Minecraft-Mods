@@ -1,21 +1,21 @@
 {
   "replace": false,
   "values": [
-    "extra_blocks:lily_pad_with_white_banner",
-    "extra_blocks:lily_pad_with_orange_banner",
-    "extra_blocks:lily_pad_with_magenta_banner",
-    "extra_blocks:lily_pad_with_light_blue_banner",
-    "extra_blocks:lily_pad_with_yellow_banner",
-    "extra_blocks:lily_pad_with_lime_banner",
-    "extra_blocks:lily_pad_with_pink_banner",
-    "extra_blocks:lily_pad_with_gray_banner",
-    "extra_blocks:lily_pad_with_light_gray_banner",
-    "extra_blocks:lily_pad_with_cyan_banner",
-    "extra_blocks:lily_pad_with_purple_banner",
-    "extra_blocks:lily_pad_with_blue_banner",
-    "extra_blocks:lily_pad_with_brown_banner",
-    "extra_blocks:lily_pad_with_green_banner",
-    "extra_blocks:lily_pad_with_red_banner",
-    "extra_blocks:lily_pad_with_black_banner"
+    "bpsbettervanillabuilding:lily_pad_with_white_banner",
+    "bpsbettervanillabuilding:lily_pad_with_orange_banner",
+    "bpsbettervanillabuilding:lily_pad_with_magenta_banner",
+    "bpsbettervanillabuilding:lily_pad_with_light_blue_banner",
+    "bpsbettervanillabuilding:lily_pad_with_yellow_banner",
+    "bpsbettervanillabuilding:lily_pad_with_lime_banner",
+    "bpsbettervanillabuilding:lily_pad_with_pink_banner",
+    "bpsbettervanillabuilding:lily_pad_with_gray_banner",
+    "bpsbettervanillabuilding:lily_pad_with_light_gray_banner",
+    "bpsbettervanillabuilding:lily_pad_with_cyan_banner",
+    "bpsbettervanillabuilding:lily_pad_with_purple_banner",
+    "bpsbettervanillabuilding:lily_pad_with_blue_banner",
+    "bpsbettervanillabuilding:lily_pad_with_brown_banner",
+    "bpsbettervanillabuilding:lily_pad_with_green_banner",
+    "bpsbettervanillabuilding:lily_pad_with_red_banner",
+    "bpsbettervanillabuilding:lily_pad_with_black_banner"
   ]
 }

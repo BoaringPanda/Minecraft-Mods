@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_crimson_roots" },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_crimson_roots", "y": 90 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_crimson_roots", "y": 180 },
+      { "model": "bpsbettervanillabuilding:block/lily_pad_with_potted_crimson_roots", "y": 270 }
+    ]
+  }
+}
