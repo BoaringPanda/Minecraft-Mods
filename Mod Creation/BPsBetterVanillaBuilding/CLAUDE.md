@@ -783,6 +783,12 @@ never share a version number. Tag each release `vMAJOR.MINOR.PATCH` (e.g. `v2.0.
 is what marks the release in git. Past releases: 1.0.0 (original, ID `extra_blocks`), 2.0.0 (renamed ID).
 When the user asks for a release, suggest the number from these rules and say why.
 
+**Local jar note (user's choice, 2026-09-20):** the user deleted the old `extra_blocks` 1.0.0 jar to start fresh
+and renamed the 2.0.0 build's file to `jars/BPsBetterVanillaBuilding-1.0.0+26.3.jar`. So that file *named* 1.0.0
+is really the 2.0.0 build (the version inside it, which Fabric shows in game, is `2.0.0+26.3`, matching
+`mod_version`). `jars/` is local and git-ignored, so this only affects the user's PC. Don't rename it back or
+change `mod_version` unless asked, and expect a new `...-2.0.0+26.3.jar` beside it after the next build.
+
 Versions live in `gradle.properties`. `mod_version` is the mod's own; `build.gradle` appends `+<minecraft_version>`
 to make the jar's and the game's version (e.g. `2.0.0+26.3`). Check https://fabricmc.net/develop for the
 current set before changing `minecraft_version` / `fabric_api_version` / `loom_version`, and bump the
