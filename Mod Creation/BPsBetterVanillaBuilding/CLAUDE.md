@@ -759,7 +759,8 @@ Ignore `*-sources.jar` and anything in `build/devlibs/` — those are not for di
 
 `build` also copies the finished jar into `jars/` (the `copyJarToJars` task in `build.gradle`). **Jars stay on
 the user's PC only and must never be committed or pushed to GitHub**: `jars/` and `*.jar` are in the repo's
-root `.gitignore`. Don't force-add them, and don't attach them to a GitHub Release unless the user asks.
+root `.gitignore`. Don't force-add them, don't attach them to a GitHub Release, and don't add a workflow step
+that uploads them as artifacts. The user's rule is that jars are never uploaded (see the repo's root CLAUDE.md).
 
 **What a player needs:** Minecraft 26.3, Fabric Loader 0.19.5 or newer, and Fabric API 0.160.7 or newer for
 26.3, plus this jar in their `mods` folder. The official launcher supplies Java itself. To play together,

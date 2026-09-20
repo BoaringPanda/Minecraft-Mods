@@ -12,7 +12,7 @@ jobs:
     # Each mod lives in its own folder. To add another mod, copy this job and change the folder name.
     defaults:
       run:
-        working-directory: Mod Creation/BPsBetterVanillaBuilding
+        working-directory: "Mod Creation/BPsBetterVanillaBuilding"
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -25,10 +25,7 @@ jobs:
           distribution: 'microsoft'
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
+      # This only checks that the mod compiles. Jars are deliberately NOT uploaded anywhere: they stay on the
+      # developer's PC (see the root README and CLAUDE.md).
       - name: build
         run: ./gradlew build
-      - name: capture build artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: Artifacts
-          path: Mod Creation/BPsBetterVanillaBuilding/build/libs/

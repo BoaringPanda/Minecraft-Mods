@@ -12,6 +12,7 @@ its own `jars/` folder for finished jars.
 ```
 Minecraft Mods/
 ├── README.md                 this file
+├── CLAUDE.md                 notes for the AI assistant: the layout and the "jars stay local" rule
 ├── .github/workflows/        automatic builds (GitHub only reads this from the repo root)
 └── Mod Creation/
     └── <ModName>/            one folder per mod
