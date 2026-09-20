@@ -12,7 +12,7 @@ jobs:
     # Each mod lives in its own folder. To add another mod, copy this job and change the folder name.
     defaults:
       run:
-        working-directory: BPsBetterVanillaBuilding
+        working-directory: Mod Creation/BPsBetterVanillaBuilding
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -31,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Artifacts
-          path: BPsBetterVanillaBuilding/build/libs/
+          path: Mod Creation/BPsBetterVanillaBuilding/build/libs/

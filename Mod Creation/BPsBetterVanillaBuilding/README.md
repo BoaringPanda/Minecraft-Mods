@@ -54,7 +54,7 @@ Fabric profile.
 ## Building it yourself
 
 Needs JDK 25. Run these from this folder (the one containing `gradlew`). The repo's
-[`.github/workflows/build.yml`](../.github/workflows/build.yml) makes GitHub build the mod automatically on
+[`.github/workflows/build.yml`](../../.github/workflows/build.yml) makes GitHub build the mod automatically on
 every push (see the **Actions** tab).
 
 ```sh
