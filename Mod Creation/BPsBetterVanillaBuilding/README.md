@@ -52,6 +52,15 @@ Fabric profile.
 - **`release-1.0.0`** is a frozen copy of the code as it was when version 1.0.0 was handed out.
 - **Tag `v1.0.0`** marks that exact release commit.
 
+Version numbers are `MAJOR.MINOR.PATCH`. The **major** number goes up when an update can break existing worlds,
+the **minor** number for new features that are safe for existing worlds, and the **patch** number for bug fixes.
+After the `+` comes the Minecraft version the jar is built for, e.g. `2.0.0+26.3`.
+
+| Version | What changed |
+| --- | --- |
+| 2.0.0 | The internal mod ID changed from `extra_blocks` to `bpsbettervanillabuilding`. Blocks placed with 1.0.0 turn into air. |
+| 1.0.0 | First release. |
+
 ## Building it yourself
 
 Needs JDK 25. Run these from this folder (the one containing `gradlew`). The repo's

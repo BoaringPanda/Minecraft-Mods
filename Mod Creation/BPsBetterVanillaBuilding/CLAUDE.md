@@ -756,7 +756,7 @@ holds several mods. `JAVA_HOME` must point at the JDK 25 install.
 - `./gradlew clean` — wipe build output
 
 The distributable jar is `build/libs/BPsBetterVanillaBuilding-<mod_version>+<minecraft_version>.jar`
-(e.g. `BPsBetterVanillaBuilding-1.0.0+26.3.jar`).
+(e.g. `BPsBetterVanillaBuilding-2.0.0+26.3.jar`).
 Ignore `*-sources.jar` and anything in `build/devlibs/` — those are not for distribution.
 
 `build` also copies the finished jar into `jars/` (the `copyJarToJars` task in `build.gradle`). **Jars stay on
@@ -771,8 +771,20 @@ LAN world runs on the host's game, so the host needs it as well. Expect a slow f
 mixed-slab blocks are registered at startup.
 
 ## Version bumps
+The mod uses semantic versioning, `MAJOR.MINOR.PATCH` (decided 2026-09-20):
+
+- **MAJOR** when an update can break existing worlds: renaming or removing a block, item or block state, or
+  changing the mod ID. (2.0.0 was the ID rename from `extra_blocks`.)
+- **MINOR** for new blocks or features that are safe for existing worlds.
+- **PATCH** for bug fixes only.
+
+Bump `mod_version` in `gradle.properties` before building any jar meant for other people, so two different jars
+never share a version number. Tag each release `vMAJOR.MINOR.PATCH` (e.g. `v2.0.0`). Jars stay local; the tag
+is what marks the release in git. Past releases: 1.0.0 (original, ID `extra_blocks`), 2.0.0 (renamed ID).
+When the user asks for a release, suggest the number from these rules and say why.
+
 Versions live in `gradle.properties`. `mod_version` is the mod's own; `build.gradle` appends `+<minecraft_version>`
-to make the jar's and the game's version (e.g. `1.0.0+26.3`). Check https://fabricmc.net/develop for the
+to make the jar's and the game's version (e.g. `2.0.0+26.3`). Check https://fabricmc.net/develop for the
 current set before changing `minecraft_version` / `fabric_api_version` / `loom_version`, and bump the
 `minecraft`, `fabricloader` and `fabric-api` bounds in `src/main/resources/fabric.mod.json` to match. The
 `fabric-api` bound is the version built against: the mod uses API added in recent Fabric API releases
