@@ -739,9 +739,10 @@ because vanilla's `mineable/axe` includes `#minecraft:banners`, and lets filled 
 `MapItem` checks this tag plus `BannerBlockEntity`.
 
 ## Commands
-Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
+Run from this mod's folder (`BPsBetterVanillaBuilding/`, where `gradlew` lives), not the repo root, which
+holds several mods. `JAVA_HOME` must point at the JDK 25 install.
 
-- `./gradlew build` — compile + produce the jar in `build/libs/`
+- `./gradlew build` — compile + produce the jar in `build/libs/`, then copy it to `jars/`
 - `./gradlew runClient` — launch a dev Minecraft client with the mod loaded
 - `./gradlew runServer` — launch a dev dedicated server
 - `./gradlew prodClient` / `./gradlew prodServer` — run the **finished jar** the way a player or server
@@ -755,6 +756,10 @@ Run from the project root. `JAVA_HOME` must point at the JDK 25 install.
 The distributable jar is `build/libs/BPsBetterVanillaBuilding-<mod_version>+<minecraft_version>.jar`
 (e.g. `BPsBetterVanillaBuilding-1.0.0+26.3.jar`).
 Ignore `*-sources.jar` and anything in `build/devlibs/` — those are not for distribution.
+
+`build` also copies the finished jar into `jars/` (the `copyJarToJars` task in `build.gradle`). **Jars stay on
+the user's PC only and must never be committed or pushed to GitHub**: `jars/` and `*.jar` are in the repo's
+root `.gitignore`. Don't force-add them, and don't attach them to a GitHub Release unless the user asks.
 
 **What a player needs:** Minecraft 26.3, Fabric Loader 0.19.5 or newer, and Fabric API 0.160.7 or newer for
 26.3, plus this jar in their `mods` folder. The official launcher supplies Java itself. To play together,

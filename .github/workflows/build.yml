@@ -9,6 +9,10 @@ on: [pull_request, push]
 jobs:
   build:
     runs-on: ubuntu-24.04
+    # Each mod lives in its own folder. To add another mod, copy this job and change the folder name.
+    defaults:
+      run:
+        working-directory: BPsBetterVanillaBuilding
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -27,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Artifacts
-          path: build/libs/
+          path: BPsBetterVanillaBuilding/build/libs/

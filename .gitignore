@@ -33,6 +33,13 @@ bin/
 
 run/
 
+# finished jars stay on this PC only, never uploaded (each mod has a jars/ folder)
+
+jars/
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+
 # java
 
 hs_err_*.log

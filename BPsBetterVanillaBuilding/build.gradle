@@ -82,6 +82,16 @@ jar {
 	}
 }
 
+// Keep a copy of every finished jar in this mod's jars/ folder (git-ignored, so jars are never uploaded).
+tasks.register("copyJarToJars", Copy) {
+	from tasks.named("jar")
+	into layout.projectDirectory.dir("jars")
+}
+
+tasks.named("build") {
+	finalizedBy "copyJarToJars"
+}
+
 // configure the maven publication
 publishing {
 	publications {
