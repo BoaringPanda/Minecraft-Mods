@@ -33,5 +33,13 @@
   "block.bpsbettervanillabuilding.red_terracotta_slab": "Red Terracotta Slab",
   "block.bpsbettervanillabuilding.black_terracotta_stairs": "Black Terracotta Stairs",
   "block.bpsbettervanillabuilding.black_terracotta_slab": "Black Terracotta Slab",
-  "block.bpsbettervanillabuilding.stacked_heads": "Stacked Heads"
+  "block.bpsbettervanillabuilding.stacked_heads": "Stacked Heads",
+  "entity.bpsbettervanillabuilding.rope_knot": "Rope Knot",
+  "message.bpsbettervanillabuilding.rope_started": "Rope started. Right-click another fence within 5 blocks.",
+  "message.bpsbettervanillabuilding.rope_cancelled": "Rope cancelled.",
+  "message.bpsbettervanillabuilding.rope_too_far": "Too far. A rope reaches 5 blocks.",
+  "message.bpsbettervanillabuilding.rope_too_high": "Connecting fence too high",
+  "message.bpsbettervanillabuilding.rope_too_low": "Connecting fence too low",
+  "message.bpsbettervanillabuilding.rope_already_tied": "Those two fences are already tied together.",
+  "message.bpsbettervanillabuilding.rope_start_gone": "The fence you started at is gone. Start again."
 }

@@ -1048,6 +1048,57 @@ one flower off a stack, potting a stack. A single flower is still the vanilla bl
 - Tags (`replace: false`): the 16 stacks are added to `minecraft:small_flowers` (which `#flowers` includes) and
   `minecraft:bee_attractive`.
 
+## Fence ropes (a lead tied between two fences, no animal)
+
+User's spec (2026-09-21): tie a lead from one fence to another with no animal on it, drawn as the rope a leashed animal has (no new
+texture), **maximum 5 blocks** between the fences (it started at 3 and the user raised it to 5, 2026-09-21). Vanilla only draws a rope between a leashed *entity* and its holder, so a rope needs
+an entity at one end, and vanilla's own leash machinery does the rest (checked by disassembly, 26.3): `ServerEntity` syncs a link packet for
+any `Leashable`, `EntityRenderer` draws a leash for any `Leashable`, and `Leashable` has default methods for saving, restoring, dropping a
+lead (`dropLeash`) and following the holder (`tickLeash`). **Syncing and saving need no code of ours. The rope is drawn by the mod's own renderer (below), because vanilla's drawing has no hang.**
+
+- `entity/RopeKnotEntity` — `extends LeashFenceKnotEntity implements Leashable`. It is a fence knot (drawn with vanilla's knot model, see Rendering)
+  that survives while its block is in `#minecraft:fences`) that is leashed to the knot on the *other* fence, so a rope is
+  a rope knot on one fence and a vanilla knot on the other, and both show a knot. It holds the `LeashData`, has the rope leave at
+  `ROPE_HEIGHT` = 7/16 (7 pixels up the 8-pixel knot model, one below its top: the user first asked for the middle, 0.25, then for "almost to the very top") (**not** `LeashFenceKnotEntity.OFFSET_Y`, which is 0.375 and is how high the knot sits in its block; using it put this end 0.175 above the other and made the rope slant, reported by the user), calls `Leashable.tickLeash` on the
+  server each tick (which also restores a saved leash after a reload), and saves `writeLeashData`/`readLeashData` next to the block
+  position. Lifecycle, all overrides:
+  - `notifyLeasheeRemoved`: discard only if nothing is tied to it **and** it isn't leashed itself (vanilla discards a knot as
+    soon as nothing is tied to it, which would kill a knot that still holds its own rope);
+  - `onLeashRemoved`: discard when nothing else is tied to it (so an animal tied to the same fence keeps it alive);
+  - `remove(reason)`: if it is being destroyed (`reason.shouldDestroy()`, so not a chunk unload) and still leashed, `dropLeash()`, so a broken
+    fence drops the lead. A `dying` flag stops the drop discarding it a second time.
+- `entity/RopeKnots` — registers `bpsbettervanillabuilding:rope_knot`: sized 0.375 x 0.5 and tracked like vanilla's knot, `noSummon`,
+  **and saved**, unlike vanilla's own knot (`noSave`, since a leashed animal recreates it on load). This one carries the rope, so
+  without saving, ropes would vanish on reload.
+- `block/FenceRopeInteraction` — a `UseBlockCallback` (server only; the client passes). A lead on a fence when nothing is tied to the
+  player: the first click **starts** a rope (remembered per player in a server-side map, action-bar message, nothing spent), clicking
+  the same fence again cancels, clicking a second fence within reach **ties** it (a `RopeKnotEntity` on the first fence, leashed to
+  `LeashFenceKnotEntity.getOrCreateKnot` on the second, `playPlacementSound`, one lead used unless creative). Too far: message and it
+  keeps waiting. A pair with a rope between them already is refused (`alreadyTied`, either direction). The waiting start is forgotten
+  after 600 ticks, on disconnect, or in another dimension. If the player already has something tied to them (an animal, or a rope picked
+  up off a knot), it passes to vanilla, adding only the distance rule for a `RopeKnotEntity`. Distance is between the two blocks'
+  centres, at most 5.0: 5 apart in a line is fine, (4, 3) is fine (exactly 5), (4, 4) is not. **Height:** the second fence may be at most 1
+  block above or below the first (`MAX_HEIGHT_DIFFERENCE`); more shows the action-bar message "Connecting fence too high" or "too low"
+  (about the fence being connected to, `rope_too_high`/`rope_too_low`), and it is checked before the distance. One helper, `reachProblem`,
+  does both checks for a new rope and for tying a rope picked up off a knot.
+- **Removing and moving a rope is vanilla's own**: break either fence and the lead drops (vanilla knots notice within a few seconds);
+  right-click a knot with an empty hand and the rope is handed to you, then tie it to another fence with a lead (within 5 blocks of its other
+  end, by the rule above) or let it go, and it snaps and drops the lead.
+- **Rendering: `client/entity/RopeKnotRenderer`** (registered in `BPsBetterVanillaBuildingClient`). It draws vanilla's knot model and
+  texture (`LeashKnotModel`, `ModelLayers.LEASH_KNOT`, `textures/entity/lead_knot/lead_knot.png`, all vanilla's) and, when the knot is tied to
+  another fence's knot, draws the rope itself with `submitCustomGeometry` and vanilla's `RenderTypes.leash()`, clearing
+  `state.leashStates` so vanilla's isn't drawn on top. Why: read from the game's `LeashFeatureRenderer` (source made with
+  `./gradlew genSources`, which writes to `.gradle/loom-cache`, git-ignored), **vanilla draws a leash as a straight line** between its two
+  attachment points, and only curves it when one end is higher (`slack`), so two fences at the same height never got any hang, and it ends
+  the rope 0.2 above the knot, off its position. Ours runs from where the rope leaves one knot's side to where it meets the other (`ROPE_HEIGHT` up at both, inset 3/16 (x1.4 on a diagonal) from each knot centre; starting at the centres made the rope leave each knot at a different height when the fences were at different heights, reported by the user)
+  along the straight line between those points, dipping in a parabola deepest halfway, with a sag of `SAG_PER_BLOCK` (0.06) x its length, so it grows with distance (about 0.06 at 1 block, 0.3 at 5). It is
+  the same thin two-tone ribbon as vanilla's (steps = length / 0.1, so the stripes are the same size on every rope; a fixed 24 steps stretched them on long ropes, reported by the user; width 0.05, brown 0.5/0.4/0.3 alternating 0.7 and 1.0; the ribbon's cross-section is kept square to the rope's direction, because vanilla's sideways-and-straight-up widening squashes/shears it on a tilted rope, the "warping" the user reported between fences at different heights) with the same light blended between the
+  two ends. A rope tied to something that isn't a fence knot (a player carrying it) is left to vanilla. The entity name and the
+  action-bar messages are in `lang/en_us.json`. No mixin, texture, model or data file.
+- Known edge: a rope knot is a `LeashFenceKnotEntity`, so vanilla's `getKnot(level, pos)` can hand it to an animal being tied at the same
+  fence. That is harmless because of the lifecycle rules above. The user hasn't tested multiplayer; it rests on `ServerEntity`
+  sending the link packet for any `Leashable`.
+
 ## Commands
 Run from this mod's folder (`BPsBetterVanillaBuilding/`, where `gradlew` lives), not the repo root, which
 holds several mods. `JAVA_HOME` must point at the JDK 25 install.

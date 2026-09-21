@@ -4,6 +4,7 @@ import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.resources.Identifier;
 
+import com.boaringpanda.bpsbettervanillabuilding.block.FenceRopeInteraction;
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadAccessories;
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadAccessoryBreaking;
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadAccessoryInteraction;
@@ -16,6 +17,7 @@ import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeads;
 import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeadsBreaking;
 import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeadsInteraction;
 import com.boaringpanda.bpsbettervanillabuilding.block.TerracottaBlocks;
+import com.boaringpanda.bpsbettervanillabuilding.entity.RopeKnots;
 
 public class BPsBetterVanillaBuilding implements ModInitializer {
 	public static final String MOD_ID = "bpsbettervanillabuilding";
@@ -27,6 +29,8 @@ public class BPsBetterVanillaBuilding implements ModInitializer {
 		MixedSlabBlocks.initialize();
 		MixedSlabPicking.initialize();
 		StackedFlowers.initialize();
+		RopeKnots.initialize();
+		FenceRopeInteraction.initialize();
 		LilyPadAccessories.initialize();
 		// Must come after LilyPadAccessories: reads its fully-populated SIGN_BLOCKS list.
 		LilyPadSignBlockEntities.initialize();

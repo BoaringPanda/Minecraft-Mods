@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.blockentity.state.StandingSignRenderState;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadSignBlockEntities;
 import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeads;
@@ -15,6 +16,8 @@ import com.boaringpanda.bpsbettervanillabuilding.client.block.LilyPadAccessoryCo
 import com.boaringpanda.bpsbettervanillabuilding.client.block.LilyPadBreakPrediction;
 import com.boaringpanda.bpsbettervanillabuilding.client.block.StackedHeadsBreakPrediction;
 import com.boaringpanda.bpsbettervanillabuilding.client.block.StackedHeadsRenderer;
+import com.boaringpanda.bpsbettervanillabuilding.client.entity.RopeKnotRenderer;
+import com.boaringpanda.bpsbettervanillabuilding.entity.RopeKnots;
 
 public class BPsBetterVanillaBuildingClient implements ClientModInitializer {
 	@Override
@@ -33,5 +36,9 @@ public class BPsBetterVanillaBuildingClient implements ClientModInitializer {
 		// Two heads in one block: vanilla's own skull renderer, run once per head.
 		BlockEntityRendererRegistry.register(StackedHeads.BLOCK_ENTITY, StackedHeadsRenderer::new);
 		StackedHeadsBreakPrediction.initialize();
+
+		// A rope knot is a fence knot: its own renderer draws vanilla's knot model, and draws the rope itself (vanilla's is a
+		// straight line at the wrong height, so the mod draws a hanging one).
+		EntityRendererRegistry.register(RopeKnots.ROPE_KNOT, RopeKnotRenderer::new);
 	}
 }
