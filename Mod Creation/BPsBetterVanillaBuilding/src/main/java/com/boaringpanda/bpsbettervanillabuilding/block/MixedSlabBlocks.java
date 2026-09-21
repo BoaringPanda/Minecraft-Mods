@@ -195,11 +195,14 @@ public class MixedSlabBlocks {
 		Identifier id = BPsBetterVanillaBuilding.id(name);
 		ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, id);
 
+		// It mines like the tougher of its two slabs (see MixedSlabBlock.toughestOf), so it gets that slab's hardness and blast
+		// resistance. It deliberately does not get requiresCorrectToolForDrops(): the block itself checks the tougher slab's real
+		// tool rule when it drops, and declaring it here would make vanilla check this block's own (unrelated) tool tags first.
+		Block toughest = MixedSlabBlock.toughestOf(bottomSlab, topSlab);
 		MixedSlabBlock block = new MixedSlabBlock(
 				BlockBehaviour.Properties.of()
 						.sound(SoundType.STONE)
-						.strength(1.5f, 6.0f)
-						.requiresCorrectToolForDrops()
+						.strength(MixedSlabBlock.hardnessOf(toughest), toughest.getExplosionResistance())
 						.setId(key),
 				bottomSlab,
 				topSlab

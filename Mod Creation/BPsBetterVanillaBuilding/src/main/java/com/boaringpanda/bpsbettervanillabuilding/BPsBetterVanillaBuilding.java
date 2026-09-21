@@ -10,6 +10,7 @@ import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadAccessoryInteracti
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadAccessoryPicking;
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadSignBlockEntities;
 import com.boaringpanda.bpsbettervanillabuilding.block.MixedSlabBlocks;
+import com.boaringpanda.bpsbettervanillabuilding.block.MixedSlabPicking;
 import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeads;
 import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeadsBreaking;
 import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeadsInteraction;
@@ -23,6 +24,7 @@ public class BPsBetterVanillaBuilding implements ModInitializer {
 		// Must come before MixedSlabBlocks: the terracotta slabs are mixed-slab materials.
 		TerracottaBlocks.initialize();
 		MixedSlabBlocks.initialize();
+		MixedSlabPicking.initialize();
 		LilyPadAccessories.initialize();
 		// Must come after LilyPadAccessories: reads its fully-populated SIGN_BLOCKS list.
 		LilyPadSignBlockEntities.initialize();

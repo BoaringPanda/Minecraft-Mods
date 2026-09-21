@@ -12,7 +12,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadTarget;
+import com.boaringpanda.bpsbettervanillabuilding.block.MixedSlabTarget;
 import com.boaringpanda.bpsbettervanillabuilding.block.custom.LilyPadCombo;
+import com.boaringpanda.bpsbettervanillabuilding.block.custom.MixedSlabBlock;
 
 /**
  * The cracks and the hit sound while a block is being mined all come from
@@ -37,6 +39,11 @@ public class ClientLevelMixin {
 	private BlockState useMinedPartState(BlockState state, @Local(argsOnly = true) BlockPos pos) {
 		if (state.getBlock() instanceof LilyPadCombo combo) {
 			return LilyPadTarget.partState(combo, state, Minecraft.getInstance().player, pos);
+		}
+
+		// A combined slab block: the slab being looked at, so the tap and the crumbs are its own.
+		if (state.getBlock() instanceof MixedSlabBlock combo) {
+			return MixedSlabTarget.aimedSlab(combo, Minecraft.getInstance().player, pos).defaultBlockState();
 		}
 
 		return state;

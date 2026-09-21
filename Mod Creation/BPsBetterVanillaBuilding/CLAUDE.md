@@ -31,11 +31,12 @@ rendering or GUI = `src/client`.
 - Build an `Identifier` with the helper `BPsBetterVanillaBuilding.id("some_path")` rather than by hand.
 - Assets live under `src/main/resources/assets/bpsbettervanillabuilding/`.
 - Data (recipes, loot tables, tags) under `src/main/resources/data/bpsbettervanillabuilding/`.
-- The mod has four mixins:
+- The mod has five mixins:
   - `mixin/LadderBlockMixin` (common) makes ladders hang from the block above, like vines. See "Ladders".
   - `mixin/SlabBlockMixin` (common) makes a different slab combine everywhere vanilla merges the same slab. See "Mixed slabs".
+  - `mixin/BlockItemMixin` (common) plays the placed slab's own place sound for a combined slab block. See "Mixed slabs".
   - `client/mixin/ClientLevelMixin` (client-only) makes mining particles and hit sounds come from the part of
-    a lily pad combo being mined. See "Particles, sounds and middle-click come from the part you aim at".
+    a lily pad combo or the slab of a combined slab block being mined. See "Particles, sounds and middle-click come from the part you aim at".
     Its config is `src/client/resources/bpsbettervanillabuilding.client.mixins.json`.
   - `mixin/PoiTypesInvoker` (common) lets lily-pad lightning rods register as vanilla's lightning-rod point
     of interest. See "Lightning rods and chains on a lily pad". Its config is
@@ -93,9 +94,9 @@ how the same slab merges with no height test at all. `mixin/SlabBlockMixin` does
 - `block/custom/MixedSlabBlock.java` — the block itself. Purely visual: no baked model
   of its own, `RenderShape` stays the default (`MODEL`) and the blockstate JSON layers two
   *existing vanilla* half-slab models on top of each other via `multipart` (see below) — no
-  BlockEntity, no custom renderer needed. `strength`/`sound` are one generic value shared by
-  every combo (not per-material); `requiresCorrectToolForDrops()` is always on, per the pickaxe
-  rule below.
+  BlockEntity, no custom renderer needed. **It mines like the tougher of its two slabs** (user's spec, 2026-09-21: two woods
+  need an axe, stone plus wool needs a pickaxe, "pick the hardest of the two, that's the tool you need"): see
+  "Mining a combined block" below. Sounds are separate, see below.
 - `block/MixedSlabBlocks.java` — the `MATERIALS` list and the registration loop. It is
   `VANILLA_MATERIALS` (every vanilla slab, currently 101 - one entry per
   `assets/minecraft/blockstates/*_slab.json` in the game, id = filename minus `_slab`) followed by
@@ -129,8 +130,20 @@ how the same slab merges with no height test at all. `mixin/SlabBlockMixin` does
   Same-slab merges and pairings not in `MixedSlabBlocks` (a modded slab) fall through to vanilla untouched.
   **Side effect, the same as vanilla same-slab merging:** clicking a slab's side in its empty half's height combines
   instead of placing a different slab beside it. Clicking the other half's height still places beside it.
-  `MixedSlabBlock.getSoundType` returns the bottom slab's sound, since the place sound now comes from the placed block
-  (it used to be played by hand from the existing slab).
+  **Sounds of a combined block** (user's spec, 2026-09-21: a block has one sound, but a combo is two materials, so each
+  sound comes from whichever slab makes sense). Steps and landings: `MixedSlabBlock.getSoundType` is the **top** slab's,
+  the surface you stand on. Placing: `mixin/BlockItemMixin` (common) injects at HEAD of `BlockItem.getPlaceSound` and, for a
+  combo placed from one of its own two slabs, returns the *held* slab's place sound (`this.getBlock()`), so a stone slab on a
+  wood slab plays stone. An earlier version used the bottom slab's sound for everything, which played wood for that case.
+  Breaking and mining: see "Particles, sounds and middle-click come from the part you aim at". Mining speed and tool for a
+  combo are still a shared stone value, which the user plans to change themselves.
+- `block/MixedSlabPicking.java` — middle-click (pick block) gives the **one slab you're pointing at**, not both and not the
+  block (it has no item). User's spec (2026-09-21). The server is only told the block's position, so
+  `block/MixedSlabTarget` casts the player's view ray against `Shapes.block()` (the same technique as `LilyPadTarget`): hit height >= 0.5 is the top slab, below is
+  the bottom slab, so the top face gives the top slab and the bottom face the bottom. It hooks `PlayerPickItemEvents.BLOCK`
+  and returns null for anything else. Everything after is vanilla's own `tryPickItem`: creative adds the slab to the hotbar,
+  survival selects it if it's in the inventory and does nothing if not. If the ray misses, `MixedSlabBlock.getCloneItemStack`
+  answers with the bottom slab (without it the default would be the block's own nonexistent item, and a pick would do nothing).
 
 **Don't assume a slab's model is named `<material>_slab`/`<material>_slab_top` — check.** True
 for most, but not all: waxed copper slabs (`waxed_oxidized_cut_copper_slab`, etc.) reuse their
@@ -160,14 +173,13 @@ material's *real* extracted bottom/top model paths (see above), e.g.:
   ]
 }
 ```
-and add `"bpsbettervanillabuilding:mixed_slab_<bottom>_bottom_<top>_top"` to
-`data/minecraft/tags/block/mineable/pickaxe.json` for each new pairing.
+There is nothing to add to any `mineable` tag: combined blocks are **not** in the tool tags any more (see "Mining a combined block").
 
 **This does not reach modded slabs automatically.** `MATERIALS` is a fixed list decided at
 build time, not a live scan of the block registry — a slab added later by installing another
 mod won't get mixed-slab support until it's added here and the game is rebuilt.
 
-At the current 118-material scale (13,806 generated blockstate files, ~1.1MB tag file), a
+At the current 118-material scale (13,806 generated blockstate files), a
 manual per-file loop like the one above is far too slow to run one-by-one - script the
 generation (load each material's id + extracted model paths into parallel arrays/a lookup, loop
 the pairs) rather than looping `grep` per material one at a time.
@@ -177,6 +189,28 @@ from process start to being in-world when there were ~10,100 mixed blocks (rough
 load). On 2026-09-21 with 13,806 it took only about 20s from `./gradlew runClient` to being in the world, on a
 single run with warm caches. So the time varies a lot and isn't a reliable number either way. Not a
 correctness problem, just worth knowing before assuming a slow launch is a bug.
+
+**Mining a combined block (it mines like the tougher of its two slabs).** User's spec, 2026-09-21. The two slabs are ranked by
+`MixedSlabBlock.toughestOf`: first a slab that needs a tool to drop anything (stone, terracotta, concrete, copper) beats one
+that doesn't (wood, wool), then the higher hardness, then the higher blast resistance, and the top slab wins a full tie. The
+user chose "needs a tool first" over "hardness number first" for cases like oak (2.0, no tool) plus terracotta (1.25,
+pickaxe), which is a pickaxe block. So oak+birch is an axe block, oak+wool is oak (axe), stone+wool is stone (pickaxe),
+wool+wool is wool.
+- **The tool data is not copied onto the combo, it is read from the tougher slab's real state**, so all of vanilla's tool rules
+  (axe on wood, shears on wool, pickaxe tiers) apply exactly as they do to that slab. `getDestroyProgress` returns
+  `toughest.defaultBlockState().getDestroyProgress(player, level, pos)`, and `playerDestroy` checks
+  `toughestState.requiresCorrectToolForDrops()` / `tool.isCorrectToolForDrops(toughestState)` before popping both slabs.
+  Vanilla's tags for the real slabs: wood slabs are in `mineable/axe`, stone-like, copper and concrete slabs in
+  `mineable/pickaxe`, wool slabs in no mineable tag.
+- **The combo is registered without `requiresCorrectToolForDrops()`, on purpose.** `ServerPlayerGameMode.destroyBlock` only
+  calls `Block.playerDestroy` if `player.hasCorrectToolForDrops(state)` for the *combo's own state*, which for a block that
+  requires a tool consults the combo's `mineable/*` and `needs_*_tool` tags. Leaving the flag off makes that check always pass,
+  so `playerDestroy` runs and makes the real check against the real slab. It does get the tougher slab's `strength(hardness,
+  resistance)` (read at registration with `state.getDestroySpeed(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)` and
+  `block.getExplosionResistance()`), for explosion resistance and tool wear.
+- **So combos are not in any `mineable` tag.** They were all in `mineable/pickaxe` at first (13,806 lines, which made two
+  woods need a pickaxe); that is gone, and the file is back to about 3KB.
+- Not covered: combos still have no loot table, so explosions and pistons drop nothing (drops only happen in `playerDestroy`).
 
 ## Terracotta stairs and slabs (real placeable blocks, and mixed-slab materials)
 
@@ -211,8 +245,8 @@ Per material, the files (all under `src/main/resources/`, generated by script, n
   (slabs drop 2 when double).
 - Recipes (`data/.../recipe/`): crafting is 6 -> 4 stairs and 3 -> 6 slabs, and stonecutting is 1 -> 1 and 1 -> 2,
   copied from vanilla stone's.
-- Tags: all 34 (plus every mixed block) in `mineable/pickaxe`, and new `minecraft:stairs` and `minecraft:slabs`
-  tags for both blocks and items.
+- Tags: all 34 in `mineable/pickaxe`, and new `minecraft:stairs` and `minecraft:slabs` tags for both blocks and items.
+  (The mixed blocks are no longer in `mineable/pickaxe`, see "Mining a combined block".)
 - 3,706 mixed-slab blockstates for the new pairings. A terracotta side points at our own slab models, a vanilla
   side at its real models as described above.
 
@@ -697,6 +731,19 @@ The three effect paths, all checked by disassembly:
   lily pad when the pad is aimed at, and `null` otherwise. `null` lets vanilla run the combo's
   `getCloneItemStack` and then its ctrl+pick data copy, which is how a player head keeps its skin. Fabric skips
   that copy for a stack the event returns itself, so the accessory must not come from the event.
+
+
+**Combined slab blocks (`MixedSlabBlock`) use the same idea**, so the break and the mining match the slab being looked at
+(user's spec, 2026-09-21; a combo's own sound would be one material for both). `block/MixedSlabTarget` says which half the
+player's view ray meets (upper half = top slab, lower = bottom slab; no player or a miss = the top slab).
+- Break sound and particles: `MixedSlabBlock` overrides `spawnDestroyByEntityParticles` (public in `Block`), which vanilla's
+  `playerWillDestroy` calls on the server and on the breaker's own client, and fires `LevelEvent 2001` with the aimed slab's
+  real default state ID. The client plays `Block.stateById(id).getSoundType().getBreakSound()` and spawns that state's
+  particles, so nothing else is needed. The breaker is left out of the server's broadcast, the same as lily pads.
+  Vanilla's own destroy sequence runs for these blocks, unlike lily pad combos, which skip it.
+- Mining tap and crumbs: a `MixedSlabBlock` branch in `ClientLevelMixin.useMinedPartState` returns the aimed slab's state,
+  using this client's own aim.
+- Middle-click: `MixedSlabPicking`, see "Mixed slabs".
 
 ## Lightning rods and chains on a lily pad (working rods; copper keeps aging)
 
