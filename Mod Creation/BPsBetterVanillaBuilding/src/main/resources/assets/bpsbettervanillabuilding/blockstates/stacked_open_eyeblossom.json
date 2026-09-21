@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "flowers=2": {
+      "model": "bpsbettervanillabuilding:block/stacked_open_eyeblossom_2"
+    },
+    "flowers=3": {
+      "model": "bpsbettervanillabuilding:block/stacked_open_eyeblossom_3"
+    },
+    "flowers=4": {
+      "model": "bpsbettervanillabuilding:block/stacked_open_eyeblossom_4"
+    }
+  }
+}

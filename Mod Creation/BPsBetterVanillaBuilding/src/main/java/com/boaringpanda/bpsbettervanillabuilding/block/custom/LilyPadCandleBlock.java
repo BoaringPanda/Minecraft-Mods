@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
@@ -34,9 +35,11 @@ import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadTarget;
  * What it does NOT inherit: vanilla's own "click with another candle to add
  * one" check compares the held item against {@code this.asItem()}, which is
  * {@code AIR} for a block with no registered {@code BlockItem} - so it never
- * matches. Stacking is instead handled explicitly by
- * {@link com.boaringpanda.bpsbettervanillabuilding.block.LilyPadAccessoryInteraction},
- * the same way the initial lily-pad-to-candle combine is.
+ * matches. That is fixed in two halves, so stacking works from every face and from
+ * the blocks beside it, exactly as it does for a real candle: {@link #canBeReplaced}
+ * answers vanilla's "can this held item be added to me?" with the real candle's item,
+ * and {@link com.boaringpanda.bpsbettervanillabuilding.mixin.CandleAndSeaPickleMixin}
+ * teaches the real candle to add one to this block, which vanilla only does for its own.
  */
 public class LilyPadCandleBlock extends CandleBlock implements LilyPadCombo {
 	/** The real vanilla candle block for this color - used for drops and for matching the held item when stacking. */
@@ -61,6 +64,21 @@ public class LilyPadCandleBlock extends CandleBlock implements LilyPadCombo {
 
 	public Block accessory() {
 		return this.accessory;
+	}
+
+	/**
+	 * Vanilla's own rule for a candle ({@code CandleBlock.canBeReplaced}), with the real candle's item in place of this
+	 * block's own (which doesn't exist): holding another one of the same candle, not sneaking, and fewer than 4 already,
+	 * means the click adds to this block. Vanilla asks this of the block in the space being placed into, so it holds for a
+	 * click on any face of the candle, on the lily pad, and on a block next to it.
+	 */
+	@Override
+	protected boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
+		if (!context.isSecondaryUseActive() && context.getItemInHand().getItem() == this.accessory.asItem() && state.getValue(CANDLES) < 4) {
+			return true;
+		}
+
+		return super.canBeReplaced(state, context);
 	}
 
 	@Override

@@ -1,0 +1,49 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "#cross",
+    "cross": "minecraft:block/dandelion"
+  },
+  "elements": [
+    {
+      "from": [ -2.70, 0, 4.50 ],
+      "to": [ 11.70, 16, 4.50 ],
+      "rotation": { "origin": [ 4.50, 8, 4.50 ], "axis": "y", "angle": 45, "rescale": true },
+      "shade_direction_override": "up",
+      "faces": {
+        "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" },
+        "south": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" }
+      }
+    },
+    {
+      "from": [ 4.50, 0, -2.70 ],
+      "to": [ 4.50, 16, 11.70 ],
+      "rotation": { "origin": [ 4.50, 8, 4.50 ], "axis": "y", "angle": 45, "rescale": true },
+      "shade_direction_override": "up",
+      "faces": {
+        "west": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" },
+        "east": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" }
+      }
+    },
+    {
+      "from": [ 4.30, 0, 11.50 ],
+      "to": [ 18.70, 16, 11.50 ],
+      "rotation": { "origin": [ 11.50, 8, 11.50 ], "axis": "y", "angle": 22.50, "rescale": true },
+      "shade_direction_override": "up",
+      "faces": {
+        "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" },
+        "south": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" }
+      }
+    },
+    {
+      "from": [ 11.50, 0, 4.30 ],
+      "to": [ 11.50, 16, 18.70 ],
+      "rotation": { "origin": [ 11.50, 8, 11.50 ], "axis": "y", "angle": 22.50, "rescale": true },
+      "shade_direction_override": "up",
+      "faces": {
+        "west": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" },
+        "east": { "uv": [ 0, 0, 16, 16 ], "texture": "#cross" }
+      }
+    }
+  ]
+}

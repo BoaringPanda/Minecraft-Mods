@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "flowers=2": {
+      "model": "bpsbettervanillabuilding:block/stacked_dandelion_2"
+    },
+    "flowers=3": {
+      "model": "bpsbettervanillabuilding:block/stacked_dandelion_3"
+    },
+    "flowers=4": {
+      "model": "bpsbettervanillabuilding:block/stacked_dandelion_4"
+    }
+  }
+}

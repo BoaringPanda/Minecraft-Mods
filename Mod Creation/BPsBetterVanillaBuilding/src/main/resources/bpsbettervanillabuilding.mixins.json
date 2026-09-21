@@ -3,7 +3,9 @@
 	"package": "com.boaringpanda.bpsbettervanillabuilding.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"BlockBehaviourMixin",
 		"BlockItemMixin",
+		"CandleAndSeaPickleMixin",
 		"LadderBlockMixin",
 		"PoiTypesInvoker",
 		"SlabBlockMixin"

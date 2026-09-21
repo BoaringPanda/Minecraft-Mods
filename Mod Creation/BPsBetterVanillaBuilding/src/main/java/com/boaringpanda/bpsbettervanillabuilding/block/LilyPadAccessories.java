@@ -176,6 +176,17 @@ public class LilyPadAccessories {
 	);
 
 	/**
+	 * The four amethyst growth stages you can place: small, medium and large bud, then the cluster. Always the upward
+	 * orientation (they're standing on the pad), which is the base model for all four: vanilla's blockstate only turns them
+	 * for the other five directions. Each is a plain {@code cross} model with its own texture, so the merged models are the
+	 * lily pad plus that cross. Light level is read from the vanilla block itself (1, 2, 4 and 5) rather than typed in.
+	 */
+	public static final LilyPadAccessoryBlock LILY_PAD_WITH_SMALL_AMETHYST_BUD = registerAmethyst("small_amethyst_bud", Blocks.SMALL_AMETHYST_BUD);
+	public static final LilyPadAccessoryBlock LILY_PAD_WITH_MEDIUM_AMETHYST_BUD = registerAmethyst("medium_amethyst_bud", Blocks.MEDIUM_AMETHYST_BUD);
+	public static final LilyPadAccessoryBlock LILY_PAD_WITH_LARGE_AMETHYST_BUD = registerAmethyst("large_amethyst_bud", Blocks.LARGE_AMETHYST_BUD);
+	public static final LilyPadAccessoryBlock LILY_PAD_WITH_AMETHYST_CLUSTER = registerAmethyst("amethyst_cluster", Blocks.AMETHYST_CLUSTER);
+
+	/**
 	 * Every candle color's own block id - these ARE the full ids already
 	 * ("candle" for plain, "white_candle" etc. for the 16 dye colors), not a
 	 * material prefix needing a suffix appended.
@@ -414,6 +425,18 @@ public class LilyPadAccessories {
 
 	private static Block resolve(String materialPath) {
 		return BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath("minecraft", materialPath));
+	}
+
+	private static LilyPadAccessoryBlock registerAmethyst(String amethystId, Block accessory) {
+		int light = accessory.defaultBlockState().getLightEmission();
+		return register(
+				"lily_pad_with_" + amethystId,
+				accessory,
+				BlockBehaviour.Properties.of()
+						.sound(SoundType.LILY_PAD)
+						.lightLevel(state -> light)
+						.strength(0.0f)
+		);
 	}
 
 	private static LilyPadAccessoryBlock register(String name, Block accessory, BlockBehaviour.Properties properties) {

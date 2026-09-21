@@ -31,10 +31,15 @@ rendering or GUI = `src/client`.
 - Build an `Identifier` with the helper `BPsBetterVanillaBuilding.id("some_path")` rather than by hand.
 - Assets live under `src/main/resources/assets/bpsbettervanillabuilding/`.
 - Data (recipes, loot tables, tags) under `src/main/resources/data/bpsbettervanillabuilding/`.
-- The mod has five mixins:
+- The mod has seven mixins:
   - `mixin/LadderBlockMixin` (common) makes ladders hang from the block above, like vines. See "Ladders".
   - `mixin/SlabBlockMixin` (common) makes a different slab combine everywhere vanilla merges the same slab. See "Mixed slabs".
-  - `mixin/BlockItemMixin` (common) plays the placed slab's own place sound for a combined slab block. See "Mixed slabs".
+  - `mixin/BlockItemMixin` (common) plays the placed item's own place sound for a combined slab block, or a candle/sea
+    pickle added to a lily pad, and makes a flower placed on the same flower a stack. See "Mixed slabs", "Candles and sea
+    pickles on a lily pad" and "Stacked flowers".
+  - `mixin/BlockBehaviourMixin` (common) lets a small flower be added to by another of the same. See "Stacked flowers".
+  - `mixin/CandleAndSeaPickleMixin` (common) lets the real candle and sea pickle add one to a lily pad combo. See
+    "Candles and sea pickles on a lily pad".
   - `client/mixin/ClientLevelMixin` (client-only) makes mining particles and hit sounds come from the part of
     a lily pad combo or the slab of a combined slab block being mined. See "Particles, sounds and middle-click come from the part you aim at".
     Its config is `src/client/resources/bpsbettervanillabuilding.client.mixins.json`.
@@ -341,11 +346,26 @@ this reason. Match that (`strength(0.0f)`, no tool requirement, no tag entry) ra
 new accessory's own harvesting rules. Light level and sound are still worth copying from the
 accessory, though — those aren't part of this exception. Currently registered this way: torch,
 soul torch, copper torch, lantern, soul lantern, copper lantern (all 8 variants: 4 oxidation stages + their waxed versions, one combo each so the exact item drops back, textures in `models/block/lily_pad_with_<variant>.json`, waxed reusing the unwaxed texture), redstone torch (always lit, a real
-power source - see below), end rod (always "facing=up" - it's already the base, unrotated model), and the
-flower pot (always empty - see below). Chains are decorative too, but registered separately because the copper
+power source - see below), end rod (always "facing=up" - it's already the base, unrotated model), the four
+amethyst blocks (see below), and the flower pot (always empty - see below). Chains are decorative too, but registered separately because the copper
 ones age (see the lightning rods and chains section). The 13 wood signs used to be here too (one fixed model,
 riding the lily pad's own rotation) but aren't anymore - see the signs section below for why they
 now need their own block class instead.
+
+**The four amethyst blocks** (small, medium and large amethyst bud, and the amethyst cluster; added 2026-09-21 at the user's
+request) are plain decorative accessories, one `LilyPadAccessoryBlock` each, through `LilyPadAccessories.registerAmethyst`.
+- Vanilla builds all four from `minecraft:block/cross` with a different texture (`block/<id>`), and the blockstate only
+  turns them for the five non-`up` facings, so on a pad (always upright) the base model is right as it is. The merged
+  models (`lily_pad_with_<id>.json`) are the lily pad element plus `cross`'s two elements copied verbatim (including
+  `rotation ... rescale` and `shade_direction_override`). The cross is two planes forming an X, which a 90 degree turn maps onto
+  itself, so the lily pad's random rotation can turn the whole merged model, like the lantern's handles.
+- **Light level is read from the vanilla block at registration** (`accessory.defaultBlockState().getLightEmission()`, which comes out
+  as 1, 2, 4 and 5) instead of being typed in, so it can't drift. Everything else is the standard decorative setup:
+  `SoundType.LILY_PAD`, `strength(0.0f)`, no tool, and the accessory's own item drops when broken. The place sound is
+  the amethyst's own, and `accessoryState` gives it aim-based break sounds and particles like the others.
+- Nothing else is needed: `LilyPadAccessories.all()` picks them up for the green tint, and the first one goes on a bare
+  lily pad through `LilyPadAccessoryInteraction.combine` (top face) like a torch. They aren't waterlogged and don't take
+  their vanilla `facing`.
 
 **Verify light levels rather than guess them** - checked each of these against the wiki before
 using it, since getting one wrong is an easy, easy-to-miss mistake: torch/end rod 14, copper
@@ -420,10 +440,20 @@ disassembling the compiled game (not guessing) showed:
   `getStateForPlacement` on the *held item's own* block (the real vanilla candle), which checks
   `existingState.is(this)` - false, since `existingState` is our combo, not that real block -  so
   it would compute a *fresh* placement and silently replace our combo (losing the lily pad
-  underneath) instead of incrementing it. Stacking is instead handled entirely by our own
-  `LilyPadAccessoryInteraction`, matching by `instanceof LilyPadCandleBlock`/
-  `LilyPadSeaPickleBlock` + `accessory() == heldBlock`, short-circuiting before any of that
-  vanilla logic runs - see `tryStack` there.
+  underneath) instead of incrementing it.
+  **Fixed properly in two halves, so it works exactly like a real candle** (changed 2026-09-21; the first version was a
+  `UseBlockCallback` with a `tryStack` method that only looked at clicks on the top face, so the user couldn't add
+  candles by clicking the sides, the lily pad, or the blocks beside it):
+  1. Each combo overrides `canBeReplaced` (vanilla's own rule: not sneaking, the held item is the *real* candle/pickle's
+     item, fewer than 4). Vanilla asks the block in the *placement space*, so it holds for any face of the candle, the
+     lily pad, and a block next to it.
+  2. `mixin/CandleAndSeaPickleMixin` (common) targets `CandleBlock` and `SeaPickleBlock` and injects at HEAD of
+     `getStateForPlacement`: if the block at the clicked position is one of our combos for the held block, return it
+     with the count + 1 (lit and the rest kept). That's the "held block computes the result" half.
+  Everything after that is vanilla's `BlockItem.place` (sneaking places beside instead, stack use-up, etc.).
+  `mixin/BlockItemMixin` plays the real candle/pickle's place sound, as the combo's own sound would be a lily pad's.
+  The **first** candle/pickle onto a bare lily pad is still `LilyPadAccessoryInteraction.combine` (top face only), since
+  vanilla can't place a candle on a lily pad at all.
 
 **Light level for candles**: `CandleBlock.LIGHT_EMISSION` is a public static
 `ToIntFunction<BlockState>` that already implements the real "scales with lit candle count"
@@ -958,6 +988,65 @@ is what a crosshair usually lands on.
 
 **Known limit:** a note block *under* a pair doesn't take the head's instrument, since vanilla checks the block above by
 identity. It would need a mixin.
+
+## Stacked flowers (up to 4 of the same small flower in one block)
+
+Right-click a small flower with the same flower to add another, up to 4 in one block, the way candles and sea pickles
+stack, and only wherever that flower can normally stand. User's spec (2026-09-21), from a picture of the creative menu's
+flower row: **16 flowers**, the 15 in the picture (dandelion, poppy, blue orchid, allium, azure bluet, the four tulips,
+oxeye daisy, cornflower, lily of the valley, closed and open eyeblossom, wither rose) plus the golden dandelion, **not**
+the torchflower. Same flower only in one block. Breaking a stack drops all of it, like candles. Not done: mixing flowers, taking
+one flower off a stack, potting a stack. A single flower is still the vanilla block, so nothing existing changes.
+
+- `block/StackedFlowers.java` — the 16 ids (`FLOWERS`), registers one `stacked_<flower>` block for each and keeps the
+  `real flower -> stack` map (`of(Block)`). To add a flower: add its id, rebuild, and run the generator (below).
+- `block/custom/StackedFlowerBlock.java` — the stack: a `FLOWERS` property (2-4), `Properties.ofFullCopy(<real flower>)` for the
+  sound, no collision and instant break, **but with `offsetType(NONE)`**: a single flower keeps vanilla's random position offset (up to
+  a quarter block off centre, which the user is happy with), a stack has none, because its flowers sit in the block's four quadrants
+  (below). The first version copied the offset and also spread the copies by a few pixels, so a group could sit ~11 pixels off centre
+  and spill into the next block's group, which the user reported (2026-09-21). **It extends `FlowerBlock`**, constructed with the real flower's
+  `getSuspiciousEffects()`, so bees, the flower tags and stew treat it as a flower. Everything else it asks the real flower:
+  - `canSurvive` = the real flower's own (a wither rose still needs its nether blocks); `updateShape` is inherited, so it pops off
+    when its ground goes, dropping the whole stack;
+  - `entityInside` (the wither rose's wither effect), `animateTick` (particles) and `getBeeInteractionEffect` are called on the
+    real flower's state;
+  - `canBeReplaced` is vanilla's candle rule (not sneaking, the same flower in hand, fewer than 4), `getCloneItemStack` is one
+    flower.
+- **The two questions vanilla asks, exactly as for candles** (see "Candles and sea pickles on a lily pad"): first the block in the
+  target space, "can the held item replace you?" (`canBeReplaced`), then the *held item's* block, "what block results?"
+  (`getPlacementState`). A plain flower says no to the first, so nothing stacked. Two mixins answer them:
+  - `mixin/BlockBehaviourMixin` (common), HEAD of `canBeReplaced(BlockState, BlockPlaceContext)`: for one of the 16 real flowers,
+    not sneaking, holding that flower -> true. It's on `BlockBehaviour` because flowers don't declare the method themselves;
+    it first checks the held item is this block's own, so it's nearly free for every other block.
+  - `mixin/BlockItemMixin`, HEAD of `getPlacementState`: the block in the space being the same single flower gives its stack of 2,
+    a stack of fewer than 4 gives +1, then the normal `canPlace` (a `@Shadow`). **It returns null, not "fall through", when the
+    result can't be placed**: vanilla's fallback would make a fresh single flower, replace the one there (which `canBeReplaced`
+    now allows) and use up the item.
+  The place sound needs nothing: the stack copies the flower's own sound.
+- **Eyeblossoms open at night and close by day** by vanilla replacing the block with a *single* eyeblossom of the other kind
+  (`setBlockAndUpdate(pos, type.transform().state())` inside the private `tryChangingState`), which would turn a stack into one.
+  So `StackedFlowerBlock.randomTick`/`tick` run the real flower's logic on its plain state (so the sound and particles still
+  happen), then, if the block became the other eyeblossom, put back the matching stack with the same count (`keepTheStack`).
+  Known difference: vanilla's version also nudges nearby eyeblossoms of the same kind to change, and it doesn't see stacks, so
+  stacks flip on their own random ticks only.
+- **Assets and data are generated, none hand-written** (a throwaway single-file Java program run with `java GenFlowers.java`, kept
+  in the scratchpad, not the repo; write it again the same way if you add a flower): per flower a blockstate
+  (`flowers=2|3|4`), three clump models `models/block/stacked_<f>_<2|3|4>.json`, and a loot table in vanilla's `candle.json`
+  format (`set_count` 2/3/4 by state, `explosion_decay`). **A stack is the flower's own cross (two crossed planes, from its vanilla
+  parent `cross`, with its texture) placed in the block's quadrants**: each flower is centred on a quadrant (4.5 or 11.5 pixels
+  from each edge) at **full size** (`SCALE = 1.0`, the same size as a vanilla flower; the user tried 0.75 first, so the four fit
+  inside their quadrants, and asked for the size back the same, 2026-09-21). At full size the flowers overlap each other and each
+  reaches about 2.7 pixels past the block edge, which is far less than the old random offset did, and it is the price of keeping
+  the size; scale less than 1.0 in `GenFlowers.java` if that ever needs tightening. Adding a
+  flower always fills the next quadrant in a fixed order, north-west, south-east, north-east, south-west (two sit diagonally, which
+  looks balanced), whatever was clicked and whichever way the player faces. The user asked for that on purpose: *not* the way leaf
+  litter and pink petals work, where the click or facing picks the segment. Each quadrant has its own angle (45, 22.5, -22.5, 0, the
+  only ones the model format allows) so a stack doesn't look stamped out. With one flower the vanilla single is used, so the first
+  flower "snaps" into its quadrant when the second is added. The tuning knobs are `SCALE` and `QUADRANTS` in `GenFlowers.java`. The open
+  eyeblossom's parent is `cross_emissive`, so its glowing overlay (`light_emission: 15`) is repeated with each copy. All 16 are plain
+  crosses otherwise.
+- Tags (`replace: false`): the 16 stacks are added to `minecraft:small_flowers` (which `#flowers` includes) and
+  `minecraft:bee_attractive`.
 
 ## Commands
 Run from this mod's folder (`BPsBetterVanillaBuilding/`, where `gradlew` lives), not the repo root, which

@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.SkullBlock;
 import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -37,14 +36,12 @@ import com.boaringpanda.bpsbettervanillabuilding.block.custom.LilyPadSkullBlock;
  * one block occupying the lily pad's own space (see {@link LilyPadAccessories}
  * for what's supported).
  * <p>
- * Also handles stacking a candle or sea pickle already on a lily pad up to
- * 4, since that isn't inherited "for free" the way lighting/extinguishing
- * are - see {@link LilyPadCandleBlock}/{@link LilyPadSeaPickleBlock}'s own
- * docs for why.
+ * Adding more candles or sea pickles to one already on a lily pad (up to 4) is <em>not</em>
+ * done here: it works from every face and from the blocks beside it, as it does for real
+ * ones, through vanilla's own placement. See {@link LilyPadCandleBlock}/{@link LilyPadSeaPickleBlock}
+ * and {@link com.boaringpanda.bpsbettervanillabuilding.mixin.CandleAndSeaPickleMixin}.
  */
 public class LilyPadAccessoryInteraction {
-	private static final int MAX_STACK = 4;
-
 	public static void initialize() {
 		UseBlockCallback.EVENT.register(LilyPadAccessoryInteraction::onUseBlock);
 	}
@@ -63,14 +60,6 @@ public class LilyPadAccessoryInteraction {
 		}
 
 		Block heldBlock = heldBlockItem.getBlock();
-
-		if (existingState.getBlock() instanceof LilyPadCandleBlock candleCombo && candleCombo.accessory() == heldBlock) {
-			return tryStack(level, pos, existingState, player, heldStack, CandleBlock.CANDLES, candleCombo.accessory());
-		}
-
-		if (existingState.getBlock() instanceof LilyPadSeaPickleBlock && heldBlock == Blocks.SEA_PICKLE) {
-			return tryStack(level, pos, existingState, player, heldStack, SeaPickleBlock.PICKLES, Blocks.SEA_PICKLE);
-		}
 
 		if (existingState.getBlock() == LilyPadAccessories.LILY_PAD_WITH_FLOWER_POT) {
 			return plant(level, pos, heldBlock, player, heldStack);
@@ -184,33 +173,5 @@ public class LilyPadAccessoryInteraction {
 			blockEntity.applyComponentsFromItemStack(heldStack);
 			blockEntity.setChanged();
 		}
-	}
-
-	private static InteractionResult tryStack(
-			Level level,
-			BlockPos pos,
-			BlockState existingState,
-			Player player,
-			ItemStack heldStack,
-			IntegerProperty countProperty,
-			Block accessory
-	) {
-		int count = existingState.getValue(countProperty);
-		if (count >= MAX_STACK) {
-			return InteractionResult.PASS;
-		}
-
-		if (level.isClientSide()) {
-			return InteractionResult.SUCCESS;
-		}
-
-		level.setBlockAndUpdate(pos, existingState.setValue(countProperty, count + 1));
-		level.playSound(null, pos, accessory.defaultBlockState().getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0F, 1.0F);
-
-		if (!player.isCreative()) {
-			heldStack.shrink(1);
-		}
-
-		return InteractionResult.SUCCESS;
 	}
 }

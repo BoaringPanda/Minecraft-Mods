@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "flowers=2": {
+      "model": "bpsbettervanillabuilding:block/stacked_azure_bluet_2"
+    },
+    "flowers=3": {
+      "model": "bpsbettervanillabuilding:block/stacked_azure_bluet_3"
+    },
+    "flowers=4": {
+      "model": "bpsbettervanillabuilding:block/stacked_azure_bluet_4"
+    }
+  }
+}
