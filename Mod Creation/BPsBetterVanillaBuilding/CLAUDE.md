@@ -31,7 +31,9 @@ rendering or GUI = `src/client`.
 - Build an `Identifier` with the helper `BPsBetterVanillaBuilding.id("some_path")` rather than by hand.
 - Assets live under `src/main/resources/assets/bpsbettervanillabuilding/`.
 - Data (recipes, loot tables, tags) under `src/main/resources/data/bpsbettervanillabuilding/`.
-- The mod has two mixins:
+- The mod has four mixins:
+  - `mixin/LadderBlockMixin` (common) makes ladders hang from the block above, like vines. See "Ladders".
+  - `mixin/SlabBlockMixin` (common) makes a different slab combine everywhere vanilla merges the same slab. See "Mixed slabs".
   - `client/mixin/ClientLevelMixin` (client-only) makes mining particles and hit sounds come from the part of
     a lily pad combo being mined. See "Particles, sounds and middle-click come from the part you aim at".
     Its config is `src/client/resources/bpsbettervanillabuilding.client.mixins.json`.
@@ -39,7 +41,7 @@ rendering or GUI = `src/client`.
     of interest. See "Lightning rods and chains on a lily pad". Its config is
     `src/main/resources/bpsbettervanillabuilding.mixins.json`.
 
-  Neither has a Fabric hook to use instead, and both sections explain why. Both configs are listed under
+  None has a Fabric hook to use instead, and each section explains why. Both configs are listed under
   `"mixins"` in `fabric.mod.json`, the client one with `"environment": "client"`. A new config has to be
   listed there too, or it won't be applied. Prefer the Fabric API event hooks over a mixin when one exists.
   MixinExtras (`@ModifyExpressionValue`, `@Local`, ...) comes with Fabric Loader and is already on the classpath.
@@ -51,11 +53,19 @@ For a plain standalone block with an item (one a player can hold and place from 
 inventory): one static field per block, a private `register()` helper that does
 `Registry.register` for both the block and its `BlockItem`, plus a public `initialize()` that's
 called once from `BPsBetterVanillaBuilding.onInitialize()` — that call is what forces the class to load and
-the registration to actually run. `block/MixedSlabBlocks.java`'s `register()` is close to this
-shape, minus the `BlockItem` half — these combo blocks are deliberately never held/placed
-directly, so there's no current example in this repo that registers both; add the `BlockItem`
-half back in following the pattern fabric-docs uses (`Registry.register` on
-`BuiltInRegistries.ITEM` with a `new BlockItem(block, ...)`) if a future block needs one.
+the registration to actually run. `block/TerracottaBlocks.java` is the real example: its `register()` registers
+the block and then `new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix())`
+under the same ID. Both `setId(...)` calls are required in 26.x, or registration throws.
+`block/MixedSlabBlocks.java`'s `register()` is the same shape minus the `BlockItem` half, because those combo
+blocks are deliberately never held or placed directly.
+
+To show a block's item in a creative tab, use Fabric's `CreativeModeTabEvents.modifyOutputEvent(tabKey)` (package
+`net.fabricmc.fabric.api.creativetab.v1`, from `fabric-creative-tab-api-v1`; the old `ItemGroupEvents` is gone).
+Vanilla's tab keys (`CreativeModeTabs.BUILDING_BLOCKS`, `COLORED_BLOCKS`, ...) are private, so `TerracottaBlocks`
+builds the key itself:
+`ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("colored_blocks"))`.
+The callback's output has `insertAfter(target, items...)` to place items next to a vanilla one, rather than at the
+end of the tab.
 
 Per-block assets needed for a block to look and behave right in-game (all keyed by the same
 block ID):
@@ -67,17 +77,18 @@ block ID):
   checkerboard placeholder, everything else still works
 - `assets/bpsbettervanillabuilding/items/<id>.json` — the client item, so it renders in inventory/hand
 - `assets/bpsbettervanillabuilding/lang/en_us.json` — `"block.bpsbettervanillabuilding.<id>": "Display Name"`
-- `data/bpsbettervanillabuilding/loot_tables/blocks/<id>.json` — drop itself when broken (otherwise no drop)
+- `data/bpsbettervanillabuilding/loot_table/blocks/<id>.json` — drop itself when broken (otherwise no drop).
+  The folder is `loot_table`, singular, in 26.x (as is `recipe`), not the old `loot_tables`
 - `data/minecraft/tags/block/mineable/<tool>.json` — add `"bpsbettervanillabuilding:<id>"` to `pickaxe`/`axe`/
   `shovel`/`hoe` so the intended tool is effective (`values` is a flat list of item IDs)
 
 ## Mixed slabs (combine two different slabs into one block)
 
-Right-clicking a placed single slab's exposed flat face with a *different* slab item
-combines them into one full-size `MixedSlabBlock` — bottom material on the bottom half,
-top material on top. Same click spot as merging two same-type slabs into a vanilla
-double slab (`Direction.UP` on a bottom half, `Direction.DOWN` on a top half); a side-face
-click is left alone so vanilla just places the new slab in the adjacent space as usual.
+Placing a *different* slab where vanilla would merge two of the *same* slab into a double slab combines them into one
+full-size `MixedSlabBlock` — bottom material on the bottom half, top material on top. "Where vanilla would merge" means
+every way vanilla allows: clicking the slab's own empty-half side (`UP` on a bottom slab, `DOWN` on a top slab, or a
+side face at the empty half's height), **and clicking a block next to the slab, or the ground under or over it**, which is
+how the same slab merges with no height test at all. `mixin/SlabBlockMixin` does this; see the bullet below.
 
 - `block/custom/MixedSlabBlock.java` — the block itself. Purely visual: no baked model
   of its own, `RenderShape` stays the default (`MODEL`) and the blockstate JSON layers two
@@ -85,18 +96,41 @@ click is left alone so vanilla just places the new slab in the adjacent space as
   BlockEntity, no custom renderer needed. `strength`/`sound` are one generic value shared by
   every combo (not per-material); `requiresCorrectToolForDrops()` is always on, per the pickaxe
   rule below.
-- `block/MixedSlabBlocks.java` — the `MATERIALS` list (every vanilla slab, currently 101 - one
-  entry per `assets/minecraft/blockstates/*_slab.json` in the game, id = filename minus
-  `_slab`) and the registration loop. Generates one block per *ordered* pair (order matters —
-  oak-bottom/stone-top ≠ stone-bottom/oak-top), skipping a material paired with itself: 101×100
-  = 10,100 blocks. Each material is resolved to its actual `Block` via a registry lookup on
-  `minecraft:<material>_slab`, **not** a `Blocks.*` constant — wool, concrete and copper slabs
+- `block/MixedSlabBlocks.java` — the `MATERIALS` list and the registration loop. It is
+  `VANILLA_MATERIALS` (every vanilla slab, currently 101 - one entry per
+  `assets/minecraft/blockstates/*_slab.json` in the game, id = filename minus `_slab`) followed by
+  `TerracottaBlocks.MATERIALS` (this mod's own 17 terracotta slabs, 118 in total). Generates one block per
+  *ordered* pair (order matters — oak-bottom/stone-top ≠ stone-bottom/oak-top), skipping a material paired
+  with itself: 118×117 = 13,806 blocks. Each vanilla material is resolved to its actual `Block` via a
+  registry lookup on `minecraft:<material>_slab` (the terracotta ones under `bpsbettervanillabuilding:`
+  instead), **not** a `Blocks.*` constant — wool, concrete and copper slabs
   aren't individual `Blocks` fields (they're `ColorCollection`/`WeatheringCopperCollection`
   entries), so a lookup by ID is what handles every material uniformly without needing to know
   which. No `BlockItem` — these are never obtainable directly, only ever the result of combining
   two slabs.
-- `block/MixedSlabInteraction.java` — the `UseBlockCallback` that detects the combine click
-  and swaps the single slab for the right registered combo block.
+- `mixin/SlabBlockMixin.java` (common) — makes a different slab combine everywhere the same slab would merge, by
+  answering vanilla's own two placement questions rather than listening for clicks. It replaced a `UseBlockCallback`
+  class (`MixedSlabInteraction`), removed 2026-09-21 after the user found the callback missed clicking the full block
+  *beside* a top slab, which works for the same slab in vanilla. A callback on the clicked block can never see that
+  case. What vanilla does (checked by disassembly, 26.3):
+  1. `BlockPlaceContext` starts with `replaceClicked = true`, then sets it to `clickedState.canBeReplaced(this)`;
+     `getClickedPos()` is the clicked block if true, otherwise `clickedPos.relative(face)`. So the block in the
+     *placement space* is asked `canBeReplaced` with the held item.
+  2. `SlabBlock.canBeReplaced` is false for a double slab or a different item; if `replacingClickedOnBlock()` it tests
+     the face and the click height (bottom slab: `UP`, or a horizontal face in the upper half; top slab: `DOWN`, or a
+     horizontal face in the lower half); otherwise it's simply `true`. The mixin injects at HEAD of it for a *different*
+     slab that has a combo in `MixedSlabBlocks`, and returns that exact rule.
+  3. `BlockItem.getPlacementState` asks the *held* block's `getStateForPlacement`, then `canPlace` runs
+     `isUnobstructed` (entities in the way) on the result. `SlabBlock` only returns a double slab when the existing block
+     `is(this)`. The mixin injects at HEAD of it and returns the combo block for the pair.
+
+  Everything after that is vanilla's `BlockItem.place`: the sound, using up the stack, the game event, sneaking and blocks
+  with their own use (a chest still opens first), adventure mode, and refusing when something stands in the empty half.
+  Same-slab merges and pairings not in `MixedSlabBlocks` (a modded slab) fall through to vanilla untouched.
+  **Side effect, the same as vanilla same-slab merging:** clicking a slab's side in its empty half's height combines
+  instead of placing a different slab beside it. Clicking the other half's height still places beside it.
+  `MixedSlabBlock.getSoundType` returns the bottom slab's sound, since the place sound now comes from the placed block
+  (it used to be played by hand from the existing slab).
 
 **Don't assume a slab's model is named `<material>_slab`/`<material>_slab_top` — check.** True
 for most, but not all: waxed copper slabs (`waxed_oxidized_cut_copper_slab`, etc.) reuse their
@@ -113,7 +147,8 @@ grep -A1 '"type=top"'    assets/minecraft/blockstates/<material>_slab.json | gre
 ```
 
 **To add a material** (a modded slab, or a future vanilla one not on the list yet): add its id
-to `MATERIALS` in `MixedSlabBlocks.java`, then regenerate for every OTHER existing material
+to `VANILLA_MATERIALS` in `MixedSlabBlocks.java` (or, for a slab this mod adds, to `TerracottaBlocks.MATERIALS`
+or a similar list that `MATERIALS` concatenates), then regenerate for every OTHER existing material
 (both orders) - one blockstate file per new pairing at
 `assets/bpsbettervanillabuilding/blockstates/mixed_slab_<bottom>_bottom_<top>_top.json`, using each
 material's *real* extracted bottom/top model paths (see above), e.g.:
@@ -132,15 +167,59 @@ and add `"bpsbettervanillabuilding:mixed_slab_<bottom>_bottom_<top>_top"` to
 build time, not a live scan of the block registry — a slab added later by installing another
 mod won't get mixed-slab support until it's added here and the game is rebuilt.
 
-At the current 101-material scale (10,100 generated blockstate files, ~700KB tag file), a
+At the current 118-material scale (13,806 generated blockstate files, ~1.1MB tag file), a
 manual per-file loop like the one above is far too slow to run one-by-one - script the
 generation (load each material's id + extracted model paths into parallel arrays/a lookup, loop
 the pairs) rather than looping `grep` per material one at a time.
 
-**Startup time cost:** this scale measurably slows the dev client's first launch after a
-rebuild - about 65s from process start to being in-world in testing (roughly 2× a plain
-Fabric+Fabric-API load), from registering/loading ~10,100 extra blocks and resources. Not a
+**Startup time cost:** this scale can slow the dev client's first launch after a rebuild. It was about 65s
+from process start to being in-world when there were ~10,100 mixed blocks (roughly 2× a plain Fabric+Fabric-API
+load). On 2026-09-21 with 13,806 it took only about 20s from `./gradlew runClient` to being in the world, on a
+single run with warm caches. So the time varies a lot and isn't a reliable number either way. Not a
 correctness problem, just worth knowing before assuming a slow launch is a bug.
+
+## Terracotta stairs and slabs (real placeable blocks, and mixed-slab materials)
+
+Vanilla has no terracotta stairs or slabs. This mod adds `<material>_stairs` and `<material>_slab` for plain
+terracotta and the 16 dyed ones (34 blocks; **not** glazed terracotta, by the user's choice, 2026-09-21).
+Materials are the vanilla block IDs, e.g. `white_terracotta` -> `white_terracotta_stairs`, and plain `terracotta`
+-> `terracotta_slab`. They are the repo's first blocks with a `BlockItem`, and they reuse vanilla's terracotta
+textures, so there is no new art.
+
+- `block/TerracottaBlocks.java` — `MATERIALS` (the 17 ids), `initialize()` and `register()`. Each block is
+  `BlockBehaviour.Properties.ofFullCopy(<vanilla block>)`, so hardness, sound, map colour and the pickaxe
+  requirement all come from the real block. Called from `onInitialize()` **before** `MixedSlabBlocks`, because
+  the terracotta slabs are mixed-slab materials.
+  The items go in the **Colored Blocks** tab (the user's choice, 2026-09-21), not Building Blocks. Vanilla lists
+  each block type for every colour in one run: wool, wool stairs, wool slabs, carpet, terracotta, dyed terracotta,
+  concrete, concrete stairs, concrete slabs, ... (read from `CreativeModeTabs.lambda$bootstrap$5`). So all 17
+  terracotta stairs go right after `minecraft:pink_terracotta` (the last dyed one), then all 17 slabs, each run
+  with plain terracotta first, matching vanilla's plain-then-dyed. `MATERIALS` is in the tab's colour order (white,
+  light gray, gray, black, brown, red, orange, yellow, lime, green, cyan, light blue, blue, purple, magenta,
+  pink), so keep it that way.
+- `block/custom/TerracottaStairBlock.java` — a plain `StairBlock` subclass, since vanilla's constructor is
+  `protected`. Slabs are plain `SlabBlock`, so `SlabBlockMixin` picks them up with no change.
+- The 17 slabs are in `MixedSlabBlocks.MATERIALS`, so they combine with every other slab in both orders.
+
+Per material, the files (all under `src/main/resources/`, generated by script, none hand-written):
+- `blockstates/<id>.json`: stairs copy vanilla `stone_stairs.json` with the model names swapped; slabs are
+  `type=bottom/top` (our models) and `type=double` (`minecraft:block/<material>`, the full vanilla block).
+- `models/block/`: `<m>_stairs`, `_stairs_inner`, `_stairs_outer`, `<m>_slab`, `<m>_slab_top`, each a vanilla
+  parent (`stairs`, `inner_stairs`, `outer_stairs`, `slab`, `slab_top`) with `bottom`/`side`/`top` set to
+  `minecraft:block/<material>`.
+- `items/<id>.json`, `lang/en_us.json` (the repo's only lang file), and loot tables copied from vanilla stone's
+  (slabs drop 2 when double).
+- Recipes (`data/.../recipe/`): crafting is 6 -> 4 stairs and 3 -> 6 slabs, and stonecutting is 1 -> 1 and 1 -> 2,
+  copied from vanilla stone's.
+- Tags: all 34 (plus every mixed block) in `mineable/pickaxe`, and new `minecraft:stairs` and `minecraft:slabs`
+  tags for both blocks and items.
+- 3,706 mixed-slab blockstates for the new pairings. A terracotta side points at our own slab models, a vanilla
+  side at its real models as described above.
+
+No Python on this machine and no generator in the repo. It was a throwaway single-file Java program run with
+`java Gen.java` (JDK 25 launches source files directly) that read vanilla's `stone_stairs`/`stone_slab` files
+out of the Minecraft jars as templates, and first checked that it could reproduce all 10,100 existing mixed
+blockstates byte for byte. Do the same for any future batch (it took a few minutes to write).
 
 ## Lily pad accessories (torch/lantern standing on a lily pad)
 
@@ -740,6 +819,99 @@ Banner combos are in `minecraft:banners` (`data/minecraft/tags/block/banners.jso
 because vanilla's `mineable/axe` includes `#minecraft:banners`, and lets filled maps mark them, because
 `MapItem` checks this tag plus `BannerBlockEntity`.
 
+## Ladders (hang like vines)
+
+`mixin/LadderBlockMixin` lets a ladder hang from above, like a vine. Vanilla's rule (sturdy block behind it)
+still works, and a ladder now also survives when the block above is a ladder or has a sturdy underside
+(`isFaceSturdy(DOWN)`). So a chain hangs from the block at its top, and breaking that block drops the whole
+chain. User's spec (2026-09-21): "if the top supporting block is broken, all the ladders break, but that's it,
+nothing else". A ladder with air above it and no wall behind it can't be placed.
+Common code: the server decides whether a ladder stays.
+
+Three injections, all needed:
+- `canSurvive` (RETURN): if vanilla says no, apply the hanging rule.
+- `updateShape` (HEAD): vanilla only re-checks when the block *behind* changes. Without a check for
+  `Direction.UP` nothing would ever pop the chain. Returning air makes the game destroy the block with its
+  drop (`Block.updateOrDestroy`), and that update cascades to the ladder below.
+- `getStateForPlacement` (RETURN): vanilla picks the first horizontal looking direction where `canSurvive` is
+  true, and hanging now makes that the first one every time. This swaps in a side with a real sturdy wall
+  (shadowed private `canAttachTo`) when there is one, so ladders still stick to walls. With no wall the
+  ladder faces away from where you're looking.
+
+A ladder that only has a wall behind it (air above) still pops when that wall goes, as in vanilla. Breaking
+the wall behind a hanging chain does nothing.
+
+## Stacked heads (two per block space)
+
+A floor head is half a block tall, so vanilla puts a second head in the block above with an 8px gap. Right-clicking
+the **top face of a floor head** with another floor head now puts it in the top half of the *same* block, so two
+fill one block space. User's spec (2026-09-21): any of the 7 floor heads on any other, heads on the ground only. Look at a
+head and break just that one; **the other one is left completely alone** (see Breaking). Clicking the top of a full pair falls through to
+vanilla, which places the next head in the block above, and that one can take its own partner, so a tall stack is
+just more pairs. Not done: heads on a lily pad (`LilyPadSkullBlock`) and wall heads.
+
+**One block, one block entity, up to two real vanilla skulls inside it.** Heads are drawn by vanilla's block entity
+renderer, not a model, and a block has only one block entity, so a pair is its own block:
+- `block/custom/StackedHeadsBlock` (`BaseEntityBlock`, only a `POWERED` property) is what the world sees: shapes,
+  redstone, drops, ticker. No item, no loot table, blockstate `stacked_heads.json` reuses vanilla's
+  particle-only `minecraft:block/skull` model. Registered in `block/StackedHeads` with its block entity type.
+- `block/custom/StackedHeadsBlockEntity` holds up to two **plain vanilla `SkullBlockEntity` objects that are never placed
+  in the world**, as data holders (`bottom`, `top`, each nullable): head block state (which head + rotation), skin, custom name and
+  note block sound, all vanilla's own. They get the block's position and level (`setLevel` is passed down) so
+  vanilla's renderer can light them. A holder's block state isn't part of what a skull saves, so the block ID and
+  rotation are saved next to it, each in a `bottom`/`top` child of the `ValueOutput`; **an empty half is just not saved**.
+  `getUpdatePacket`/`getUpdateTag` are the same as vanilla's skull, so clients get the skins.
+- Data moves between a placed vanilla head and a holder as **components**: `collectComponents()` out,
+  `applyComponents(map, DataComponentPatch.EMPTY)` in. `applyComponentsFromItemStack` for the held item. There's no
+  serialisation step, and `block_entity_data` on an item isn't supported for the top head.
+- **Renderer** (client, `client/block/StackedHeadsRenderer`): builds one vanilla `SkullBlockRenderer` from its `Context`
+  and calls its public `extractRenderState` and `submit` once per *present* head, the top one after
+  `poseStack.translate(0, 0.5, 0)`. That works because the vanilla renderer reads only the skull block entity's
+  block state, its skin and its animation (checked by disassembly). The skin, models and the dragon and piglin
+  animation are vanilla's, so nothing about a head is reimplemented. Registered in `BPsBetterVanillaBuildingClient`.
+- **Animation:** `SkullBlockEntity.animation` takes the block state as an argument, so `clientTick` passes each head's
+  state with the *block's* `POWERED` in. That's how a powered dragon head opens its mouth.
+- **Shapes:** each head's own vanilla outline/collision shape, the top one moved up 0.5, read from the block entity
+  (a piglin is wider), and an empty half has `Shapes.empty()`. `Block.column(8, 0, 16)` if the block entity is missing.
+
+**Placement** (`StackedHeadsInteraction`, a `UseBlockCallback`): held item is a `BlockItem` whose block is a
+`SkullBlock` (that's the standing head, never the wall one) and the click is on the `UP` face of either
+(a) a vanilla `SkullBlock`, **that is not a `LilyPadCombo`** (`LilyPadSkullBlock extends SkullBlock`, so without that check
+it would match), which becomes a pair block holding it in the bottom half, or (b) a pair block that has only a bottom
+head, whose empty top half is filled. Refuses if `level.isUnobstructed` fails for the top half (a player standing on the
+first head would end up inside the new one). The old head keeps its exact state and data; the new one gets rotation
+`convertToSegment(player.getYRot())` (no +180, like every head).
+
+**Breaking and middle-click** (`StackedHeadsBreaking`, aim from `StackedHeadsTarget`, the two-head version of `LilyPadTarget`)
+act on the head being aimed at. **Break drops that head (none in creative) and touches nothing else**: the other head
+stays in its own half, facing the same way, and the pair block stays a pair block holding one head; only when the last head goes
+does the block become air. This was changed on 2026-09-21: the first version replaced the block with a vanilla head and, when the
+bottom head broke, dropped the top one down into its place, which looked like the remaining head turning (it kept the *top*
+head's rotation). The user wanted the other head unaffected. Removal is `removeHead(top)` + `setChanged()` +
+`level.sendBlockUpdated(...)`, so only the block entity's data goes to clients. With one head in the block, aiming at anything
+means that head (`aimedAtTop`). It hooks `PlayerBlockBreakEvents.BEFORE` and returns `false` for the same reason as
+`LilyPadAccessoryBreaking`. Drops run vanilla's own loot table against the head's holder via `LilyPadVanillaDrops.accessory`
+(package-private in `block/custom`, so the call is `StackedHeadsBlockEntity.drops`). `getDrops(state, params)` returns both
+heads' drops for explosions and pistons, which would otherwise delete a player head.
+
+**The break blink, and how it's fixed.** The breaker's own client predicts the whole block turning to air before the
+server's answer arrives, so the head left behind blinked out and back in (reported by the user, 2026-09-21).
+`client/block/StackedHeadsBreakPrediction` fixes it as `LilyPadBreakPrediction` does for pads: in
+`ClientPlayerBlockBreakEvents.AFTER`, when the block had two heads, it puts the same pair block straight back and refills
+the kept head's half with its state and components, using the same `aimedAtTop` test as the server. By then the pair's block entity is
+gone, so the pair under the crosshair is remembered every client tick (`END_CLIENT_TICK`, from `client.hitResult`) and cleared on
+disconnect. If the two ever disagree about which head was aimed at, the server's answer wins and the head flips.
+
+**How the "always breaks the bottom" report was diagnosed:** temporary logging on both sides showed client and server always
+agreed, that the top shape was hit when the crosshair was on the upper half (local y >= 0.5) and the bottom shape on the lower
+half, and that most of the user's breaks were simply on the lower half. A standalone test (`java ShapeTest.java` with the
+game jars on the classpath, since `Shapes` needs no bootstrap) confirmed the shape maths. So the aim test was right, and
+the real problem was the head dropping down. Worth remembering: heads look small, and from standing height the lower half
+is what a crosshair usually lands on.
+
+**Known limit:** a note block *under* a pair doesn't take the head's instrument, since vanilla checks the block above by
+identity. It would need a mixin.
+
 ## Commands
 Run from this mod's folder (`BPsBetterVanillaBuilding/`, where `gradlew` lives), not the repo root, which
 holds several mods. `JAVA_HOME` must point at the JDK 25 install.
@@ -767,7 +939,7 @@ that uploads them as artifacts. The user's rule is that jars are never uploaded 
 **What a player needs:** Minecraft 26.3, Fabric Loader 0.19.5 or newer, and Fabric API 0.160.7 or newer for
 26.3, plus this jar in their `mods` folder. The official launcher supplies Java itself. To play together,
 every player needs the mod, and so does the server (dedicated servers need Fabric and Fabric API too). A
-LAN world runs on the host's game, so the host needs it as well. Expect a slow first load: about 10,100
+LAN world runs on the host's game, so the host needs it as well. Expect a slow first load: about 13,800
 mixed-slab blocks are registered at startup.
 
 ## Version bumps

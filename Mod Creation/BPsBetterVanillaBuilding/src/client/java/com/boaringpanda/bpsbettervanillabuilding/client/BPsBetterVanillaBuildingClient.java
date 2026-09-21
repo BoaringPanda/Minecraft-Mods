@@ -10,8 +10,11 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 
 import com.boaringpanda.bpsbettervanillabuilding.block.LilyPadSignBlockEntities;
+import com.boaringpanda.bpsbettervanillabuilding.block.StackedHeads;
 import com.boaringpanda.bpsbettervanillabuilding.client.block.LilyPadAccessoryColors;
 import com.boaringpanda.bpsbettervanillabuilding.client.block.LilyPadBreakPrediction;
+import com.boaringpanda.bpsbettervanillabuilding.client.block.StackedHeadsBreakPrediction;
+import com.boaringpanda.bpsbettervanillabuilding.client.block.StackedHeadsRenderer;
 
 public class BPsBetterVanillaBuildingClient implements ClientModInitializer {
 	@Override
@@ -26,5 +29,9 @@ public class BPsBetterVanillaBuildingClient implements ClientModInitializer {
 		// baked block model - so there's nothing lily-pad-specific for a custom renderer to do.
 		BlockEntityRendererProvider<SignBlockEntity, StandingSignRenderState> signRenderer = StandingSignRenderer::new;
 		BlockEntityRendererRegistry.register(LilyPadSignBlockEntities.LILY_PAD_SIGN, signRenderer);
+
+		// Two heads in one block: vanilla's own skull renderer, run once per head.
+		BlockEntityRendererRegistry.register(StackedHeads.BLOCK_ENTITY, StackedHeadsRenderer::new);
+		StackedHeadsBreakPrediction.initialize();
 	}
 }

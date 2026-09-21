@@ -3,6 +3,7 @@ package com.boaringpanda.bpsbettervanillabuilding.block;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -46,7 +47,8 @@ import com.boaringpanda.bpsbettervanillabuilding.block.custom.MixedSlabBlock;
 public class MixedSlabBlocks {
 	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger("bpsbettervanillabuilding/mixed_slabs");
 
-	private static final List<String> MATERIALS = List.of(
+	/** Every vanilla slab, resolved under {@code minecraft:}. */
+	private static final List<String> VANILLA_MATERIALS = List.of(
 			"acacia",
 			"andesite",
 			"bamboo",
@@ -150,13 +152,22 @@ public class MixedSlabBlocks {
 			"yellow_wool"
 	);
 
+	/**
+	 * Every material that gets mixed blocks: the vanilla slabs, then this mod's own terracotta slabs
+	 * ({@link TerracottaBlocks#MATERIALS}, resolved under {@code bpsbettervanillabuilding:} instead).
+	 */
+	private static final List<String> MATERIALS = Stream.concat(
+			VANILLA_MATERIALS.stream(), TerracottaBlocks.MATERIALS.stream()).toList();
+
 	/** bottom slab -> top slab -> the combined block for that pairing. */
 	private static final Map<Block, Map<Block, MixedSlabBlock>> BY_MATERIALS = new LinkedHashMap<>();
 
 	public static void initialize() {
 		Map<String, Block> resolved = new LinkedHashMap<>();
 		for (String material : MATERIALS) {
-			Identifier slabId = Identifier.fromNamespaceAndPath("minecraft", material + "_slab");
+			Identifier slabId = TerracottaBlocks.MATERIALS.contains(material)
+					? BPsBetterVanillaBuilding.id(material + "_slab")
+					: Identifier.fromNamespaceAndPath("minecraft", material + "_slab");
 			Block slab = BuiltInRegistries.BLOCK.getOptional(slabId).orElse(null);
 			if (slab == null) {
 				// Shouldn't happen for the vanilla list above, but a future

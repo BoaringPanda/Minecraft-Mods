@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "minecraft:block/mossy_cobblestone_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "bpsbettervanillabuilding:block/light_blue_terracotta_slab_top"
+      }
+    }
+  ]
+}

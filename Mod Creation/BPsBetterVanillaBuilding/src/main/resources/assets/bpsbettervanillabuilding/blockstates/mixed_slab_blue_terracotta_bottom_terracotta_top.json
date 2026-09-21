@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "bpsbettervanillabuilding:block/blue_terracotta_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "bpsbettervanillabuilding:block/terracotta_slab_top"
+      }
+    }
+  ]
+}

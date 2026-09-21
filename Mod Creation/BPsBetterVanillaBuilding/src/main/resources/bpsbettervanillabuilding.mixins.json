@@ -3,7 +3,9 @@
 	"package": "com.boaringpanda.bpsbettervanillabuilding.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"PoiTypesInvoker"
+		"LadderBlockMixin",
+		"PoiTypesInvoker",
+		"SlabBlockMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

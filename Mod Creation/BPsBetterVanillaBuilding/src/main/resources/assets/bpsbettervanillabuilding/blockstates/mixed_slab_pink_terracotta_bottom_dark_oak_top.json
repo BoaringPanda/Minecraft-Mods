@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "bpsbettervanillabuilding:block/pink_terracotta_slab"
+      }
+    },
+    {
+      "apply": {
+        "model": "minecraft:block/dark_oak_slab_top"
+      }
+    }
+  ]
+}

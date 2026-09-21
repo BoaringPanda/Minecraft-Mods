@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -21,7 +22,8 @@ import net.minecraft.world.level.block.state.BlockState;
  * <p>
  * Never placed directly - it has no {@code BlockItem} and never appears in
  * the creative inventory. It only ever appears as the result of combining
- * two different slabs, see {@link com.boaringpanda.bpsbettervanillabuilding.block.MixedSlabInteraction}.
+ * two different slabs, which happens wherever vanilla would merge two of the same slab, see
+ * {@link com.boaringpanda.bpsbettervanillabuilding.mixin.SlabBlockMixin}.
  */
 public class MixedSlabBlock extends Block {
 	private final Block bottomSlab;
@@ -31,6 +33,16 @@ public class MixedSlabBlock extends Block {
 		super(properties);
 		this.bottomSlab = bottomSlab;
 		this.topSlab = topSlab;
+	}
+
+	/**
+	 * The bottom slab's sound, so a wooden or metal slab still sounds like itself. Placing goes through vanilla's
+	 * {@code BlockItem.place}, which plays the placed block's sound, and every combo is registered with one shared stone
+	 * sound. An earlier version played the existing slab's sound by hand instead.
+	 */
+	@Override
+	protected SoundType getSoundType(BlockState state) {
+		return this.bottomSlab.defaultBlockState().getSoundType();
 	}
 
 	@Override

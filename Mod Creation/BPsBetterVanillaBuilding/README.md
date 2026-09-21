@@ -32,7 +32,7 @@ Fabric profile.
 
 - **Everyone who plays together needs the mod**, and so does the server if you use one. On a LAN world the host
   needs it too.
-- **The first load is slow.** About 10,100 mixed-slab blocks are registered at startup.
+- **The first load is slow.** About 13,800 mixed-slab blocks are registered at startup.
 
 ## What's in this repo
 
