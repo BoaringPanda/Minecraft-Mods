@@ -5,7 +5,7 @@ its own `jars/` folder for finished jars.
 
 | Mod | Folder | What it is |
 | --- | --- | --- |
-| Better Vanilla Building | [Mod Creation/BetterVanillaBuilding/](<Mod Creation/BetterVanillaBuilding/>) | Fabric mod for Minecraft 26.3: vanilla-style extra blocks. |
+| Better Vanilla Building | [Mod Creation/BetterVanillaBuilding/](<Mod Creation/BetterVanillaBuilding/>) | Fabric mod for Minecraft 26.3 |
 
 ## How the repo is laid out
 
