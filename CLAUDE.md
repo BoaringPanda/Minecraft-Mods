@@ -9,7 +9,7 @@ own CLAUDE.md, so read the CLAUDE.md inside a mod's folder before changing that 
 - Run `gradlew` from inside a mod's own folder (that's where its `gradlew` is), not from the repo root.
 - Only repo-wide files sit at the root and must stay there: `.git`, `.github/` (GitHub only reads workflows from
   here), `.gitignore`, `.gitattributes`, `.vscode/`, `README.md` and this file.
-- Mods so far: `Mod Creation/BPsBetterVanillaBuilding/`.
+- Mods so far: `Mod Creation/BetterVanillaBuilding/`.
 
 ## Jars stay on this PC (hard rule from Dylan)
 
