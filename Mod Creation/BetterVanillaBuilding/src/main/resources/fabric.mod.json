@@ -1,0 +1,36 @@
+{
+	"schemaVersion": 1,
+	"id": "bettervanillabuilding",
+	"version": "${version}",
+	"name": "Better Vanilla Building",
+	"description": "Adds extra blocks to Minecraft.",
+	"authors": [
+		"BoaringPanda"
+	],
+	"contact": {
+		"sources": "https://github.com/BoaringPanda/Minecraft-Mods"
+	},
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.boaringpanda.bettervanillabuilding.BetterVanillaBuilding"
+		],
+		"client": [
+			"com.boaringpanda.bettervanillabuilding.client.BetterVanillaBuildingClient"
+		]
+	},
+	"mixins": [
+		"bettervanillabuilding.mixins.json",
+		{
+			"config": "bettervanillabuilding.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": ">=0.160.7"
+	}
+}
