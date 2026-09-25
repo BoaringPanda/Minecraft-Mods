@@ -20,7 +20,7 @@ Spec from Dylan (2026-09-24): tie a lead from fence to fence with no animal, usi
 below the top of the knot at both ends and hangs a little, more on longer ropes, with no warping or stretching. It reaches **at most 7
 blocks counting both fences** (Dylan, 2026-09-25, was 5: "5 distance isn't long enough"; fences at most 6 apart, measured flat between
 block centres: (6,0) and (4,4) are fine, (5,4) is not) and
-goes **at most 1 block up or down**. Tying works like leading an animal: a lead on fence 1 starts a rope that follows your hand, and a
+goes **at most 3 blocks up or down** (Dylan, 2026-09-25, was 1; `MAX_HEIGHT_DIFFERENCE`). Tying works like leading an animal: a lead on fence 1 starts a rope that follows your hand, and a
 click on fence 2 ties it.
 
 - `entity/RopeKnotEntity` extends vanilla's `LeashFenceKnotEntity` and implements `Leashable`: a knot on fence 1 whose own rope is
@@ -58,8 +58,11 @@ click on fence 2 ties it.
 - `client/entity/RopeKnotRenderer` draws vanilla's knot model/texture. When the holder is a fence knot it draws the rope itself and
   clears `state.leashStates`, because vanilla draws a leash as a straight line with no sag (it only curves when one end is higher) and
   ends it 0.2 above a knot. The rope is inset 3/16 from each knot centre and sits at `ROPE_HEIGHT` at both ends, with a parabolic sag
-  of `SAG_PER_BLOCK` (0.06) × length (**the knob for "how much hang"**). Steps = length / 0.1, so stripes never stretch. The ribbon
-  cross-section stays perpendicular to the rope's direction, so sloped ropes don't warp. While a player carries the rope, vanilla draws it.
+  of `SAG_PER_BLOCK` (0.06) × the *flat* span (**the knob for "how much hang"**; flat span, not full length, so a steep rope hangs
+  less and one between fences stacked in a column hangs straight). `evenlySpaced` measures the curve in 64 straight pieces and places
+  the steps every 0.1 blocks *along the rope* (equal steps of the curve's 0-1 are longer where a sloped rope's sag steepens it, which
+  stretched the stripes at one end of a 3-up rope). The ribbon cross-section stays perpendicular to the rope's direction, so sloped
+  ropes don't warp. While a player carries the rope, vanilla draws it.
 - **Rope collision** (Dylan, 2026-09-24): `entity/RopeCollision` plus `mixin/EntityMixin`. A tied rope is an invisible wall of one of
   two heights (`wallHeight`):
   - Unridden `Animal`s get 1.5 (fence collision height), which they can't jump, so ropes make animal pens.
@@ -70,8 +73,10 @@ click on fence 2 ties it.
     entity bumps into (step-up included). The local player moves client-side, and the client knows both knots, so it collides there
     too; the server's movement check uses the same walls.
   - Wall shape: along the flat line between the fence centres, 0.25 wide (a fence arm), made of small boxes every 0.125 so diagonals
-    have no gaps. The bottom is the lower fence's base; the top follows the slope (interpolated fence base + height), so a rope going
-    up a block is equally jumpable along its length.
+    have no gaps. Each box stands on the line between the two fences' bases (interpolated fence base, up to height), so a sloped rope
+    is equally jumpable along its length, and the high end of a rope strung off a pillar can be walked under (Dylan's pick,
+    2026-09-25, when ropes went to 3 up; it used to reach down to the lower fence's base). On stepped ground small animals may slip
+    under a steep rope where the line is above the ground. The knot search box reaches `MAX_HEIGHT_DIFFERENCE` + 1.5 up and down.
   - Pathfinding only reads blocks, so mobs don't see ropes. `hopIfBlockedByRope` (the `@Inject` at `Entity.move` TAIL) makes a
     non-animal mob on the ground with `horizontalCollision` against a rope jump (`JumpControl.jump()`). Animals just walk up to the
     rope and stop, as at a fence.
@@ -635,3 +640,46 @@ only** in a group. Without crouching it's all vanilla. Redstone torches aren't i
 - Known edges: structure mirror doesn't swap left/right or turn corners; a `/setblock` that swaps the block under corner torches for a
   non-full one leaves them standing (only vanilla's centre-support rule is checked afterwards); breaking one torch shows break particles
   over the whole group.
+
+## Wall lanterns
+Spec from Dylan (2026-09-25): lanterns go on walls, hanging off a small bracket in the **colours of the chain** (his pick: the iron
+chain's own dark blue-grey for the lantern and soul lantern, and the matching copper chain stage for each copper lantern, so the bracket
+oxidises with it). The bracket stops **at least 1 px below the top** of its block (his pick), so it never touches a block above.
+**Where you click picks the form**, even with a block above: a wall's side gives a wall lantern, a ceiling's underside a hanging
+one, a floor's top a standing one. (Vanilla picks standing/hanging from where you *look*.)
+
+- `block/WallLanterns`: a `wall` property (`none` = vanilla's lantern, the first value so the default; `north/east/south/west` = the
+  side the wall is on), added by `BlockMixin` to every `LanternBlock` (copper lanterns are `WeatheringLanternBlock`s, a subclass).
+  Only blocks in the tag `bettervanillabuilding:wall_lanterns` (the 10 vanilla lanterns, waxed included) are ever placed on a wall.
+  Weathering, waxing and scraping keep it (`withPropertiesOf`). A wall lantern always has `hanging=false`.
+- `mixin/LanternBlockMixin` (also merges `rotate`/`mirror` overrides into `LanternBlock`, which has none, so structures turn it):
+  - `getStateForPlacement` HEAD → `WallLanterns.place`: by `getClickedFace()`: side = wall lantern, DOWN = hanging, UP = standing,
+    used if it `canSurvive`, else vanilla's own look-direction loop. A click *into* a replaceable block (`replacingClickedOnBlock`:
+    grass, a bare lily pad) is always vanilla, so lanterns on lily pads still stand.
+  - `canSurvive`: a wall lantern needs a full sturdy face behind it (the wall torch's rule), so a fence or pane side falls back to
+    vanilla's choice. `updateShape`: vanilla only re-checks above/below; the wall side going now drops it too (the `LadderBlockMixin`
+    pattern).
+  - `getShape`: vanilla's standing shape 2 px up plus the bracket's plate and arm, `Shapes.rotateHorizontal` per side.
+- Look (wall on the north; blockstates rotate it y 90/180/270): `models/block/template_wall_lantern` = vanilla `template_lantern`'s
+  elements (same UVs) 2 px up (body y 2–9, handle to 13), hanging from the tip of a flat 1-px bracket (x 7.5–8.5), drawn from
+  Dylan's picture (2026-09-25, replacing a first plate + straight arm): a **3×5 base plate** on the wall (x 6.5–9.5, y 9–14,
+  z 0–1; Dylan, 2026-09-26, was 1 wide); a top arm y 13–14, z 1–9; a brace stepping up from the plate's bottom to the arm (z 1–2
+  y 10, z 2–4 y 11, z 4–6 y 12; Dylan had the step's last pixel, z 6–7 next to the handle, removed), leaving a triangle hole
+  between them. Side view, wall on the left, y 13 at the top (the first column is the plate):
+  ```
+  ■■■■■■■■■
+  ■···■■
+  ■·■■
+  ■■
+  ■
+  ```
+  Children `wall_<lantern>` set `#lantern` and `#bracket` (waxed ones share, as in vanilla).
+  `assets/minecraft/blockstates/<lantern>.json` (10 files): vanilla's two variants with `wall=none` added, plus `wall=<side>`.
+- Textures `textures/block/lantern_bracket_{iron,copper,exposed_copper,weathered_copper,oxidized_copper}.png`: only each chain
+  texture's own colours (mid with light and dark flecks, the brace's lower steps darker; exposed/weathered add their chain's
+  weathering fleck). Layout: the arm and brace side view at x 1–8, y 0–3 (u = z out from the wall, v = 13 − y; the east faces flip
+  u); 1-px edge strips along v: top faces x 12, undersides x 13, ends x 14; the plate: front x 0–2 y 6–10 (two rivets), sides x 3
+  y 6–10, top x 0–2 y 11, bottom x 0–2 y 12. Made by a
+  throwaway Java/ImageIO script (not kept); edit the PNGs to change them.
+- Known edges: the Builder Stick doesn't turn lanterns (not asked for); a resource pack replacing the lantern blockstates draws wall
+  lanterns with a missing model.

@@ -31,14 +31,16 @@ import com.boaringpanda.bettervanillabuilding.block.LilyPadDecorations;
 import com.boaringpanda.bettervanillabuilding.block.LockedBlocks;
 import com.boaringpanda.bettervanillabuilding.block.Rainbow;
 import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
+import com.boaringpanda.bettervanillabuilding.block.WallLanterns;
 
 /**
  * Gives every block that can stand on a lily pad the {@code lily_pad} property ({@link LilyPadDecorations}), off by default, every
  * standing head the {@code top_head} property ({@link StackedHeads}), fences, panes, bars, walls and rails the {@code locked}
  * property ({@link LockedBlocks}), off by default, and leaf litter, pink petals and wildflowers the {@code segment_order} property
  * ({@link AimedSegments}), vanilla's order by default, flowers and mushrooms the {@code flowers} count ({@link FlowerClumps}),
- * 1 by default, torches a property per quarter or a wall {@code side} ({@link CornerTorches}), vanilla's middle by default, and wool,
- * carpets, stained glass, beds and banners the {@code rainbow} property ({@link Rainbow}), off by default.
+ * 1 by default, torches a property per quarter or a wall {@code side} ({@link CornerTorches}), vanilla's middle by default, wool,
+ * carpets, stained glass, beds and banners the {@code rainbow} property ({@link Rainbow}), off by default, and lanterns the
+ * {@code wall} property ({@link WallLanterns}), vanilla's {@code none} by default.
  */
 @Mixin(Block.class)
 public class BlockMixin {
@@ -73,6 +75,9 @@ public class BlockMixin {
 		}
 		if (CornerTorches.hasSides(block)) {
 			builder.add(CornerTorches.SIDE);
+		}
+		if (WallLanterns.has(block)) {
+			builder.add(WallLanterns.WALL);
 		}
 	}
 

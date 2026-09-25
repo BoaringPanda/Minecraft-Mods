@@ -46,8 +46,10 @@ public class RopeKnotRenderer extends EntityRenderer<RopeKnotEntity, RopeKnotRen
 	/** Half the width of the knot model (6 pixels wide): where a rope emerges from its side. */
 	private static final float KNOT_HALF_WIDTH = 3.0F / 16.0F;
 	private static final float WIDTH = 0.05F;
-	/** How far the middle of a rope hangs below the straight line between its ends, for each block of length. */
+	/** How far the middle of a rope hangs below the straight line between its ends, for each block it spans across (not up). */
 	private static final float SAG_PER_BLOCK = 0.06F;
+	/** How many short straight pieces a rope is measured in to space its stripes evenly (see {@link #evenlySpaced}). */
+	private static final int MEASURE_STEPS = 64;
 
 	private final LeashKnotModel model;
 
@@ -108,8 +110,11 @@ public class RopeKnotRenderer extends EntityRenderer<RopeKnotEntity, RopeKnotRen
 	 * <p>
 	 * It runs from where the rope leaves one knot's side to where it meets the other's, at {@link RopeKnotEntity#ROPE_HEIGHT} on both, so
 	 * both ends look attached at the same point whatever the height difference (a curve that started at the knots' centres left each knot
-	 * at a different height, depending on how steep the rope was there). The number of steps follows the length, so the light and dark
-	 * stripes are the same size on every rope instead of stretching on a long one.
+	 * at a different height, depending on how steep the rope was there). The steps are spaced by distance along the curved rope, so the
+	 * light and dark stripes are the same size everywhere on every rope: not stretched on a long one, nor at one end of a steep one.
+	 * <p>
+	 * The sag grows with the rope's flat span, not its full length, so a steep rope hangs less than a flat one, and a rope between fences
+	 * stacked straight above each other hangs straight.
 	 */
 	private static void drawRope(PoseStack.Pose pose, VertexConsumer buffer, State state) {
 		float horizontal = Mth.sqrt(state.dx * state.dx + state.dz * state.dz);
@@ -127,22 +132,61 @@ public class RopeKnotRenderer extends EntityRenderer<RopeKnotEntity, RopeKnotRen
 		float cx = state.dx - 2.0F * sx;
 		float cy = state.dy;
 		float cz = state.dz - 2.0F * sz;
-		float chord = Mth.sqrt(cx * cx + cy * cy + cz * cz);
-		int steps = Math.max(2, Math.round(chord / SEGMENT_LENGTH));
-		float sag = chord * SAG_PER_BLOCK;
+		float sag = Mth.sqrt(cx * cx + cz * cz) * SAG_PER_BLOCK;
+		float[] progresses = evenlySpaced(cx, cy, cz, sag);
+		int steps = progresses.length - 1;
 
 		Matrix4fc matrix = pose.pose();
 		for (int k = 0; k <= steps; k++) {
-			addVertexPair(buffer, matrix, state, sx, sz, cx, cy, cz, sag, ux, uz, k, steps, false, WIDTH);
+			addVertexPair(buffer, matrix, state, sx, sz, cx, cy, cz, sag, ux, uz, k, progresses[k], false, WIDTH);
 		}
 
 		for (int k = steps; k >= 0; k--) {
-			addVertexPair(buffer, matrix, state, sx, sz, cx, cy, cz, sag, ux, uz, k, steps, true, 0.0F);
+			addVertexPair(buffer, matrix, state, sx, sz, cx, cy, cz, sag, ux, uz, k, progresses[k], true, 0.0F);
 		}
 	}
 
-	private static void addVertexPair(VertexConsumer buffer, Matrix4fc matrix, State state, float sx, float sz, float cx, float cy, float cz, float sag, float ux, float uz, int k, int steps, boolean backwards, float fudge) {
-		float progress = k / (float) steps;
+	/**
+	 * Where along the curve (0 to 1) each step of the rope goes, so that the steps are {@link #SEGMENT_LENGTH} apart measured along the
+	 * rope itself. Equal steps of the curve's own 0-to-1 are not equal lengths: where a sloped rope's sag steepens it, they are longer, so
+	 * the stripes there would stretch. The curve is measured in {@value #MEASURE_STEPS} short straight pieces, and each step is placed by
+	 * how far along those it falls.
+	 */
+	private static float[] evenlySpaced(float cx, float cy, float cz, float sag) {
+		float[] lengthTo = new float[MEASURE_STEPS + 1];
+		float dxz = Mth.sqrt(cx * cx + cz * cz) / MEASURE_STEPS;
+		float prevY = 0.0F;
+		for (int i = 1; i <= MEASURE_STEPS; i++) {
+			float y = ropeY(cy, sag, i / (float) MEASURE_STEPS);
+			float dy = y - prevY;
+			lengthTo[i] = lengthTo[i - 1] + Mth.sqrt(dxz * dxz + dy * dy);
+			prevY = y;
+		}
+
+		float length = lengthTo[MEASURE_STEPS];
+		int steps = Math.max(2, Math.round(length / SEGMENT_LENGTH));
+		float[] progresses = new float[steps + 1];
+		int piece = 0;
+		for (int k = 0; k <= steps; k++) {
+			float target = length * k / steps;
+			while (piece < MEASURE_STEPS - 1 && lengthTo[piece + 1] < target) {
+				piece++;
+			}
+
+			float pieceLength = lengthTo[piece + 1] - lengthTo[piece];
+			float within = pieceLength > 1.0E-6F ? Mth.clamp((target - lengthTo[piece]) / pieceLength, 0.0F, 1.0F) : 0.0F;
+			progresses[k] = (piece + within) / MEASURE_STEPS;
+		}
+
+		return progresses;
+	}
+
+	/** How far above the start the rope is at {@code progress}: along the straight line, dipping below it by a parabola deepest halfway. */
+	private static float ropeY(float cy, float sag, float progress) {
+		return cy * progress - sag * 4.0F * progress * (1.0F - progress);
+	}
+
+	private static void addVertexPair(VertexConsumer buffer, Matrix4fc matrix, State state, float sx, float sz, float cx, float cy, float cz, float sag, float ux, float uz, int k, float progress, boolean backwards, float fudge) {
 		int block = (int) Mth.lerp(progress, (float) state.startBlockLight, (float) state.endBlockLight);
 		int sky = (int) Mth.lerp(progress, (float) state.startSkyLight, (float) state.endSkyLight);
 		int light = LightCoordsUtil.pack(block, sky);
@@ -152,9 +196,8 @@ public class RopeKnotRenderer extends EntityRenderer<RopeKnotEntity, RopeKnotRen
 		float g = 0.4F * colorModifier;
 		float b = 0.3F * colorModifier;
 
-		// Along the straight line between the two attachment points, dipping below it by a parabola that is deepest halfway.
 		float x = sx + cx * progress;
-		float y = (float) RopeKnotEntity.ROPE_HEIGHT + cy * progress - sag * 4.0F * progress * (1.0F - progress);
+		float y = (float) RopeKnotEntity.ROPE_HEIGHT + ropeY(cy, sag, progress);
 		float z = sz + cz * progress;
 
 		// The ribbon's cross-section must be square to the rope, not to the ground. Widening it sideways and straight up (as vanilla does)

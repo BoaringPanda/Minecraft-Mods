@@ -23,8 +23,9 @@ import com.boaringpanda.bettervanillabuilding.block.FenceRopeInteraction;
  *   <li>Players, every other mob (hostile ones, villagers, golems) and an animal a player is riding get a wall only as high as the rope
  *       itself ({@link #JUMP_WALL_HEIGHT}): too high to step over, low enough to jump.</li>
  * </ul>
- * Anything else (items, boats, arrows) passes through. The top of a wall follows the rope's slope, so a rope going up a block is the
- * same height to jump everywhere along it.
+ * Anything else (items, boats, arrows) passes through. A wall follows the rope's slope (up to
+ * {@value FenceRopeInteraction#MAX_HEIGHT_DIFFERENCE} blocks), top and bottom, standing on the line between the two fences' bases. So a
+ * sloped rope is the same height to jump everywhere along it, and the high end of a rope strung off a pillar can be walked under.
  * <p>
  * The walls are only added to what a moving entity collides with ({@code Entity.collide}, via
  * {@link com.boaringpanda.bettervanillabuilding.mixin.EntityMixin}), so nothing else about the world changes. Mob pathfinding only looks at
@@ -38,8 +39,10 @@ public class RopeCollision {
 	private static final double WALL_HALF_WIDTH = 2.0 / 16.0;
 	/** Spacing of the small boxes that make up a wall, less than their width so a diagonal wall has no gaps. */
 	private static final double STEP = 0.125;
-	/** How far from an entity a rope knot can be and its rope still reach it (the longest rope is about 6.1 blocks: 6 across, 1 up). */
+	/** How far from an entity a rope knot can be and its rope still reach it (the longest rope is about 6.7 blocks: 6 across, 3 up). */
 	private static final double SEARCH_RANGE = FenceRopeInteraction.MAX_DISTANCE + 0.5;
+	/** The same, up or down: a rope's other end can be this much higher or lower, and an animal's wall reaches this far above it. */
+	private static final double SEARCH_HEIGHT = FenceRopeInteraction.MAX_HEIGHT_DIFFERENCE + ANIMAL_WALL_HEIGHT;
 	/** How far beside a mob that has bumped into something a rope counts as what it bumped into. */
 	private static final double TOUCH_DISTANCE = 0.1;
 
@@ -60,7 +63,7 @@ public class RopeCollision {
 		}
 
 		List<VoxelShape> result = null;
-		AABB searchArea = area.inflate(SEARCH_RANGE, ANIMAL_WALL_HEIGHT, SEARCH_RANGE);
+		AABB searchArea = area.inflate(SEARCH_RANGE, SEARCH_HEIGHT, SEARCH_RANGE);
 		for (RopeKnotEntity rope : entity.level().getEntitiesOfClass(RopeKnotEntity.class, searchArea)) {
 			if (!(rope.getLeashHolder() instanceof LeashFenceKnotEntity other)) {
 				continue;
@@ -68,7 +71,6 @@ public class RopeCollision {
 
 			BlockPos from = rope.getPos();
 			BlockPos to = other.getPos();
-			double bottom = Math.min(from.getY(), to.getY());
 			double dx = to.getX() - from.getX();
 			double dz = to.getZ() - from.getZ();
 			int steps = Math.max(1, (int) Math.ceil(Math.sqrt(dx * dx + dz * dz) / STEP));
@@ -76,8 +78,9 @@ public class RopeCollision {
 				double progress = i / (double) steps;
 				double x = from.getX() + 0.5 + dx * progress;
 				double z = from.getZ() + 0.5 + dz * progress;
-				double top = Mth.lerp(progress, from.getY(), to.getY()) + height;
-				AABB box = new AABB(x - WALL_HALF_WIDTH, bottom, z - WALL_HALF_WIDTH, x + WALL_HALF_WIDTH, top, z + WALL_HALF_WIDTH);
+				// Under the rope, not down to the lower fence: a rope strung off a pillar can be walked under where it is high enough.
+				double bottom = Mth.lerp(progress, from.getY(), to.getY());
+				AABB box = new AABB(x - WALL_HALF_WIDTH, bottom, z - WALL_HALF_WIDTH, x + WALL_HALF_WIDTH, bottom + height, z + WALL_HALF_WIDTH);
 				if (box.intersects(area)) {
 					if (result == null) {
 						result = new ArrayList<>(shapes);

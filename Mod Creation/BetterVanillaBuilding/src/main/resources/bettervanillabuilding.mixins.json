@@ -22,6 +22,7 @@
 		"ItemFrameMixin",
 		"ItemMixin",
 		"LadderBlockMixin",
+		"LanternBlockMixin",
 		"LeafLitterBlockMixin",
 		"LevelMixin",
 		"LivingEntityMixin",

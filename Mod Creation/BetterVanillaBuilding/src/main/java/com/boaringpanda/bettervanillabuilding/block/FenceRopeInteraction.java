@@ -40,7 +40,7 @@ import com.boaringpanda.bettervanillabuilding.entity.RopeKnotEntity;
  * </ol>
  * A rope reaches at most {@value #MAX_BLOCKS} blocks counting both fences (so the fences are at most {@value #MAX_DISTANCE} apart,
  * measured flat between the blocks' centres: (6, 0) and (4, 4) are fine, (5, 4) is not), and may go at most
- * {@value #MAX_HEIGHT_DIFFERENCE} block up or down. Clicking a fence out of reach says why on the action bar and the rope stays in hand.
+ * {@value #MAX_HEIGHT_DIFFERENCE} blocks up or down. Clicking a fence out of reach says why on the action bar and the rope stays in hand.
  * Walking out of reach while carrying a rope shows the same limit message ({@link RopeKnotEntity} checks with {@link #isBeyondReach}).
  * <p>
  * Everything else is vanilla's, because a rope is a {@link RopeKnotEntity} held on a lead like an animal: the actual tying at the second
@@ -62,7 +62,7 @@ public class FenceRopeInteraction {
 	private static final int MAX_BLOCKS = 7;
 	public static final double MAX_DISTANCE = MAX_BLOCKS - 1;
 	/** How many blocks higher or lower than the first fence the second may be. */
-	private static final int MAX_HEIGHT_DIFFERENCE = 1;
+	public static final int MAX_HEIGHT_DIFFERENCE = 3;
 	/** How long after starting or tying a rope a lead click can't start another one (see the class notes on repeat clicks). */
 	private static final int REPEAT_TICKS = 10;
 
