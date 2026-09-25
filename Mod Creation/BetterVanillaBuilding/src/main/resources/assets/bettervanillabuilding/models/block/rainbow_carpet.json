@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/carpet",
+  "textures": {
+    "wool": "bettervanillabuilding:block/rainbow_wool"
+  }
+}

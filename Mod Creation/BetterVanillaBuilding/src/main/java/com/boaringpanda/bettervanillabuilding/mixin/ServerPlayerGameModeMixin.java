@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import com.boaringpanda.bettervanillabuilding.block.CornerTorches;
 import com.boaringpanda.bettervanillabuilding.block.LilyPadDecorations;
 import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
 
@@ -29,7 +30,8 @@ import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
  * A player breaking a decoration while aiming at the bare lily pad under it breaks the pad, and the decoration drops with it (as a
  * torch does when the block under it goes). Otherwise the decoration comes off and the pad stays ({@code LevelMixin}).
  *
- * <p>On a stack of heads ({@link StackedHeads}), a player breaks only the head they aim at. The other head stays where it is.
+ * <p>On a stack of heads ({@link StackedHeads}), a player breaks only the head they aim at. The other head stays where it is. Likewise
+ * only the aimed torch of a group of corner torches comes off ({@link CornerTorches}).
  */
 @Mixin(ServerPlayerGameMode.class)
 public class ServerPlayerGameModeMixin {
@@ -40,7 +42,8 @@ public class ServerPlayerGameModeMixin {
 	@WrapOperation(method = "destroyBlock",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;removeBlock(Lnet/minecraft/core/BlockPos;Z)Z"))
 	private boolean bettervanillabuilding$breakPad(ServerLevel level, BlockPos pos, boolean movedByPiston, Operation<Boolean> original,
-			@Share("padAimed") LocalBooleanRef padAimed, @Share("brokenHead") LocalRef<StackedHeads.@Nullable Head> brokenHead) {
+			@Share("padAimed") LocalBooleanRef padAimed, @Share("brokenHead") LocalRef<StackedHeads.@Nullable Head> brokenHead,
+			@Share("brokenTorch") LocalRef<@Nullable BlockState> brokenTorch) {
 		BlockState state = level.getBlockState(pos);
 		if (LilyPadDecorations.aimsAtPad(player, level, pos, state)) {
 			padAimed.set(true);
@@ -51,19 +54,30 @@ public class ServerPlayerGameModeMixin {
 			brokenHead.set(StackedHeads.breakHead(level, pos, state, StackedHeads.aimsAtTop(player, level, pos, state), Block.UPDATE_ALL));
 			return brokenHead.get() != null;
 		}
+		BlockState torch = CornerTorches.aimedTorch(player, level, pos, state);
+		if (torch != null) {
+			// Only the aimed torch comes off; the rest of the group stays.
+			brokenTorch.set(torch);
+			return CornerTorches.breakTorch(level, pos, state, torch, Block.UPDATE_ALL);
+		}
 		return original.call(level, pos, movedByPiston);
 	}
 
-	/** Breaking one head of a stack drops that head alone, by its own loot table, and counts as mining that head. */
+	/**
+	 * Breaking one head of a stack drops that head alone, by its own loot table, and counts as mining that head. Breaking one torch of
+	 * a group drops that torch alone (its loot table counts one torch).
+	 */
 	@WrapOperation(method = "destroyBlock",
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/world/level/block/Block;playerDestroy(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemStack;)V"))
 	private void bettervanillabuilding$dropBrokenHead(Block block, ServerLevel level, ServerPlayer breaker, BlockPos pos, BlockState state,
 			@Nullable BlockEntity entity, ItemStack tool, Operation<Void> original,
-			@Share("brokenHead") LocalRef<StackedHeads.@Nullable Head> brokenHead) {
+			@Share("brokenHead") LocalRef<StackedHeads.@Nullable Head> brokenHead,
+			@Share("brokenTorch") LocalRef<@Nullable BlockState> brokenTorch) {
 		StackedHeads.Head head = brokenHead.get();
 		if (head == null) {
-			original.call(block, level, breaker, pos, state, entity, tool);
+			BlockState torch = brokenTorch.get();
+			original.call(block, level, breaker, pos, torch != null ? torch : state, entity, tool);
 			return;
 		}
 		BlockState headState = head.state();

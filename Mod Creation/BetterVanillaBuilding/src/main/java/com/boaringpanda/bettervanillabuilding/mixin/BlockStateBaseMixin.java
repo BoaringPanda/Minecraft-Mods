@@ -29,6 +29,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import com.boaringpanda.bettervanillabuilding.block.CornerTorches;
 import com.boaringpanda.bettervanillabuilding.block.FlowerClumps;
 import com.boaringpanda.bettervanillabuilding.block.LilyPadDecorations;
 import com.boaringpanda.bettervanillabuilding.block.LockedBlocks;
@@ -45,7 +46,8 @@ import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
  *
  * <p>A locked fence, pane, bars or wall ignores its neighbours ({@link LockedBlocks}).
  *
- * <p>A flower makes room for the same flower, and a clump of flowers has no random offset ({@link FlowerClumps}).
+ * <p>A flower makes room for the same flower, and a clump of flowers has no random offset ({@link FlowerClumps}). A group of torches
+ * makes room for the same torch ({@link CornerTorches}).
  */
 @Mixin(BlockBehaviour.BlockStateBase.class)
 public class BlockStateBaseMixin {
@@ -69,8 +71,9 @@ public class BlockStateBaseMixin {
 	}
 
 	/**
-	 * A locked fence, pane, bars or wall ({@link LockedBlocks}) keeps the sides the Builder Stick gave it, whatever changes next to it.
-	 * Vanilla's own update has still run, so a waterlogged one still schedules its water tick.
+	 * A locked fence, pane, bars, wall, stair, fence gate or placed rod ({@link LockedBlocks}) keeps what the Builder Stick gave it,
+	 * whatever changes next to it. Vanilla's own update has still run, so a waterlogged one still schedules its water tick, and if vanilla
+	 * removes the block (it lost its support) that still happens.
 	 *
 	 * <p>When the pad can't stay (the water went), the decoration breaks with it, as a lily pad does. Panes, chains, rods, pots and heads
 	 * never check what's under them, so this is done here for all of them (locked or not).
@@ -79,7 +82,7 @@ public class BlockStateBaseMixin {
 	private BlockState bettervanillabuilding$keepLockedOrBreakWithPad(BlockState updated, LevelReader level, ScheduledTickAccess ticks,
 			BlockPos pos, Direction direction, BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
 		BlockState state = (BlockState) (Object) this;
-		if (LockedBlocks.isLocked(state)) {
+		if (LockedBlocks.isLocked(state) && updated.is(state.getBlock())) {
 			updated = state;
 		}
 		return LilyPadDecorations.onPad(updated) && !LilyPadDecorations.padSurvives(level, pos) ? Blocks.AIR.defaultBlockState() : updated;
@@ -101,14 +104,15 @@ public class BlockStateBaseMixin {
 
 	/**
 	 * A lily pad makes room for a decoration placed into it from any side, as a candle makes room for another candle. A standing head
-	 * makes room for a second head in its free half ({@link StackedHeads#takesHead}), and a flower for the same flower clicked onto it
-	 * ({@link FlowerClumps#takesFlower}).
+	 * makes room for a second head in its free half ({@link StackedHeads#takesHead}), a flower for the same flower clicked onto it
+	 * ({@link FlowerClumps#takesFlower}), and a group of torches for the same torch in a free spot ({@link CornerTorches#takesTorch}).
 	 */
 	@ModifyReturnValue(method = "canBeReplaced(Lnet/minecraft/world/item/context/BlockPlaceContext;)Z", at = @At("RETURN"))
 	private boolean bettervanillabuilding$padTakesDecoration(boolean replaceable, BlockPlaceContext context) {
 		BlockState state = (BlockState) (Object) this;
 		return replaceable || state.is(Blocks.LILY_PAD) && LilyPadDecorations.goesOnPad(context.getItemInHand())
-				|| StackedHeads.takesHead(state, context) || FlowerClumps.takesFlower(state, context);
+				|| StackedHeads.takesHead(state, context) || FlowerClumps.takesFlower(state, context)
+				|| CornerTorches.takesTorch(state, context);
 	}
 
 	/** Vanilla moves each flower a random bit sideways; a clump's flowers keep to their fixed pattern ({@link FlowerClumps}). */

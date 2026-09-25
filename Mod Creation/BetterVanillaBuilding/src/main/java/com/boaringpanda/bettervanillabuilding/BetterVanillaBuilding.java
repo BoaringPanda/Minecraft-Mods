@@ -7,6 +7,7 @@ import net.minecraft.resources.Identifier;
 import com.boaringpanda.bettervanillabuilding.block.FenceRopeInteraction;
 import com.boaringpanda.bettervanillabuilding.block.MixedSlabs;
 import com.boaringpanda.bettervanillabuilding.block.PlacedRods;
+import com.boaringpanda.bettervanillabuilding.entity.RainbowCushions;
 import com.boaringpanda.bettervanillabuilding.entity.RopeKnots;
 import com.boaringpanda.bettervanillabuilding.item.BuilderStick;
 
@@ -19,6 +20,7 @@ public class BetterVanillaBuilding implements ModInitializer {
 		FenceRopeInteraction.initialize();
 		PlacedRods.initialize();
 		MixedSlabs.initialize();
+		RainbowCushions.initialize();
 		BuilderStick.initialize();
 	}
 

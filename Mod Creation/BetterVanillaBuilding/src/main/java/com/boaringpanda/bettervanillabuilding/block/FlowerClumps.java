@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -40,8 +39,6 @@ public final class FlowerClumps {
 	 */
 	private static final List<Vec3> PATTERN = List.of(
 			new Vec3(-0.25, 0.0, -0.25), new Vec3(0.25, 0.0, 0.25), new Vec3(0.25, 0.0, -0.25), new Vec3(-0.25, 0.0, 0.25));
-	/** Nudges a click point back into the clicked face, so it lands in the block that was clicked. */
-	private static final double INTO_FACE = 0.001;
 
 	private static final Map<BlockState, VoxelShape> SHAPES = new ConcurrentHashMap<>();
 
@@ -78,16 +75,11 @@ public final class FlowerClumps {
 	 * doesn't add one, as with candles).
 	 *
 	 * <p>Vanilla also asks this of the block <em>next to</em> the clicked one (clicking the ground beside a flower asks the flower),
-	 * and only a click on the flower itself should count. The clicked block isn't known yet when vanilla first asks, so the click point
-	 * decides: it has to be in a block with this very state. Two neighbouring flowers in the same state give the same answer anyway.
+	 * and only a click on the flower itself should count: that's the first ask, while {@code replacingClickedOnBlock()} is still true.
 	 */
 	public static boolean takesFlower(BlockState state, BlockPlaceContext context) {
-		if (!state.is(CLUMPS) || !state.hasProperty(FLOWERS) || state.getValue(FLOWERS) == 4 || context.isSecondaryUseActive()
-				|| !context.getItemInHand().is(state.getBlock().asItem())) {
-			return false;
-		}
-		Vec3 hit = context.getClickLocation().subtract(context.getClickedFace().getUnitVec3().scale(INTO_FACE));
-		return context.getLevel().getBlockState(BlockPos.containing(hit)) == state;
+		return state.is(CLUMPS) && state.hasProperty(FLOWERS) && state.getValue(FLOWERS) < 4 && !context.isSecondaryUseActive()
+				&& context.replacingClickedOnBlock() && context.getItemInHand().is(state.getBlock().asItem());
 	}
 
 	/** The state for placing a flower: the flower already there with one more, or vanilla's single flower when there's none. */

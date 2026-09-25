@@ -14,6 +14,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import com.boaringpanda.bettervanillabuilding.block.FenceRopeInteraction;
+
 /**
  * Makes tied fence ropes solid, as an invisible wall along each rope, of one of two heights:
  * <ul>
@@ -36,8 +38,8 @@ public class RopeCollision {
 	private static final double WALL_HALF_WIDTH = 2.0 / 16.0;
 	/** Spacing of the small boxes that make up a wall, less than their width so a diagonal wall has no gaps. */
 	private static final double STEP = 0.125;
-	/** How far from an entity a rope knot can be and its rope still reach it (the longest rope is about 4.2 blocks). */
-	private static final double SEARCH_RANGE = 4.5;
+	/** How far from an entity a rope knot can be and its rope still reach it (the longest rope is about 6.1 blocks: 6 across, 1 up). */
+	private static final double SEARCH_RANGE = FenceRopeInteraction.MAX_DISTANCE + 0.5;
 	/** How far beside a mob that has bumped into something a rope counts as what it bumped into. */
 	private static final double TOUCH_DISTANCE = 0.1;
 

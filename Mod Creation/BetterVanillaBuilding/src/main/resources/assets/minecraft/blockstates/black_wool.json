@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "rainbow=false": {
+      "model": "minecraft:block/black_wool"
+    },
+    "rainbow=true": {
+      "model": "bettervanillabuilding:block/rainbow_wool"
+    }
+  }
+}

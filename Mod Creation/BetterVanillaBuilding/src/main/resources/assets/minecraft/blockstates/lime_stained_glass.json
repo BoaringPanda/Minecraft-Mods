@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "rainbow=false": {
+      "model": "minecraft:block/lime_stained_glass"
+    },
+    "rainbow=true": {
+      "model": "bettervanillabuilding:block/rainbow_stained_glass"
+    }
+  }
+}

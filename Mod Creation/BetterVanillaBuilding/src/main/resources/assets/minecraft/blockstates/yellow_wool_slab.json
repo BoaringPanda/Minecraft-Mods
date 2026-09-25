@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "type=bottom,rainbow=false": {
+      "model": "minecraft:block/yellow_wool_slab"
+    },
+    "type=double,rainbow=false": {
+      "model": "minecraft:block/yellow_wool"
+    },
+    "type=top,rainbow=false": {
+      "model": "minecraft:block/yellow_wool_slab_top"
+    },
+    "type=bottom,rainbow=true": {
+      "model": "bettervanillabuilding:block/rainbow_wool_slab"
+    },
+    "type=double,rainbow=true": {
+      "model": "bettervanillabuilding:block/rainbow_wool"
+    },
+    "type=top,rainbow=true": {
+      "model": "bettervanillabuilding:block/rainbow_wool_slab_top"
+    }
+  }
+}

@@ -84,8 +84,8 @@ public final class AimedSegments {
 		return below.isFaceSturdy(level, belowPos, Direction.UP) || below.is(BlockTags.LEAVES);
 	}
 
-	/** The quarter the click points at, as the {@code facing} whose piece 1 sits there. */
-	private static Direction aimedQuarter(BlockPlaceContext context) {
+	/** The quarter the click points at, as the {@code facing} whose piece 1 sits there. Corner torches aim the same way. */
+	static Direction aimedQuarter(BlockPlaceContext context) {
 		BlockPos pos = context.getClickedPos();
 		Vec3 hit = context.getClickLocation().subtract(context.getClickedFace().getUnitVec3().scale(INTO_FACE));
 		boolean east = hit.x - pos.getX() >= 0.5;

@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.BannerBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.CactusFlowerBlock;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.CopperGolemStatueBlock;
@@ -86,7 +87,8 @@ public final class LilyPadDecorations {
 				|| block instanceof DecoratedPotBlock
 				|| block instanceof FlowerPotBlock // the empty pot and every potted plant
 				|| block instanceof TurtleEggBlock
-				|| block instanceof CopperGolemStatueBlock; // every copper stage, waxed or not
+				|| block instanceof CopperGolemStatueBlock // every copper stage, waxed or not
+				|| block instanceof CactusFlowerBlock;
 	}
 
 	/** {@code to} standing on a pad if {@code from} was: for vanilla swaps that build the new block from its default state. */

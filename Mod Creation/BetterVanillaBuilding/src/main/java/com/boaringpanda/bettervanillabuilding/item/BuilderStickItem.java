@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 
@@ -21,11 +22,14 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.decoration.Cushion;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractBannerBlock;
+import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.BellBlock;
@@ -79,21 +83,27 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 
 import com.boaringpanda.bettervanillabuilding.block.LockedBlocks;
+import com.boaringpanda.bettervanillabuilding.block.PlacedRodBlock;
+import com.boaringpanda.bettervanillabuilding.block.Rainbow;
 import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
+import com.boaringpanda.bettervanillabuilding.entity.RainbowCushions;
 
 /**
  * Works like vanilla's {@code DebugStickItem}, limited to a few blocks and a few {@link Option}s on each ({@link #optionsFor}): the sides
  * of fences, walls, glass panes and bars; a fence gate's facing and height; a door's facing and hinge; a trapdoor's facing, and an iron
  * trapdoor's open state; a stair's facing, shape and half; a slab's half (never double); the axis of chains, logs and a few pillar blocks; a
- * rod's direction; the facing of pistons (retracted), dispensers, droppers, observers, comparators, repeaters, buttons, signs, banners,
- * heads, stonecutters, grindstones and bells; a hopper's spout; a rail's shape and rotation; a copper golem statue's facing and pose. Left click selects the block's next option (sneak: the previous
+ * rod's direction, and an upright placed rod's arms; the facing of pistons (retracted), dispensers, droppers, observers, comparators, repeaters, buttons, signs, banners,
+ * heads, stonecutters, grindstones and bells; a hopper's spout; a rail's shape and rotation; a copper golem statue's facing and pose; and
+ * wool, wool stairs and slabs, carpets, stained glass and panes, beds and banners fading through every colour like a jeb_ sheep (as well
+ * as their other options). Left click selects the block's next option (sneak: the previous
  * one), right click changes it. Both show an action-bar message worded like the debug stick's. It never breaks a block, and on any other
  * block both clicks only show "Can not be used on this block"; a right click there doesn't open doors, chests etc. either.
  * <p>
- * A changed fence, pane, bars, wall or rail is {@link LockedBlocks locked}, so its neighbours never reshape it afterwards.
+ * A changed fence, pane, bars, wall, stair, fence gate, placed rod or rail is {@link LockedBlocks locked}, so its neighbours never reshape
+ * it afterwards.
  * <p>
- * The one entity is the armour stand ({@link #onAttackEntity}, {@link #onUseEntity}): its facing, turned like a sign, without ever
- * hitting it. Every other entity is left to vanilla.
+ * The entities are the armour stand, the cushion and the item frame ({@link #onAttackEntity}, {@link #onUseEntity}): a stand's facing,
+ * turned like a sign, a cushion's fade, and whether a frame shows, without ever hitting them. Every other entity is left to vanilla.
  */
 public class BuilderStickItem extends Item {
 	private static final String KEY = "item.bettervanillabuilding.builder_stick";
@@ -157,10 +167,18 @@ public class BuilderStickItem extends Item {
 	/** Chains and {@link #isPillar pillars}. */
 	private static final List<Option> AXIS = List.of(cycle("axis", RotatedPillarBlock.AXIS, Component::literal));
 	/**
-	 * All six directions: end rods, lightning rods, this mod's placed sticks, blaze rods and breeze rods, pistons, dispensers, droppers and
-	 * observers (all share vanilla's {@code DirectionalBlock.FACING}).
+	 * All six directions: end rods, lightning rods, pistons, dispensers, droppers and observers (all share vanilla's
+	 * {@code DirectionalBlock.FACING}).
 	 */
-	private static final List<Option> ALL_DIRECTIONS = List.of(cycle("facing", DirectionalBlock.FACING, Component::literal));
+	private static final Option ALL_DIRECTIONS_FACING = cycle("facing", DirectionalBlock.FACING, Component::literal);
+	private static final List<Option> ALL_DIRECTIONS = List.of(ALL_DIRECTIONS_FACING);
+	/** This mod's placed sticks, blaze rods and breeze rods: all six directions, then its arms worked out again (none unless upright). */
+	private static final Option PLACED_ROD_FACING = new Option("facing", ALL_DIRECTIONS_FACING.value(), (level, pos, state, player) ->
+			PlacedRodBlock.withArms(level, pos, ALL_DIRECTIONS_FACING.change().apply(level, pos, state, player)));
+	private static final List<Option> PLACED_ROD = List.of(PLACED_ROD_FACING);
+	/** An upright placed rod also has its four arms. */
+	private static final List<Option> UPRIGHT_PLACED_ROD = List.of(PLACED_ROD_FACING, rodArm(Direction.NORTH), rodArm(Direction.EAST),
+			rodArm(Direction.SOUTH), rodArm(Direction.WEST));
 	/** Buttons, wall signs and wall hanging signs only turn onto a side that can hold them. */
 	private static final List<Option> TURNS_SUPPORTED = List.of(supported(FACING));
 	/**
@@ -213,9 +231,17 @@ public class BuilderStickItem extends Item {
 	private static final String ARMOR_STAND_OPTION = "facing";
 	/** How far a right click turns an armour stand: vanilla's own placement steps ({@code ArmorStandItem} snaps to 45°). */
 	private static final float ARMOR_STAND_STEP = 45.0F;
+	/** An item frame's one option: whether the frame itself shows (vanilla's {@code Invisible} flag; the item always shows). */
+	private static final String FRAME_OPTION = "frame";
 
 	/** A statue's pose, with the sound and game event of vanilla's own pose change (its {@code updatePose} is protected). */
 	private static final List<Option> COPPER_GOLEM_STATUE = List.of(FACING, sounded(cycle("pose", CopperGolemStatueBlock.POSE, BuilderStickItem::word)));
+
+	/**
+	 * A dyed block fading through every colour like a sheep named jeb_ ({@link Rainbow}), the last option of every block that has it. A
+	 * cushion has it too, as an entity ({@link #onUseEntity}).
+	 */
+	private static final Option RAINBOW = flag("rainbow", Rainbow.RAINBOW, "on", "off");
 
 	public BuilderStickItem(Item.Properties properties) {
 		super(properties);
@@ -223,6 +249,12 @@ public class BuilderStickItem extends Item {
 
 	/** What the stick can change on {@code state}'s block, in left-click order; empty if it can't be used on it. */
 	private static List<Option> optionsFor(BlockState state) {
+		List<Option> options = shapeOptionsFor(state);
+		return state.hasProperty(Rainbow.RAINBOW) ? Stream.concat(options.stream(), Stream.of(RAINBOW)).toList() : options;
+	}
+
+	/** {@link #optionsFor} without the rainbow option. */
+	private static List<Option> shapeOptionsFor(BlockState state) {
 		Block block = state.getBlock();
 		if (block instanceof FenceBlock || block instanceof IronBarsBlock) {
 			return SIDES;
@@ -243,6 +275,8 @@ public class BuilderStickItem extends Item {
 			return state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE ? List.of() : SLAB;
 		} else if (block instanceof ChainBlock || isPillar(state)) {
 			return AXIS;
+		} else if (block instanceof PlacedRodBlock) {
+			return state.getValue(PlacedRodBlock.FACING).getAxis() == Direction.Axis.Y ? UPRIGHT_PLACED_ROD : PLACED_ROD;
 		} else if (block instanceof RodBlock || block instanceof DispenserBlock || block instanceof ObserverBlock) {
 			return ALL_DIRECTIONS;
 		} else if (block instanceof PistonBaseBlock) {
@@ -289,6 +323,13 @@ public class BuilderStickItem extends Item {
 		return block instanceof PistonBaseBlock || block instanceof DispenserBlock || block instanceof ObserverBlock || block instanceof HopperBlock
 				|| block instanceof DiodeBlock || block instanceof BaseRailBlock || block instanceof ButtonBlock || block instanceof SignBlock
 				|| block instanceof AbstractBannerBlock || block instanceof AbstractSkullBlock || block instanceof CopperGolemStatueBlock;
+	}
+
+	/** An upright placed rod's arm on {@code side}: always turns off, but only turns on toward air or the same kind of rod. */
+	private static Option rodArm(Direction side) {
+		BooleanProperty arm = PlacedRodBlock.ARMS.get(side);
+		return new Option(side.getSerializedName(), state -> word(state.getValue(arm) ? "on" : "off"), (level, pos, state, player) ->
+				state.getValue(arm) || PlacedRodBlock.canHaveArm(state, level.getBlockState(pos.relative(side))) ? state.cycle(arm) : state);
 	}
 
 	/**
@@ -465,8 +506,9 @@ public class BuilderStickItem extends Item {
 			return InteractionResult.SUCCESS;
 		}
 		Block block = changed.getBlock();
-		if (changed != state && LockedBlocks.canLock(block)) {
-			// Keep the new shape: neighbours changing (a barrel opening, a rail placed beside it) no longer reshape it.
+		if (changed != state && LockedBlocks.canLock(block) && option != RAINBOW) {
+			// Keep the new shape: neighbours changing (a barrel opening, a rail placed beside it) no longer reshape it. Fading a stained
+			// glass pane leaves its shape alone, so it doesn't lock it.
 			changed = changed.setValue(LockedBlocks.LOCKED, true);
 		}
 		// No change (a hopper pointing down, a wall button with only one side to hang on) needs no updates either.
@@ -490,16 +532,35 @@ public class BuilderStickItem extends Item {
 			if (other.is(block) &&other.getValue(DoorBlock.HALF) != half) {
 				level.setBlock(otherPos, changed.setValue(DoorBlock.HALF, other.getValue(DoorBlock.HALF)), FLAGS);
 			}
+		} else if (block instanceof AbstractBedBlock) {
+			// A bed's only option is its fade, which the other half shares.
+			BlockPos otherPos = pos.relative(AbstractBedBlock.getConnectedDirection(changed));
+			BlockState other = level.getBlockState(otherPos);
+			if (other.is(block) && other.getValue(AbstractBedBlock.PART) != changed.getValue(AbstractBedBlock.PART)) {
+				level.setBlock(otherPos, other.setValue(Rainbow.RAINBOW, changed.getValue(Rainbow.RAINBOW)), FLAGS);
+			}
 		}
 
 		player.sendOverlayMessage(Component.translatable(KEY + ".update", option.name(), option.value().apply(changed)));
 		return InteractionResult.SUCCESS;
 	}
 
-	/** Whether this is the stick, in {@code hand}, on an armour stand the player may turn (as with blocks, not in adventure mode). */
-	private static boolean isStickOnArmorStand(Player player, InteractionHand hand, Entity entity) {
-		return player.getItemInHand(hand).getItem() instanceof BuilderStickItem && entity instanceof ArmorStand stand && !stand.isMarker()
+	/**
+	 * Whether this is the stick, in {@code hand}, on an armour stand, cushion or item frame (glow ones too) the player may change (as with
+	 * blocks, not in adventure mode).
+	 */
+	private static boolean isStickOnEntity(Player player, InteractionHand hand, Entity entity) {
+		return player.getItemInHand(hand).getItem() instanceof BuilderStickItem
+				&& (entity instanceof ArmorStand stand && !stand.isMarker() || entity instanceof Cushion || entity instanceof ItemFrame)
 				&& !player.isSpectator() && player.mayBuild();
+	}
+
+	private static Component rainbow(Cushion cushion) {
+		return word(RainbowCushions.isRainbow(cushion) ? "on" : "off");
+	}
+
+	private static Component frame(ItemFrame frame) {
+		return word(frame.isInvisible() ? "hidden" : "shown");
 	}
 
 	/** The compass point an armour stand faces, to the nearest 22.5° (yaw 0 faces south, as a sign's rotation 0 does). */
@@ -508,32 +569,52 @@ public class BuilderStickItem extends Item {
 	}
 
 	/**
-	 * Left click on an armour stand ({@code AttackEntityCallback}): select its facing instead of hitting it. The client's SUCCESS sends
-	 * the attack on to the server, where SUCCESS cancels {@code Player.attack}, so the stand never takes a hit.
+	 * Left click on an armour stand, cushion or item frame ({@code AttackEntityCallback}): select its one option (facing, rainbow, frame)
+	 * instead of hitting it. The client's SUCCESS sends the attack on to the server, where SUCCESS cancels {@code Player.attack}, so it never
+	 * takes a hit (a frame keeps its item and doesn't break).
 	 */
 	public static InteractionResult onAttackEntity(Player player, Level level, InteractionHand hand, Entity entity, @Nullable EntityHitResult hit) {
-		if (!isStickOnArmorStand(player, hand, entity)) {
+		if (!isStickOnEntity(player, hand, entity)) {
 			return InteractionResult.PASS;
 		}
 
 		if (!level.isClientSide()) {
-			player.getItemInHand(hand).set(BuilderStick.SELECTED_OPTION, ARMOR_STAND_OPTION);
-			player.sendOverlayMessage(Component.translatable(KEY + ".select", ARMOR_STAND_OPTION, facing((ArmorStand) entity)));
+			if (entity instanceof Cushion cushion) {
+				player.getItemInHand(hand).set(BuilderStick.SELECTED_OPTION, RAINBOW.name());
+				player.sendOverlayMessage(Component.translatable(KEY + ".select", RAINBOW.name(), rainbow(cushion)));
+			} else if (entity instanceof ItemFrame frame) {
+				player.getItemInHand(hand).set(BuilderStick.SELECTED_OPTION, FRAME_OPTION);
+				player.sendOverlayMessage(Component.translatable(KEY + ".select", FRAME_OPTION, frame(frame)));
+			} else {
+				player.getItemInHand(hand).set(BuilderStick.SELECTED_OPTION, ARMOR_STAND_OPTION);
+				player.sendOverlayMessage(Component.translatable(KEY + ".select", ARMOR_STAND_OPTION, facing((ArmorStand) entity)));
+			}
 		}
 		return InteractionResult.SUCCESS;
 	}
 
 	/**
-	 * Right click on an armour stand ({@code UseEntityCallback}, which runs before the stand's own {@code interact}, so the stick is never
-	 * put in its hand): turn it {@value #ARMOR_STAND_STEP}° clockwise (sneak: counter-clockwise), from its facing rounded to the nearest
-	 * step. As with blocks, the client's SUCCESS sends the click on and the server makes the change.
+	 * Right click on an armour stand, cushion or item frame ({@code UseEntityCallback}, which runs before the entity's own {@code interact},
+	 * so the stick is never put in a stand's hand or a frame, a frame's item never turns, and nobody sits on the cushion). A cushion's fade
+	 * turns on or off ({@link RainbowCushions}). A frame is hidden or shown: vanilla's own {@code Invisible} flag, which it saves, sends to
+	 * clients and draws (the item alone, flat to the wall). A stand turns {@value #ARMOR_STAND_STEP}° clockwise (sneak: counter-clockwise),
+	 * from its facing rounded to the nearest step. As with blocks, the client's SUCCESS sends the click on and the server makes the change.
 	 */
 	public static InteractionResult onUseEntity(Player player, Level level, InteractionHand hand, Entity entity, @Nullable EntityHitResult hit) {
-		if (!isStickOnArmorStand(player, hand, entity)) {
+		if (!isStickOnEntity(player, hand, entity)) {
 			return InteractionResult.PASS;
 		}
 
-		if (!level.isClientSide()) {
+		if (level.isClientSide()) {
+			return InteractionResult.SUCCESS;
+		}
+		if (entity instanceof Cushion cushion) {
+			RainbowCushions.setRainbow(cushion, !RainbowCushions.isRainbow(cushion));
+			player.sendOverlayMessage(Component.translatable(KEY + ".update", RAINBOW.name(), rainbow(cushion)));
+		} else if (entity instanceof ItemFrame frame) {
+			frame.setInvisible(!frame.isInvisible());
+			player.sendOverlayMessage(Component.translatable(KEY + ".update", FRAME_OPTION, frame(frame)));
+		} else {
 			ArmorStand stand = (ArmorStand) entity;
 			float step = player.isSecondaryUseActive() ? -ARMOR_STAND_STEP : ARMOR_STAND_STEP;
 			float yRot = Mth.wrapDegrees(Math.round(stand.getYRot() / ARMOR_STAND_STEP) * ARMOR_STAND_STEP + step);

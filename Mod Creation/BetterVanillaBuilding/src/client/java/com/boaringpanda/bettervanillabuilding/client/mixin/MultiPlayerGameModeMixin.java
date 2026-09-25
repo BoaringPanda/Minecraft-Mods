@@ -15,13 +15,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import com.boaringpanda.bettervanillabuilding.block.CornerTorches;
 import com.boaringpanda.bettervanillabuilding.block.LilyPadDecorations;
 import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
 
 /**
  * The client's own guess at a break matches the server's: breaking a decoration on a lily pad leaves the pad unless the player is
  * aiming at the bare pad ({@link LilyPadDecorations}). Otherwise the pad would vanish until the server put it back. Likewise breaking
- * one head of a stack leaves the other head where it is ({@link StackedHeads}).
+ * one head of a stack leaves the other head where it is ({@link StackedHeads}), and breaking one torch of a group leaves the rest
+ * ({@link CornerTorches}).
  */
 @Mixin(MultiPlayerGameMode.class)
 public class MultiPlayerGameModeMixin {
@@ -37,6 +39,10 @@ public class MultiPlayerGameModeMixin {
 		boolean pad = LilyPadDecorations.aimsAtPad(minecraft.player, level, pos, old);
 		if (!pad && StackedHeads.isStacked(old)) {
 			return StackedHeads.breakHead(level, pos, old, StackedHeads.aimsAtTop(minecraft.player, level, pos, old), flags) != null;
+		}
+		BlockState torch = CornerTorches.aimedTorch(minecraft.player, level, pos, old);
+		if (torch != null) {
+			return CornerTorches.breakTorch(level, pos, old, torch, flags);
 		}
 		if (LilyPadDecorations.onPad(old) && !pad) {
 			return original.call(level, pos, Blocks.LILY_PAD.defaultBlockState(), flags);

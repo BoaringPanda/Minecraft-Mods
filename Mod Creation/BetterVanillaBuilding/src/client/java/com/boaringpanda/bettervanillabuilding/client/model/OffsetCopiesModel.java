@@ -1,5 +1,6 @@
 package com.boaringpanda.bettervanillabuilding.client.model;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
@@ -15,26 +16,31 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.fabric.api.client.model.loading.v1.wrapper.WrapperBlockStateModel;
 import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadEmitter;
 
+import com.boaringpanda.bettervanillabuilding.block.CornerTorches;
 import com.boaringpanda.bettervanillabuilding.block.FlowerClumps;
 
 /**
- * A clump of flowers ({@link FlowerClumps}): the flower's own vanilla model, full size, drawn once for each flower of the clump.
- * Textures, cutout and the open eyeblossom's glow all come from that model.
+ * A block's own vanilla model, full size, drawn once at each of a few offsets: a clump of flowers ({@link FlowerClumps}) or a group of
+ * torches ({@link CornerTorches}). Textures, cutout and glow (the open eyeblossom) all come from that model.
  */
-public class FlowerClumpModel extends WrapperBlockStateModel {
-	public FlowerClumpModel(BlockStateModel wrapped) {
+public class OffsetCopiesModel extends WrapperBlockStateModel {
+	private final List<Vec3> offsets;
+
+	public OffsetCopiesModel(BlockStateModel wrapped, List<Vec3> offsets) {
 		super(wrapped);
+		this.offsets = offsets;
 	}
 
-	/** Wraps {@code model} if {@code state} is a clump; otherwise returns it unchanged. */
-	public static BlockStateModel wrapIfClump(BlockStateModel model, BlockState state) {
-		return FlowerClumps.isClump(state) ? new FlowerClumpModel(model) : model;
+	/** Wraps {@code model} if {@code state} is a clump of flowers or a group of torches; otherwise returns it unchanged. */
+	public static BlockStateModel wrapIfCopied(BlockStateModel model, BlockState state) {
+		List<Vec3> offsets = FlowerClumps.isClump(state) ? FlowerClumps.offsets(state) : CornerTorches.offsets(state);
+		return offsets.isEmpty() ? model : new OffsetCopiesModel(model, offsets);
 	}
 
 	@Override
 	public void emitQuads(QuadEmitter emitter, BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random,
 			Predicate<@Nullable Direction> cullTest) {
-		for (Vec3 offset : FlowerClumps.offsets(state)) {
+		for (Vec3 offset : offsets) {
 			float dx = (float) offset.x;
 			float dz = (float) offset.z;
 			emitter.pushTransform(quad -> {
@@ -49,7 +55,7 @@ public class FlowerClumpModel extends WrapperBlockStateModel {
 		}
 	}
 
-	/** Never shares cached geometry with a single flower of the same kind. */
+	/** Never shares cached geometry with the same block drawn once. */
 	@Override
 	public @Nullable Object createGeometryKey(BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random) {
 		return null;

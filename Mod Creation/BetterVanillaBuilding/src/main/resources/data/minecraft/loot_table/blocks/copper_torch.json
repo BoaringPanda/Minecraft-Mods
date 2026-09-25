@@ -1,0 +1,118 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "modifier": [
+            {
+              "type": "minecraft:set_count",
+              "add": true,
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "minecraft:copper_torch",
+                "state": {
+                  "north_west": "true"
+                }
+              },
+              "count": 1
+            },
+            {
+              "type": "minecraft:set_count",
+              "add": true,
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "minecraft:copper_torch",
+                "state": {
+                  "north_east": "true"
+                }
+              },
+              "count": 1
+            },
+            {
+              "type": "minecraft:set_count",
+              "add": true,
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "minecraft:copper_torch",
+                "state": {
+                  "south_east": "true"
+                }
+              },
+              "count": 1
+            },
+            {
+              "type": "minecraft:set_count",
+              "add": true,
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "minecraft:copper_torch",
+                "state": {
+                  "south_west": "true"
+                }
+              },
+              "count": 1
+            },
+            {
+              "type": "minecraft:set_count",
+              "add": true,
+              "condition": {
+                "type": "minecraft:any_of",
+                "terms": [
+                  {
+                    "type": "minecraft:match_block",
+                    "blocks": "minecraft:copper_torch",
+                    "state": {
+                      "north_west": "true"
+                    }
+                  },
+                  {
+                    "type": "minecraft:match_block",
+                    "blocks": "minecraft:copper_torch",
+                    "state": {
+                      "north_east": "true"
+                    }
+                  },
+                  {
+                    "type": "minecraft:match_block",
+                    "blocks": "minecraft:copper_torch",
+                    "state": {
+                      "south_east": "true"
+                    }
+                  },
+                  {
+                    "type": "minecraft:match_block",
+                    "blocks": "minecraft:copper_torch",
+                    "state": {
+                      "south_west": "true"
+                    }
+                  }
+                ]
+              },
+              "count": -1
+            },
+            {
+              "type": "minecraft:set_count",
+              "add": true,
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "minecraft:copper_wall_torch",
+                "state": {
+                  "side": "both"
+                }
+              },
+              "count": 1
+            },
+            {
+              "type": "minecraft:explosion_decay"
+            }
+          ],
+          "name": "minecraft:copper_torch"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "minecraft:blocks/copper_torch"
+}

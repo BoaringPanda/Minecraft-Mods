@@ -37,9 +37,11 @@
   "item.bettervanillabuilding.builder_stick.sitting": "sitting",
   "item.bettervanillabuilding.builder_stick.running": "running",
   "item.bettervanillabuilding.builder_stick.star": "star",
+  "item.bettervanillabuilding.builder_stick.shown": "shown",
+  "item.bettervanillabuilding.builder_stick.hidden": "hidden",
   "item.bettervanillabuilding.builder_stick.not_allowed": "Can not be used on this block",
   "message.bettervanillabuilding.rope_started": "Rope fence started",
-  "message.bettervanillabuilding.rope_too_far": "Rope limit reached (5 block limit)",
+  "message.bettervanillabuilding.rope_too_far": "Rope limit reached (7 block limit)",
   "message.bettervanillabuilding.rope_too_high": "Connecting fence too high",
   "message.bettervanillabuilding.rope_too_low": "Connecting fence too low",
   "message.bettervanillabuilding.rope_already_tied": "Those two fences are already tied together."

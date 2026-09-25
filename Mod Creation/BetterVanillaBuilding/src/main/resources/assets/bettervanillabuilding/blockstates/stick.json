@@ -1,34 +1,84 @@
 {
-  "variants": {
-    "facing=down": [
-      { "model": "bettervanillabuilding:block/stick_1", "x": 180 },
-      { "model": "bettervanillabuilding:block/stick_2", "x": 180 },
-      { "model": "bettervanillabuilding:block/stick_3", "x": 180 }
-    ],
-    "facing=east": [
-      { "model": "bettervanillabuilding:block/stick_1", "x": 90, "y": 90 },
-      { "model": "bettervanillabuilding:block/stick_2", "x": 90, "y": 90 },
-      { "model": "bettervanillabuilding:block/stick_3", "x": 90, "y": 90 }
-    ],
-    "facing=north": [
-      { "model": "bettervanillabuilding:block/stick_1", "x": 90 },
-      { "model": "bettervanillabuilding:block/stick_2", "x": 90 },
-      { "model": "bettervanillabuilding:block/stick_3", "x": 90 }
-    ],
-    "facing=south": [
-      { "model": "bettervanillabuilding:block/stick_1", "x": 90, "y": 180 },
-      { "model": "bettervanillabuilding:block/stick_2", "x": 90, "y": 180 },
-      { "model": "bettervanillabuilding:block/stick_3", "x": 90, "y": 180 }
-    ],
-    "facing=up": [
-      { "model": "bettervanillabuilding:block/stick_1" },
-      { "model": "bettervanillabuilding:block/stick_2" },
-      { "model": "bettervanillabuilding:block/stick_3" }
-    ],
-    "facing=west": [
-      { "model": "bettervanillabuilding:block/stick_1", "x": 90, "y": 270 },
-      { "model": "bettervanillabuilding:block/stick_2", "x": 90, "y": 270 },
-      { "model": "bettervanillabuilding:block/stick_3", "x": 90, "y": 270 }
-    ]
-  }
+  "multipart": [
+    {
+      "when": { "facing": "down" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_1", "x": 180 },
+        { "model": "bettervanillabuilding:block/stick_2", "x": 180 },
+        { "model": "bettervanillabuilding:block/stick_3", "x": 180 }
+      ]
+    },
+    {
+      "when": { "facing": "east" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_1", "x": 90, "y": 90 },
+        { "model": "bettervanillabuilding:block/stick_2", "x": 90, "y": 90 },
+        { "model": "bettervanillabuilding:block/stick_3", "x": 90, "y": 90 }
+      ]
+    },
+    {
+      "when": { "facing": "north" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_1", "x": 90 },
+        { "model": "bettervanillabuilding:block/stick_2", "x": 90 },
+        { "model": "bettervanillabuilding:block/stick_3", "x": 90 }
+      ]
+    },
+    {
+      "when": { "facing": "south" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_1", "x": 90, "y": 180 },
+        { "model": "bettervanillabuilding:block/stick_2", "x": 90, "y": 180 },
+        { "model": "bettervanillabuilding:block/stick_3", "x": 90, "y": 180 }
+      ]
+    },
+    {
+      "when": { "facing": "up" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_1" },
+        { "model": "bettervanillabuilding:block/stick_2" },
+        { "model": "bettervanillabuilding:block/stick_3" }
+      ]
+    },
+    {
+      "when": { "facing": "west" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_1", "x": 90, "y": 270 },
+        { "model": "bettervanillabuilding:block/stick_2", "x": 90, "y": 270 },
+        { "model": "bettervanillabuilding:block/stick_3", "x": 90, "y": 270 }
+      ]
+    },
+    {
+      "when": { "north": "true" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_arm_1" },
+        { "model": "bettervanillabuilding:block/stick_arm_2" },
+        { "model": "bettervanillabuilding:block/stick_arm_3" }
+      ]
+    },
+    {
+      "when": { "east": "true" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_arm_1", "y": 90 },
+        { "model": "bettervanillabuilding:block/stick_arm_2", "y": 90 },
+        { "model": "bettervanillabuilding:block/stick_arm_3", "y": 90 }
+      ]
+    },
+    {
+      "when": { "south": "true" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_arm_1", "y": 180 },
+        { "model": "bettervanillabuilding:block/stick_arm_2", "y": 180 },
+        { "model": "bettervanillabuilding:block/stick_arm_3", "y": 180 }
+      ]
+    },
+    {
+      "when": { "west": "true" },
+      "apply": [
+        { "model": "bettervanillabuilding:block/stick_arm_1", "y": 270 },
+        { "model": "bettervanillabuilding:block/stick_arm_2", "y": 270 },
+        { "model": "bettervanillabuilding:block/stick_arm_3", "y": 270 }
+      ]
+    }
+  ]
 }

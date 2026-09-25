@@ -39,7 +39,7 @@ import com.boaringpanda.bettervanillabuilding.entity.RopeKnotEntity;
  *       vanilla way, snapping (and dropping the lead) if the player walks {@code Leashable.leashSnapDistance} blocks away.</li>
  * </ol>
  * A rope reaches at most {@value #MAX_BLOCKS} blocks counting both fences (so the fences are at most {@value #MAX_DISTANCE} apart,
- * measured flat between the blocks' centres: (4, 0) and (3, 2) are fine, (3, 3) is not), and may go at most
+ * measured flat between the blocks' centres: (6, 0) and (4, 4) are fine, (5, 4) is not), and may go at most
  * {@value #MAX_HEIGHT_DIFFERENCE} block up or down. Clicking a fence out of reach says why on the action bar and the rope stays in hand.
  * Walking out of reach while carrying a rope shows the same limit message ({@link RopeKnotEntity} checks with {@link #isBeyondReach}).
  * <p>
@@ -59,8 +59,8 @@ import com.boaringpanda.bettervanillabuilding.entity.RopeKnotEntity;
  * holding the button while tying at fence B would start a new rope from B straight away.
  */
 public class FenceRopeInteraction {
-	private static final int MAX_BLOCKS = 5;
-	private static final double MAX_DISTANCE = MAX_BLOCKS - 1;
+	private static final int MAX_BLOCKS = 7;
+	public static final double MAX_DISTANCE = MAX_BLOCKS - 1;
 	/** How many blocks higher or lower than the first fence the second may be. */
 	private static final int MAX_HEIGHT_DIFFERENCE = 1;
 	/** How long after starting or tying a rope a lead click can't start another one (see the class notes on repeat clicks). */

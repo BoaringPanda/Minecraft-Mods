@@ -15,13 +15,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import com.boaringpanda.bettervanillabuilding.block.CornerTorches;
 import com.boaringpanda.bettervanillabuilding.block.LilyPadDecorations;
 import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
 
 /**
  * On a decoration on a lily pad, the block outline shows only the part under the cursor, the one a break would take: the bare pad or
  * the decoration ({@link LilyPadDecorations#partShape}). On a stack of heads, it shows only the head under the cursor
- * ({@link StackedHeads#partShape}).
+ * ({@link StackedHeads#partShape}), and on a group of corner torches only the torch under it ({@link CornerTorches#aimedTorch}).
  */
 @Mixin(LevelExtractor.class)
 public class LevelExtractorMixin {
@@ -34,6 +35,10 @@ public class LevelExtractorMixin {
 		boolean pad = LilyPadDecorations.aimsAtPad(player, level, pos, state);
 		if (!pad && StackedHeads.isStacked(state)) {
 			return StackedHeads.partShape(state, level, pos, context, StackedHeads.aimsAtTop(player, level, pos, state));
+		}
+		BlockState torch = CornerTorches.aimedTorch(player, level, pos, state);
+		if (torch != null) {
+			return original.call(torch, level, pos, context);
 		}
 		if (!LilyPadDecorations.onPad(state)) {
 			return original.call(state, level, pos, context);

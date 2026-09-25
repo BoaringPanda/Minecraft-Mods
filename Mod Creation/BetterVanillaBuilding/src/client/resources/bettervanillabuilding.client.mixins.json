@@ -3,11 +3,15 @@
 	"package": "com.boaringpanda.bettervanillabuilding.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"BannerRendererMixin",
 		"ClientLevelMixin",
+		"CushionRendererMixin",
+		"EntityHitboxDebugRendererMixin",
 		"LevelExtractorMixin",
 		"MovingBlockRenderStateMixin",
 		"MultiPlayerGameModeMixin",
 		"PistonHeadRendererMixin",
+		"RainbowRenderStateMixin",
 		"SkullBlockRendererMixin",
 		"SkullBlockRenderStateMixin"
 	],

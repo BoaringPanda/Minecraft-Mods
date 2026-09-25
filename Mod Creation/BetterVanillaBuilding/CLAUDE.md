@@ -17,8 +17,9 @@ Run from this folder (where `gradlew` is), not the repo root. `JAVA_HOME` must p
 
 ## Fence ropes (a lead tied between two fences, no animal)
 Spec from Dylan (2026-09-24): tie a lead from fence to fence with no animal, using only vanilla textures. The rope attaches one pixel
-below the top of the knot at both ends and hangs a little, more on longer ropes, with no warping or stretching. It reaches **at most 5
-blocks counting both fences** (fences at most 4 apart, measured flat between block centres: (4,0) and (3,2) are fine, (3,3) is not) and
+below the top of the knot at both ends and hangs a little, more on longer ropes, with no warping or stretching. It reaches **at most 7
+blocks counting both fences** (Dylan, 2026-09-25, was 5: "5 distance isn't long enough"; fences at most 6 apart, measured flat between
+block centres: (6,0) and (4,4) are fine, (5,4) is not) and
 goes **at most 1 block up or down**. Tying works like leading an animal: a lead on fence 1 starts a rope that follows your hand, and a
 click on fence 2 ties it.
 
@@ -40,7 +41,7 @@ click on fence 2 ties it.
     the same reason a lead click can't *start* a rope within `REPEAT_TICKS` (10) of the player starting or tying one
     (`LAST_ROPE_CLICK`, a `WeakHashMap<Player, Long>`); otherwise holding the button while tying at B started a new rope from B.
   - The rules live in `tieProblem(level, from, to)`: height, then distance (`isBeyondReach`), then `alreadyTied`. Out of reach is
-    "Rope limit reached (5 block limit)". **The knot enforces them**: `RopeKnotEntity.canHaveALeashAttachedTo` only accepts the
+    "Rope limit reached (7 block limit)". **The knot enforces them**: `RopeKnotEntity.canHaveALeashAttachedTo` only accepts the
     player, or a knot on a *different* fence with no `tieProblem`. Vanilla asks this before every tie (`LeadItem.bindPlayerMobs`, the
     knot's `interact`, sneak-clicking a mob in `Entity.interact`), so vanilla itself refuses bad ties.
   - Clicks on a fence block while carrying (`tieAtFence`) are **never cancelled** (Dylan's bug, 2026-09-25: a block placed on the
@@ -99,11 +100,15 @@ Slowness I while stood on, wearing off about 1 s after stepping off (his pick).
 - `block/PlacedRodBlock` extends vanilla `RodBlock` (FACING, 4-px hitbox, rotate/mirror), copies `EndRodBlock.getStateForPlacement`
   (out from the clicked face, flipped against the same rod facing the same way), and returns its item from `getCloneItemStack`.
   26.3 blocks have no `codec()`.
-  - `StickBlock`: `stepOn` by a `LivingEntity` schedules a 30-tick block tick (once; `hasScheduledTick`). The tick calls
-    `destroyBlock(pos, false)` (no drop), whose break sound is the block's own `SoundType.WOOD`, the same as a log breaking (Dylan asked
-    for a log-break sound in place of the first version's tool-break snap). Dylan's spec (2026-09-24): it snaps
-    1.5 s after first being stepped on, even if you've walked off, and sneaking doesn't help. Scheduled ticks save with the chunk.
-    Breaking by hand still drops the stick.
+  - `StickBlock`: snaps once something has stood on it for 30 ticks **in a row** (Dylan, 2026-09-25: "you need to actually be on the
+    block for it to break, so if you stand on it for half a second it doesn't break"; it used to snap 1.5 s after the *first* step, even
+    after walking off, via a scheduled tick). Vanilla calls `stepOn` every tick while a `LivingEntity` is on the ground on it (from
+    `LivingEntity.aiStep` → `applyEffectsFromBlocks`, standing still included), so `stepOn` keeps a server-side record per level
+    (`WeakHashMap<Level, Long2ObjectMap<long[]>>`, pos → first and last tick of the current stand). More than `GAP_TICKS` (2) off it
+    (stepping off, a jump) starts a new stand; stale records are dropped whenever a new one starts. Not saved. Sneaking doesn't help.
+    Snapping is `destroyBlock(pos, false)` (no drop), whose break sound is the block's own `SoundType.WOOD`, the same as a log breaking
+    (Dylan asked for a log-break sound in place of the first version's tool-break snap). An old save's pending tick from the first
+    version is ignored (no `tick` override any more). Breaking by hand still drops the stick.
   - `BlazeRodBlock`: `animateTick` flames and smoke along the rod's axis. `stepOn` does `hurt(damageSources().campfire(), 1)` to a
     `LivingEntity`, exactly vanilla `CampfireBlock.entityInside` (no sneak exemption, as with a campfire; Dylan asked for campfire damage).
   - `BreezeRodBlock`: `stepOn` Slowness I (20 ticks, refreshed each tick), plus a slight powder-snow chill (Dylan: "slightly shows
@@ -124,8 +129,26 @@ Slowness I while stood on, wearing off about 1 s after stepping off (his pick).
   - Made with a throwaway seeded Java/ImageIO script, not kept in the repo; to change them, edit the PNGs.
 
   Models: one template, `block/placed_rod` (element `[7,0,7]`–`[9,16,9]`, north/east/south/west uv x 0–2/2–4/4–6/6–8, up
-  `[8,0,10,2]`, down `[10,0,12,2]`), plus a child per variant that only sets `#rod`. Blockstates copy vanilla `end_rod.json`'s
-  rotations. Loot tables drop the vanilla item.
+  `[8,0,10,2]`, down `[10,0,12,2]`), plus a child per variant that only sets `#rod`. Blockstates are `multipart`: one part per
+  facing with vanilla `end_rod.json`'s rotations (3 random variants each), plus the arm parts below. Loot tables drop the vanilla item.
+- **Arms** (Dylan, 2026-09-25, from a picture): an upright rod (facing up or down) reaches out to a rod **of the same kind** (his pick)
+  lying beside it and pointing at it (its `FACING` axis = that side's axis, either way round). The arm goes from the rod's middle to the
+  edge of its block at half height, where the lying rod's end is. The upright rod is the one that reaches out.
+  - `PlacedRodBlock` has the fence's `north/east/south/west` booleans (`ARMS` = `CrossCollisionBlock.PROPERTY_BY_DIRECTION`), always
+    false unless upright. `getStateForPlacement` and the stick's facing change use `withArms` (all four from the neighbours).
+    `updateShape` works out **only the side that changed**, as a fence does. A stub toward
+    air stays until something is placed there. An arm the stick removed would grow back when a matching rod is placed on that side,
+    so a stick-changed rod is locked (Builder Stick → Locked blocks).
+  - Hitbox: `getShapeForEachState` of `RodBlock`'s upright column plus a 4-px arm box per arm (`Shapes.rotateHorizontal`, the
+    `CrossCollisionBlock` pattern), collision too. `rotate`/`mirror` move the arms with the rod (structures).
+  - Models: template `block/placed_rod_arm` (`[7,7,0]`–`[9,9,7]`, toward north; the side-strip UVs, the east/west faces UV-rotated 90 so
+    the grain runs along the arm; the outer end has the top cap's uv `[8,0,10,2]` so a stub is closed off, and there's no inner end face) and children `<rod>_arm_{1,2,3}`. Multipart `north=true` etc. with y 0/90/180/270.
+  - Builder Stick: on an upright rod the options are facing, north, east, south, west. A side always turns off, but only turns **on** (a
+    stub if nothing's there) toward air or the same kind of rod (`canHaveArm`, Dylan: "anywhere, but if a block is next to it that isn't
+    a stick, it won't"). Stick changes on rods are quiet (`FLAGS`, never neighbours): they were briefly in `updatesLikePlacing`, and
+    Dylan saw that as a bug, because changing one rod re-worked the arm of the upright rod next to it. No lock (his pick): placing or
+    breaking next to a rod still connects and disconnects as normal. Known edge: turning a lying rod with the stick leaves the upright
+    rod's arm as it was, until something is placed or broken on that side.
 
 ## Hanging ladders
 Spec from Dylan (2026-09-24): only the top ladder of a column needs a block behind it. If that one loses its support, every ladder
@@ -202,13 +225,14 @@ recipe, so it fits the 2×2 and 3×3 grids). It works **only** on blocks Dylan n
 | trapdoor (every `TrapDoorBlock`) | facing | rotate |
 | iron trapdoor (only `Blocks.IRON_TRAPDOOR`; copper ones open by hand) | facing, state | rotate / open, closed |
 | stairs (every `StairBlock`) | facing, shape, half ("flipped") | rotate / 5 shapes / top, bottom |
-| slab (every `SlabBlock`, not while double) | half | top, bottom (never makes a double slab; a double slab is "not allowed") |
+| slab (every `SlabBlock`, not while double; wool slabs see below) | half | top, bottom (never makes a double slab; a double slab is "not allowed") |
 | chain, copper chains (`ChainBlock`) | axis | x, y, z |
 | every log, wood, stripped log, stripped wood (`#logs`, so nether stems and hyphae too), hay bale, quartz pillar, purpur pillar, polished basalt, deepslate, ancient debris, reinforced deepslate (`isPillar`) | axis | x, y, z |
 | stonecutter, grindstone (floats, so any way, on a wall too) | facing | rotate |
 | bell on the floor or ceiling | facing | rotate |
 | bell on a wall | facing | rotate, onto a side with a wall only; hangs between two walls when the opposite side is solid too |
 | end rod, lightning rods, placed stick/blaze rod/breeze rod (`RodBlock`) | facing | all 6 directions |
+| upright placed stick/blaze rod/breeze rod | facing, north, east, south, west (its arms) | all 6 directions / on, off (on only toward air or the same kind of rod) |
 | piston, sticky piston (`PistonBaseBlock`, retracted only), dispenser, dropper (`DispenserBlock`), observer | facing | all 6 directions |
 | hopper | shape, facing | down, side (points the way you look) / turn the side spout (nothing while it points down) |
 | comparator, repeater (`DiodeBlock`) | facing | rotate |
@@ -223,6 +247,49 @@ recipe, so it fits the 2×2 and 3×3 grids). It works **only** on blocks Dylan n
 | every standing head, player included (`SkullBlock`) | facing | all 16 directions (on a stack of heads, the head under the cursor) |
 | every wall head (`WallSkullBlock`) | facing | rotate, only onto a side with a block behind |
 | armour stand (an **entity**, not markers) | facing | turns 45° (vanilla's 8 placement directions) |
+| item frame, glow item frame (**entities**, `ItemFrame`) | frame | shown / hidden (Dylan, 2026-09-25: vanilla's own `Invisible` flag, which vanilla saves, syncs and draws: the item alone, flat to the wall; an empty hidden frame shows nothing but can still be aimed at) |
+| rainbow things: wool, wool stairs, wool slabs, carpets (not moss), stained glass, stained glass panes, beds, banners (standing + wall), cushions (an **entity**) | rainbow, added after the block's own options (stairs: facing, shape, half, rainbow; slabs: half, rainbow; panes: north…west, rainbow; banners: facing, rainbow; everything else, double wool slabs included: rainbow only) | on / off (fades through every colour like a sheep named jeb_, but slower: 3.5 s a colour) |
+
+Rainbow things (Dylan, 2026-09-25): "on wool blocks, they change colours like sheep when you name them jeb_"; then, after trying it,
+"slow down the colour changing" (2x slower, then "tiny bit slower", then "3.5": 70 ticks) and "let the wool stairs and slabs have that
+option as well" (both new in 26.3); then "add beds, stained glass, stained glass panes, cushions, carpets, and banners".
+- **Blocks:** `block/Rainbow`: a `rainbow` boolean that `BlockMixin` adds (off by default via `offByDefault`, like `locked`) to every
+  vanilla block whose id is `<dye colour>_` + one of `wool`, `wool_stairs`, `wool_slab`, `carpet`, `stained_glass`,
+  `stained_glass_pane`, `bed`, `banner`, `wall_banner` (so moss carpets and straw beds are out). Picked **by id**, since wool is a plain
+  `Block` and the rest are ordinary vanilla classes: `mixin/BlockPropertiesAccessor` reads the private `BlockBehaviour.Properties.id` (set
+  by `Blocks.register` before the constructor runs), taken in `addProperties` with `@Local(argsOnly = true)`. Placement, worldgen and old
+  saves stay vanilla; loot is vanilla's, so each drops its own colour. (The very first version swapped wool to a `RainbowWoolBlock` class
+  in `BlocksMixin`; that couldn't reach stairs/slabs, so it was removed.) `Rainbow` is loaded while vanilla builds its blocks, so it holds
+  nothing else (no registrations).
+- **Cushions** are entities in 26.3 (`Cushion`, placed on a block and sat on), so `entity/RainbowCushions` keeps a Fabric data attachment
+  (`bettervanillabuilding:rainbow`, `Codec.BOOL`, synced to all clients, removed when off). The stick's `onAttackEntity`/`onUseEntity`
+  handle them like armour stands (`isStickOnEntity`): left click selects `rainbow`, right click toggles it; the stick's right click runs
+  before `Cushion.interact`, so it never sits you down. Breaking one drops its own colour.
+- **Stick:** `optionsFor` = `shapeOptionsFor` (the per-block lists) + the shared `RAINBOW` option last when the block has the property.
+  Quiet first-batch flags, except banners, which already update like placing. A rainbow toggle never locks a stained glass pane
+  (`option != RAINBOW`). A bed's other half gets the same value (`AbstractBedBlock.getConnectedDirection`), like a door's.
+- **Looks: only animated textures, everything in step.** Each rainbow texture is 16 frames (vanilla's texture of each colour, top to bottom
+  in `DyeColor` order, the order `ColorLerper.Type.SHEEP` steps through) with an `.mcmeta` of `frametime` **70** + `interpolate` (jeb_ is
+  25 ticks a colour; Dylan wanted it slower: 3.5 s a colour, 56 s a loop). All animated textures count the same client ticks, so every
+  rainbow block, banner and cushion fades together (jeb_ sheep are offset by entity id). Textures, `block/`: `rainbow_wool`,
+  `rainbow_stained_glass`, `rainbow_stained_glass_pane_top`, 7 `rainbow_bed_*` (beds are block models in 26.3, 7 textures a colour),
+  `rainbow_cushion` (64×64 frames); `entity/banner/rainbow_base`.
+  - Blocks: `assets/minecraft/blockstates/` overrides all 16 of each kind except banners: vanilla's cases with `rainbow=false`, then again
+    with `rainbow=true` pointing at `bettervanillabuilding:block/rainbow_<rest of vanilla's model name>` (same rotations, uvlock; pane
+    multiparts get `"rainbow"` in every `when`). A double wool slab uses `rainbow_wool`. Rainbow models use vanilla's parents; glass ones
+    keep vanilla's `force_translucent`. Banner blockstates need no override (`""` matches every state; the look is the renderer's).
+  - Banners (drawn by `BannerRenderer`, the base colour being vanilla's white `entity/banner/base` tinted with the dye's
+    `getTextureDiffuseColor`): `rainbow_base` is that base pre-tinted with each colour, in the banner pattern atlas (its `entity/banner`
+    folder takes every namespace). `client/mixin/BannerRendererMixin` puts the flag in the render state (`RainbowRenderState`, added by
+    `RainbowRenderStateMixin`), and while `submit` draws a rainbow banner, `submitPatternLayer`'s base layer (`Sheets.BANNER_PATTERN_BASE`)
+    is drawn untinted from `rainbow_base` instead. Patterns stay their own colours on top. Items (`submitSpecial`) aren't changed.
+  - Cushions (drawn by `CushionRenderer` from plain, non-atlas textures, which can't animate): `rainbow_cushion` is in the **block** atlas,
+    and `client/mixin/CushionRendererMixin` swaps the `submitModel` call for the sprite version (`SpriteId(LOCATION_BLOCKS, …)`).
+  - The texture strips and the 64 stair/slab/carpet/glass/pane/bed blockstates were generated from the game jar's own files by throwaway
+    Java scripts (not kept); the banner strip multiplies `base.png` by each `DyeColor` diffuse colour.
+- Edges: a same-colour wool slab put into a rainbow half makes a rainbow double slab (vanilla's `SlabBlock.getStateForPlacement` keeps
+  the existing state). A rainbow wool slab stacked with a *different* slab becomes a mixed slab, which saves only block ids
+  (`MixedSlabs.Halves`), so that half goes back to its plain colour. Picking up / breaking anything rainbow gives the plain item.
 
 Fourth batch (Dylan, 2026-09-24): logs/wood (all four kinds), hay, quartz and purpur pillars, polished basalt, deepslate ("directions" =
 their axis), stonecutter, bell and grindstone rotation. Ancient debris ("netherite debris") and reinforced deepslate are plain `Block`s
@@ -287,7 +354,7 @@ trapdoor top/bottom, the wall `up` post. `RodBlock` in 26.3 is exactly end rod, 
     built by `standing(offset)`. Signs and banners use offset 0; heads use 8, because vanilla places them without the sign's half turn
     (`convertToSegment(rot)` vs `rot + 180`), so a head's 0 faces north. Block entities stay through the `setBlock` (same block), so
     banner patterns and player-head skins are kept.
-  - **Armour stands** are entities, so they have their own path (`onAttackEntity`, `onUseEntity`), only for the stick on a non-marker
+  - **Armour stands** (and item frames and cushions) are entities, so they have their own path (`onAttackEntity`, `onUseEntity`), only for the stick on a non-marker
     `ArmorStand`, not spectating, `mayBuild()`. Every other entity passes to vanilla (the stick still hits mobs, villagers still trade).
     - Left click: Fabric's client hook sends the attack when the callback returns SUCCESS, and on the server a non-PASS result cancels
       `Player.attack`, so the stand is never hit. The server selects `facing` and shows its compass point. Entity attacks don't repeat
@@ -295,6 +362,12 @@ trapdoor top/bottom, the wall `up` post. `RodBlock` in 26.3 is exactly end rod, 
     - Right click: runs before `ArmorStand.interact`, so the stick is never put in the stand's hand. The server rounds the yaw to the
       nearest 45° (`ArmorStandItem` places in 45° steps), turns ±45° and applies it with `forceSetRotation` (vanilla `/rotate`'s path,
       which clients are sent). Yaw 0 faces south, so it shares `COMPASS` (yaw / 22.5).
+    - **Item frames** (and glow item frames, a subclass) take the same path (`isStickOnEntity`): left click selects `frame` without
+      popping the item out or breaking the frame; right click (before `ItemFrame.interact`, so the stick never goes in and the item
+      never turns) flips vanilla's `setInvisible`. Vanilla saves it as `Invisible`, syncs it (an entity shared flag) and draws a hidden
+      frame as its item alone, flat to the wall. Cushions take this path too (see rainbow things).
+      F3+B hitboxes still show for hidden frames (Dylan, 2026-09-25: so they're not forgotten, being entities that can lag):
+      `client/mixin/EntityHitboxDebugRendererMixin` skips vanilla's `isInvisible()` check in `emitGizmos` for `ItemFrame`s only.
   - Doors: after the clicked half, the other half gets the same state with its own `HALF`, the copy vanilla's
     `DoorBlock.updateShape` does.
   - Iron trapdoor state plays vanilla's iron trapdoor open/close sound and `BLOCK_OPEN`/`BLOCK_CLOSE` game event (copied from the
@@ -304,7 +377,7 @@ trapdoor top/bottom, the wall `up` post. `RodBlock` in 26.3 is exactly end rod, 
     path) picks LOW/TALL per side and whether the post shows. The `up` property is never set directly.
 - Texture: vanilla `stick.png` blended 60% toward an amethyst purple at each pixel's own brightness (throwaway Java script, not kept).
 - **Locked blocks** (Dylan, 2026-09-25, from a picture: glass pane, stained glass panes, iron bars, copper bars, walls, fences, rail,
-  powered / detector / activator rail; **only those**). Vanilla used to recompute a stick-set side whenever a neighbour changed (a barrel
+  powered / detector / activator rail; later stairs, fence gates and placed rods, below). Vanilla used to recompute a stick-set side whenever a neighbour changed (a barrel
   opening next to a pane re-connected it). Now any stick change to one of them locks it (his pick: automatic, no option; break and
   re-place to unlock). `block/LockedBlocks`: a boolean `locked` property that `BlockMixin` adds to `FenceBlock`, `IronBarsBlock`
   (panes, stained panes, iron + copper bars), `WallBlock` and `BaseRailBlock`, forced false in the default state (as with `lily_pad`),
@@ -316,6 +389,15 @@ trapdoor top/bottom, the wall `up` post. `RodBlock` in 26.3 is exactly end rod, 
     `neighborChanged`). `mixin/RailStateMixin`: a locked rail's `canConnectTo` is only "already points there" and its `connectTo` is
     cancelled, so a rail placed beside it can't bend it (and only joins it if it already points at the new rail). Power and detector
     presses are separate paths and still work; a rail still pops off without its floor or slope support.
+  - Stairs, fence gates, placed rods (Dylan, 2026-09-25: "I altered stairs but as soon as I placed a block near it, it reset it"; he asked
+    that everything the stick sets stays put). Checked against 26.3's `updateShape` of every stick block: only these three (plus the
+    ones above) have something neighbours recompute: a stair's `shape` (`getStairsShape` on any horizontal update), a gate's `in_wall`,
+    an upright rod's arms (`PlacedRodBlock.updateShape`, a turned-off arm grew back toward a matching rod). Same `updateShape` hook.
+    Left to vanilla on purpose: doors (each half copies the other; locking would break opening), wall bells (re-hang single/double and
+    turn to the remaining wall, which is vanilla keeping them attached), repeater locking, redstone open/powered. Every other stick block
+    only schedules water ticks or pops when unsupported. The hook keeps a locked state only while vanilla still returns the same block,
+    so anything vanilla removes still goes. Locked gates still open and take redstone (`neighborChanged` / `useWithoutItem` set it
+    directly, not through `updateShape`). The rainbow toggle never locks.
 - Known edges: a *new* block placed beside a locked one picks its own shape from its neighbours as usual (a new fence can reach an arm
   toward a locked fence whose side is off); the locked block itself stays as set. First-batch changes don't update neighbours, so a
   rotated gate leaves the fence arms beside it as they were.
@@ -325,7 +407,8 @@ Spec from Dylan (2026-09-24, from a picture): these stand **on** a lily pad, in 
 and stained glass panes, iron and copper bars, iron and copper chains, candles, standing banners, amethyst cluster and buds, sea pickle,
 torch / soul / copper / redstone torch, lanterns, standing signs, end rod, lightning rods, placed stick / blaze rod / breeze rod (his
 pick), standing heads, decorated pot, flower pot and every potted plant, turtle egg, buttons, and the armour stand. Added 2026-09-25:
-copper golem statues (every stage, waxed too) and item frames / glow item frames lying flat on the pad.
+copper golem statues (every stage, waxed too) and item frames / glow item frames lying flat on the pad; later the cactus flower
+(`CactusFlowerBlock`; the pad stands in for the cactus or sturdy top vanilla wants under it).
 **Breaking goes by aim (his pick):** aim at the
 decoration and only it comes off, leaving the pad. Aim at the bare pad edge and the pad breaks, and the decoration drops too (whatever
 the tool, as when its support goes).
@@ -489,11 +572,12 @@ flower (like candles). The first version put each flower in the aimed quarter; h
   rest (torchflower, modded flowers) just carry an unused property.
 - **Placing:** `BlockStateBaseMixin.canBeReplaced` → `takesFlower`: in the tag, same item, not sneaking (candle rule), fewer than 4,
   and the click was on the flower itself. Vanilla also asks `canBeReplaced` of the block *next to* the clicked one (clicking the
-  ground beside a flower asks the flower), and `getClickedPos()` isn't set yet on the first ask, so the check is: the click point,
-  nudged 0.001 back into the clicked face, is in a block with this very state. `BlockMixin`'s `getStateForPlacement` hook → `place`:
-  the flower already there + 1. A full clump sends vanilla on to the space above, where a flower can't stand, so nothing is placed.
+  ground beside a flower asks the flower). `BlockPlaceContext.replaceClicked` starts out true and is only set from the first ask's
+  answer, so `replacingClickedOnBlock()` is true exactly on the first ask (the clicked block itself); the flower requires it.
+  `BlockMixin`'s `getStateForPlacement` hook → `place`: the flower already there + 1. A full clump sends vanilla on to the space above, where a flower can't stand, so nothing is placed.
 - **Look:** `BlockStateBaseMixin.getOffset` is zero for a clump (vanilla's random sideways shift would break the pattern).
-  `client/model/FlowerClumpModel` (via `modifyBlockModelAfterBake`) draws the flower's own vanilla model once per flower, moved
+  `client/model/OffsetCopiesModel` (via `modifyBlockModelAfterBake`, shared with corner torches) draws the flower's own vanilla
+  model once per flower, moved
   ±4 px to its spot in `PATTERN` with a `QuadTransform`, so size, texture, cutout, the open eyeblossom's glow and resource packs are
   all vanilla's. `mixin/FlowerClumpMixin` (`FlowerBlock` + `MushroomBlock` `getShape`): vanilla's shape of one flower at each spot,
   one box around them (`singleEncompassing`, as candles), cached per state.
@@ -508,3 +592,46 @@ flower (like candles). The first version put each flower in the aimed quarter; h
     drops all of it on death (its death drop uses `getDrops`).
 - Known edges: bone meal on a mushroom clump grows one huge mushroom and the clump is used up (as a single mushroom is); a datapack
   replacing those 18 loot tables drops one flower per clump.
+
+## Corner torches (crouch to put a torch where the cursor is)
+Spec from Dylan (2026-09-25): crouch-placing a torch, soul torch or copper torch on a full block puts it **where the cursor is**: the
+aimed quarter of the top (up to 4 torches), or the aimed half of a side (only **two** wall torches, side by side). **Same torch type
+only** in a group. Without crouching it's all vanilla. Redstone torches aren't included. After testing he changed two things:
+- **Menu blocks** (crafting table, furnace, chest: you have to crouch to place anything on them) take corner torches too, and
+  crouch-aiming at the **middle** of one gives vanilla's middle torch. On other blocks crouching always gives a corner torch (his pick).
+- **A player breaks only the torch they aim at**; the rest of the group stays. Explosions, pistons and losing the block underneath
+  still take the whole group.
+
+- `block/CornerTorches`: vanilla's own torch blocks with extra properties (flower-clumps pattern), added by class in `BlockMixin`:
+  - Standing torches (`TorchBlock` but not `WallTorchBlock`): four booleans `north_west`/`north_east`/`south_east`/`south_west`,
+    forced false in `offByDefault`. All false = vanilla's centred torch. Quarters use `AimedSegments.aimedQuarter` (package-private,
+    shared) and its naming (north = north-west, ...).
+  - Wall torches (`WallTorchBlock`): `side` = `middle` (vanilla, first value, so the default) / `left` / `right` / `both`, as seen
+    facing the wall (`right` = along `facing.getCounterClockWise()`).
+  - Only blocks in the tag `bettervanillabuilding:corner_torches` (torch, soul and copper torch and their wall forms) ever spread;
+    modded torches just carry unused properties. The redstone torch is a `BaseTorchBlock`, not a `TorchBlock`, so it has none.
+- **Placing a new one:** `mixin/StandingAndWallBlockItemMixin` (`getPlacementState` return, the one place both forms come out of) →
+  `place`: crouching, in the tag, and not `staysInMiddle`: the clicked block (`pos.relative(face.getOpposite())`) has a full face
+  (`isFaceSturdy(..., SupportType.FULL)`), and if it has a menu (`getMenuProvider != null`) the click isn't `aimsAtMiddle` (the middle
+  6×6 px of the top, or the middle 6 px strip of a side, left to right). A standing torch on face UP gets the aimed quarter; a wall
+  torch whose `FACING` is the clicked face gets the aimed side.
+- **Adding to a group:** crouch-click the same block face again. The group sits in the space in front of the clicked block, so vanilla
+  asks the group `canBeReplaced` on its *second* ask (`!replacingClickedOnBlock()`); `BlockStateBaseMixin.canBeReplaced` →
+  `takesTorch`: same torch item, crouching, the clicked face is the group's (UP / its `FACING`), and the aimed quarter/side is free.
+  `place` then adds it to the group, whatever vanilla picked (vanilla might have picked a wall torch). A middle torch and a group never
+  share a block.
+- **Breaking one torch** (stacked-heads pattern): `torches(state)` is each torch alone, as a one-torch group state. `aimedTorch` (a
+  `player.pick` raycast, like `aimsAtPad`; groups of 2+ only) is the one whose shape the hit is in, else the nearest. `breakTorch`
+  turns it off (`both` → the other side). `ServerPlayerGameModeMixin` does that in place of `removeBlock` and hands the one-torch state
+  to `playerDestroy` (`@Share("brokenTorch")`), so the loot table drops exactly one. `client/mixin/MultiPlayerGameModeMixin` makes the
+  client's guess match, and `client/mixin/LevelExtractorMixin` outlines only the aimed torch. A lone corner torch breaks the vanilla way.
+- **Look:** `client/model/OffsetCopiesModel` draws the torch's own vanilla model at each spot (±4 px). `mixin/CornerTorchShapeMixin`
+  (`BaseTorchBlock` + `WallTorchBlock` `getShape`): vanilla's shape at each torch, **unioned** (not one box), so the top between
+  torches can still be clicked. `mixin/TorchParticlesMixin` (`TorchBlock` + `WallTorchBlock` `animateTick`) wraps both
+  `addParticle` calls, so each torch has its own smoke and flame. Light is vanilla's (one light source per block).
+- **Drops:** data only. `data/minecraft/loot_table/blocks/{torch,soul_torch,copper_torch}.json` (each wall torch already uses its
+  standing torch's table via `overrideLootTable`): `add` 1 per corner set, `add` -1 if any corner is set (`any_of`), `add` 1 for the
+  wall torch with `side: both`, then `explosion_decay`.
+- Known edges: structure mirror doesn't swap left/right or turn corners; a `/setblock` that swaps the block under corner torches for a
+  non-full one leaves them standing (only vanilla's centre-support rule is checked afterwards); breaking one torch shows break particles
+  over the whole group.
