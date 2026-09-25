@@ -18,8 +18,8 @@ import net.fabricmc.fabric.api.client.renderer.v1.mesh.QuadEmitter;
 import com.boaringpanda.bettervanillabuilding.block.FlowerClumps;
 
 /**
- * A clump of flowers ({@link FlowerClumps}): the flower's own vanilla model, full size, drawn once in each filled quarter. Textures,
- * cutout and the open eyeblossom's glow all come from that model.
+ * A clump of flowers ({@link FlowerClumps}): the flower's own vanilla model, full size, drawn once for each flower of the clump.
+ * Textures, cutout and the open eyeblossom's glow all come from that model.
  */
 public class FlowerClumpModel extends WrapperBlockStateModel {
 	public FlowerClumpModel(BlockStateModel wrapped) {

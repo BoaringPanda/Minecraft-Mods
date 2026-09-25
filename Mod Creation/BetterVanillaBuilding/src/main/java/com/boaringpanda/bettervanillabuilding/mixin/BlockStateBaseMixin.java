@@ -101,7 +101,7 @@ public class BlockStateBaseMixin {
 
 	/**
 	 * A lily pad makes room for a decoration placed into it from any side, as a candle makes room for another candle. A standing head
-	 * makes room for a second head in its free half ({@link StackedHeads#takesHead}), and a flower for the same flower in a free quarter
+	 * makes room for a second head in its free half ({@link StackedHeads#takesHead}), and a flower for the same flower clicked onto it
 	 * ({@link FlowerClumps#takesFlower}).
 	 */
 	@ModifyReturnValue(method = "canBeReplaced(Lnet/minecraft/world/item/context/BlockPlaceContext;)Z", at = @At("RETURN"))
@@ -111,9 +111,9 @@ public class BlockStateBaseMixin {
 				|| StackedHeads.takesHead(state, context) || FlowerClumps.takesFlower(state, context);
 	}
 
-	/** Vanilla moves each flower a random bit sideways; a clump's flowers stand in their quarters instead ({@link FlowerClumps}). */
+	/** Vanilla moves each flower a random bit sideways; a clump's flowers keep to their fixed pattern ({@link FlowerClumps}). */
 	@ModifyReturnValue(method = "getOffset", at = @At("RETURN"))
-	private Vec3 bettervanillabuilding$clumpInQuarters(Vec3 offset) {
+	private Vec3 bettervanillabuilding$clumpInPattern(Vec3 offset) {
 		return FlowerClumps.isClump((BlockState) (Object) this) ? Vec3.ZERO : offset;
 	}
 

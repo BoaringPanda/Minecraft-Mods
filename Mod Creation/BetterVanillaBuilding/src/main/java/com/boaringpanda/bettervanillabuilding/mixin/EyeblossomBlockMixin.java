@@ -27,7 +27,7 @@ public class EyeblossomBlockMixin {
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
 	private boolean bettervanillabuilding$keepClump(ServerLevel level, BlockPos pos, BlockState state, Operation<Boolean> original) {
-		return original.call(level, pos, FlowerClumps.keepQuarters(level.getBlockState(pos), state));
+		return original.call(level, pos, FlowerClumps.keepFlowers(level.getBlockState(pos), state));
 	}
 
 	@WrapOperation(method = "tryChangingState",

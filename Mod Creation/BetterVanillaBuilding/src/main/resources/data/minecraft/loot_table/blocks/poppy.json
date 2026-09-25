@@ -8,69 +8,36 @@
           "modifier": [
             {
               "type": "minecraft:set_count",
-              "add": true,
               "condition": {
                 "type": "minecraft:match_block",
                 "blocks": "minecraft:poppy",
                 "state": {
-                  "north_west": "true"
+                  "flowers": "2"
                 }
               },
-              "count": 1
+              "count": 2
             },
             {
               "type": "minecraft:set_count",
-              "add": true,
               "condition": {
                 "type": "minecraft:match_block",
                 "blocks": "minecraft:poppy",
                 "state": {
-                  "north_east": "true"
+                  "flowers": "3"
                 }
               },
-              "count": 1
+              "count": 3
             },
             {
               "type": "minecraft:set_count",
-              "add": true,
               "condition": {
                 "type": "minecraft:match_block",
                 "blocks": "minecraft:poppy",
                 "state": {
-                  "south_east": "true"
+                  "flowers": "4"
                 }
               },
-              "count": 1
-            },
-            {
-              "type": "minecraft:set_count",
-              "add": true,
-              "condition": {
-                "type": "minecraft:match_block",
-                "blocks": "minecraft:poppy",
-                "state": {
-                  "south_west": "true"
-                }
-              },
-              "count": 1
-            },
-            {
-              "type": "minecraft:set_count",
-              "add": true,
-              "condition": {
-                "type": "minecraft:inverted",
-                "term": {
-                  "type": "minecraft:match_block",
-                  "blocks": "minecraft:poppy",
-                  "state": {
-                    "north_east": "false",
-                    "north_west": "false",
-                    "south_east": "false",
-                    "south_west": "false"
-                  }
-                }
-              },
-              "count": -1
+              "count": 4
             },
             {
               "type": "minecraft:explosion_decay"

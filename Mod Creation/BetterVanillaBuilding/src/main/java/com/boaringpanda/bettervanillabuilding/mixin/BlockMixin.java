@@ -32,8 +32,8 @@ import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
  * Gives every block that can stand on a lily pad the {@code lily_pad} property ({@link LilyPadDecorations}), off by default, every
  * standing head the {@code top_head} property ({@link StackedHeads}), fences, panes, bars, walls and rails the {@code locked}
  * property ({@link LockedBlocks}), off by default, and leaf litter, pink petals and wildflowers the {@code segment_order} property
- * ({@link AimedSegments}), vanilla's order by default, and flowers and mushrooms a property per quarter ({@link FlowerClumps}), off by
- * default.
+ * ({@link AimedSegments}), vanilla's order by default, and flowers and mushrooms the {@code flowers} count ({@link FlowerClumps}),
+ * 1 by default.
  */
 @Mixin(Block.class)
 public class BlockMixin {
@@ -57,14 +57,14 @@ public class BlockMixin {
 			builder.add(AimedSegments.ORDER);
 		}
 		if (FlowerClumps.has(block)) {
-			builder.add(FlowerClumps.NORTH_WEST, FlowerClumps.NORTH_EAST, FlowerClumps.SOUTH_EAST, FlowerClumps.SOUTH_WEST);
+			builder.add(FlowerClumps.FLOWERS);
 		}
 	}
 
 	/**
 	 * A boolean property's first value is true, and blocks build their default state from {@code stateDefinition.any()} (the first
 	 * value of every property they don't set), so without this every torch would default to standing on a pad, every head to
-	 * floating half a block up, every fence to being locked, and every flower to a clump of four.
+	 * floating half a block up, and every fence to being locked.
 	 */
 	@ModifyVariable(method = "registerDefaultState", at = @At("HEAD"), argsOnly = true)
 	private BlockState bettervanillabuilding$offByDefault(BlockState state) {
@@ -74,13 +74,10 @@ public class BlockMixin {
 		if (state.hasProperty(LockedBlocks.LOCKED)) {
 			state = state.setValue(LockedBlocks.LOCKED, false);
 		}
-		if (state.hasProperty(FlowerClumps.NORTH_WEST)) {
-			state = FlowerClumps.single(state);
-		}
 		return state.hasProperty(LilyPadDecorations.LILY_PAD) ? state.setValue(LilyPadDecorations.LILY_PAD, false) : state;
 	}
 
-	/** A flower placed onto the same flower joins it, in the quarter aimed at ({@link FlowerClumps#place}). */
+	/** A flower clicked onto the same flower joins it ({@link FlowerClumps#place}). */
 	@ModifyReturnValue(method = "getStateForPlacement", at = @At("RETURN"))
 	private @Nullable BlockState bettervanillabuilding$joinFlowerClump(@Nullable BlockState state, BlockPlaceContext context) {
 		return FlowerClumps.place(context, state);

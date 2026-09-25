@@ -21,7 +21,7 @@ public class BetterVanillaBuildingClient implements ClientModInitializer {
 
 		// A mixed slab block's model is made in code (it draws the two vanilla slab models), so it has no blockstate file.
 		// A decoration on a lily pad uses its own vanilla model with the lily pad's drawn under it.
-		// A clump of flowers draws the flower's own vanilla model once per quarter.
+		// A clump of flowers draws the flower's own vanilla model once per flower.
 		ModelLoadingPlugin.register(context -> {
 			context.registerBlockStateResolver(MixedSlabs.MIXED_SLAB,
 					resolver -> resolver.setModel(MixedSlabs.MIXED_SLAB.defaultBlockState(), new MixedSlabModel.Unbaked()));

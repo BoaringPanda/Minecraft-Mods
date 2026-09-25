@@ -23,6 +23,6 @@ public class EndermanTakeBlockGoalMixin {
 					target = "Lnet/minecraft/world/entity/monster/Enderman;setCarriedBlock(Lnet/minecraft/world/level/block/state/BlockState;)V"))
 	private void bettervanillabuilding$takeWholeClump(Enderman enderman, BlockState carried, Operation<Void> original,
 			@Local BlockState taken) {
-		original.call(enderman, FlowerClumps.keepQuarters(taken, carried));
+		original.call(enderman, FlowerClumps.keepFlowers(taken, carried));
 	}
 }

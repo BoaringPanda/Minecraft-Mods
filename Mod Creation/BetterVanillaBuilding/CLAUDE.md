@@ -476,34 +476,35 @@ dripstone block and both nyliums **in any light**. Data only, no code: vanilla a
 - Shelf mushrooms need nothing: vanilla puts them on the side of any block with a sturdy side face, in any light.
 
 ## Flower clumps (up to four of the same flower in one block)
-Spec from Dylan (2026-09-25, from a picture): placing a flower onto the same flower adds another, like candles, up to 4, each full size
-and one per quarter. The 18 in his picture: dandelion, golden dandelion, poppy, blue orchid, allium, azure bluet, the four tulips, oxeye
-daisy, cornflower, lily of the valley, closed and open eyeblossom, wither rose, brown and red mushroom (not torchflower). His picks:
-**same flower only** (like candle colours), **the quarter you aim at** (like leaf litter), and it **breaks as a whole clump**, dropping
-every flower (like candles).
+Spec from Dylan (2026-09-25, from a picture): clicking a flower with the same flower adds another, like candles, up to 4, each full
+size and one per quarter. The 18 in his picture: dandelion, golden dandelion, poppy, blue orchid, allium, azure bluet, the four tulips,
+oxeye daisy, cornflower, lily of the valley, closed and open eyeblossom, wither rose, brown and red mushroom (not torchflower). His
+picks: **same flower only** (like candle colours), a **fixed pattern, diagonal first** (2 = north-west + south-east, 3 adds
+north-east, 4 adds south-west), only when you **click the flower's own hitbox**, and it **breaks as a whole clump**, dropping every
+flower (like candles). The first version put each flower in the aimed quarter; he had that removed.
 
-- `block/FlowerClumps`: four booleans `north_west`/`north_east`/`south_east`/`south_west`, added by `BlockMixin` to every
-  `FlowerBlock` and `MushroomBlock` (by class: properties are added before blocks have ids) and forced false in the default state. All
-  false = vanilla's single flower, random offset and all. Only blocks in the tag `bettervanillabuilding:flower_clumps` (data, the 18
-  above) ever clump; the rest (torchflower, modded flowers) just carry unused properties.
-- **Placing:** `BlockStateBaseMixin.canBeReplaced` → `takesFlower`: in the tag, same item, not sneaking (candle rule), aimed quarter
-  free. Aim is `AimedSegments.aimedQuarter` (package-private, shared), so it matches leaf litter. `BlockMixin`'s `getStateForPlacement`
-  hook → `place`: a single flower becomes the aimed quarter + the one diagonally opposite (the first flower moves there), a clump gets
-  the aimed quarter. A full clump or a filled quarter places nothing (vanilla tries above, where a flower can't stand).
-- **Look:** `BlockStateBaseMixin.getOffset` is zero for a clump (vanilla's random sideways shift would break the grid).
-  `client/model/FlowerClumpModel` (via `modifyBlockModelAfterBake`) draws the flower's own vanilla model once per filled quarter, moved
-  ±4 px with a `QuadTransform`, so size, texture, cutout, the open eyeblossom's glow and resource packs are all vanilla's.
-  `mixin/FlowerClumpMixin` (`FlowerBlock` + `MushroomBlock` `getShape`): vanilla's shape of one flower in each quarter, one box around
-  them (`singleEncompassing`, as candles), cached per state.
-- **Drops:** data only. `data/minecraft/loot_table/blocks/<flower>.json` for the 18 copy vanilla's and add candle-style `set_count`
-  modifiers: `add` 1 per quarter set, then `add` -1 unless all are off (so the count never passes through 0), then `explosion_decay`
-  (as on candles; for a single flower the same odds as vanilla's `survives_explosion`). Hand, water, pistons and explosions all use it.
+- `block/FlowerClumps`: a `flowers` count 1-4, exactly like the candle's `candles`, added by `BlockMixin` to every `FlowerBlock` and
+  `MushroomBlock` (by class: properties are added before blocks have ids). 1 is the first value, so the default is vanilla's single
+  flower, random offset and all. Only blocks in the tag `bettervanillabuilding:flower_clumps` (data, the 18 above) ever clump; the
+  rest (torchflower, modded flowers) just carry an unused property.
+- **Placing:** `BlockStateBaseMixin.canBeReplaced` → `takesFlower`: in the tag, same item, not sneaking (candle rule), fewer than 4,
+  and the click was on the flower itself. Vanilla also asks `canBeReplaced` of the block *next to* the clicked one (clicking the
+  ground beside a flower asks the flower), and `getClickedPos()` isn't set yet on the first ask, so the check is: the click point,
+  nudged 0.001 back into the clicked face, is in a block with this very state. `BlockMixin`'s `getStateForPlacement` hook → `place`:
+  the flower already there + 1. A full clump sends vanilla on to the space above, where a flower can't stand, so nothing is placed.
+- **Look:** `BlockStateBaseMixin.getOffset` is zero for a clump (vanilla's random sideways shift would break the pattern).
+  `client/model/FlowerClumpModel` (via `modifyBlockModelAfterBake`) draws the flower's own vanilla model once per flower, moved
+  ±4 px to its spot in `PATTERN` with a `QuadTransform`, so size, texture, cutout, the open eyeblossom's glow and resource packs are
+  all vanilla's. `mixin/FlowerClumpMixin` (`FlowerBlock` + `MushroomBlock` `getShape`): vanilla's shape of one flower at each spot,
+  one box around them (`singleEncompassing`, as candles), cached per state.
+- **Drops:** data only. `data/minecraft/loot_table/blocks/<flower>.json` for the 18 are vanilla's `candle.json` pattern: `set_count`
+  2/3/4 on a `match_block` `flowers` condition, then `explosion_decay` (for a single flower the same odds as vanilla's
+  `survives_explosion`). Hand, water, pistons and explosions all use it.
 - **Vanilla paths that would lose flowers:**
-  - `mixin/EyeblossomBlockMixin`: opening/closing swaps in the other eyeblossom's *default* state; `keepQuarters` keeps the clump.
+  - `mixin/EyeblossomBlockMixin`: opening/closing swaps in the other eyeblossom's *default* state; `keepFlowers` keeps the count.
     The wave to nearby eyeblossoms (`filterState(s -> s == state)`) is widened to any state of that block, so clumps join in.
   - `mixin/MushroomBlockMixin`: spreading copies the whole state; it now spreads one mushroom (`single`).
   - `mixin/EndermanTakeBlockGoalMixin`: an enderman carries `defaultBlockState()`; it now carries the clump, puts it back as one, and
     drops all of it on death (its death drop uses `getDrops`).
-- Known edges: bone meal on a mushroom clump grows one huge mushroom and the clump is used up (as a single mushroom is); structure
-  rotate/mirror doesn't turn a clump's quarters; `/setblock` can make a one-quarter state (one flower in a corner, drops 1); a
-  datapack replacing those 18 loot tables drops one flower per clump.
+- Known edges: bone meal on a mushroom clump grows one huge mushroom and the clump is used up (as a single mushroom is); a datapack
+  replacing those 18 loot tables drops one flower per clump.
