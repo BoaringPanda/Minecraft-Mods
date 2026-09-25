@@ -1,0 +1,6 @@
+{
+  "parent": "bettervanillabuilding:block/template_leaf_litter_ne",
+  "textures": {
+    "texture": "minecraft:block/leaf_litter"
+  }
+}

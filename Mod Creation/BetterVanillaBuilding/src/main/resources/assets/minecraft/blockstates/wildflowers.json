@@ -1,0 +1,20 @@
+{
+  "multipart": [
+    { "apply": { "model": "minecraft:block/wildflowers_1" }, "when": { "facing": "north" } },
+    { "apply": { "model": "minecraft:block/wildflowers_1", "y": 90 }, "when": { "facing": "east" } },
+    { "apply": { "model": "minecraft:block/wildflowers_1", "y": 180 }, "when": { "facing": "south" } },
+    { "apply": { "model": "minecraft:block/wildflowers_1", "y": 270 }, "when": { "facing": "west" } },
+    { "apply": { "model": "minecraft:block/wildflowers_2" }, "when": { "OR": [ { "facing": "north", "segment_order": "1234", "flower_amount": "2|3|4" }, { "facing": "north", "segment_order": "1342", "flower_amount": "4" }, { "facing": "north", "segment_order": "1423", "flower_amount": "3|4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_2", "y": 90 }, "when": { "OR": [ { "facing": "east", "segment_order": "1234", "flower_amount": "2|3|4" }, { "facing": "east", "segment_order": "1342", "flower_amount": "4" }, { "facing": "east", "segment_order": "1423", "flower_amount": "3|4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_2", "y": 180 }, "when": { "OR": [ { "facing": "south", "segment_order": "1234", "flower_amount": "2|3|4" }, { "facing": "south", "segment_order": "1342", "flower_amount": "4" }, { "facing": "south", "segment_order": "1423", "flower_amount": "3|4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_2", "y": 270 }, "when": { "OR": [ { "facing": "west", "segment_order": "1234", "flower_amount": "2|3|4" }, { "facing": "west", "segment_order": "1342", "flower_amount": "4" }, { "facing": "west", "segment_order": "1423", "flower_amount": "3|4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_3" }, "when": { "OR": [ { "facing": "north", "segment_order": "1234", "flower_amount": "3|4" }, { "facing": "north", "segment_order": "1342", "flower_amount": "2|3|4" }, { "facing": "north", "segment_order": "1423", "flower_amount": "4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_3", "y": 90 }, "when": { "OR": [ { "facing": "east", "segment_order": "1234", "flower_amount": "3|4" }, { "facing": "east", "segment_order": "1342", "flower_amount": "2|3|4" }, { "facing": "east", "segment_order": "1423", "flower_amount": "4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_3", "y": 180 }, "when": { "OR": [ { "facing": "south", "segment_order": "1234", "flower_amount": "3|4" }, { "facing": "south", "segment_order": "1342", "flower_amount": "2|3|4" }, { "facing": "south", "segment_order": "1423", "flower_amount": "4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_3", "y": 270 }, "when": { "OR": [ { "facing": "west", "segment_order": "1234", "flower_amount": "3|4" }, { "facing": "west", "segment_order": "1342", "flower_amount": "2|3|4" }, { "facing": "west", "segment_order": "1423", "flower_amount": "4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_4" }, "when": { "OR": [ { "facing": "north", "segment_order": "1234", "flower_amount": "4" }, { "facing": "north", "segment_order": "1342", "flower_amount": "3|4" }, { "facing": "north", "segment_order": "1423", "flower_amount": "2|3|4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_4", "y": 90 }, "when": { "OR": [ { "facing": "east", "segment_order": "1234", "flower_amount": "4" }, { "facing": "east", "segment_order": "1342", "flower_amount": "3|4" }, { "facing": "east", "segment_order": "1423", "flower_amount": "2|3|4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_4", "y": 180 }, "when": { "OR": [ { "facing": "south", "segment_order": "1234", "flower_amount": "4" }, { "facing": "south", "segment_order": "1342", "flower_amount": "3|4" }, { "facing": "south", "segment_order": "1423", "flower_amount": "2|3|4" } ] } },
+    { "apply": { "model": "minecraft:block/wildflowers_4", "y": 270 }, "when": { "OR": [ { "facing": "west", "segment_order": "1234", "flower_amount": "4" }, { "facing": "west", "segment_order": "1342", "flower_amount": "3|4" }, { "facing": "west", "segment_order": "1423", "flower_amount": "2|3|4" } ] } }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:grass_block",
+    "minecraft:dirt",
+    "minecraft:coarse_dirt",
+    "minecraft:rooted_dirt",
+    "minecraft:mud",
+    "minecraft:moss_block",
+    "minecraft:pale_moss_block",
+    "minecraft:stone",
+    "minecraft:granite",
+    "minecraft:diorite",
+    "minecraft:andesite",
+    "minecraft:deepslate",
+    "minecraft:tuff",
+    "minecraft:oak_log",
+    "minecraft:sand",
+    "minecraft:red_sand",
+    "minecraft:dripstone_block"
+  ]
+}

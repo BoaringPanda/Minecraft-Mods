@@ -26,8 +26,10 @@ import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import com.boaringpanda.bettervanillabuilding.block.FlowerClumps;
 import com.boaringpanda.bettervanillabuilding.block.LilyPadDecorations;
 import com.boaringpanda.bettervanillabuilding.block.LockedBlocks;
 import com.boaringpanda.bettervanillabuilding.block.MixedSlabs;
@@ -42,6 +44,8 @@ import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
  * <p>A standing head makes room for a second head on top, and a stack of two heads drops both ({@link StackedHeads}).
  *
  * <p>A locked fence, pane, bars or wall ignores its neighbours ({@link LockedBlocks}).
+ *
+ * <p>A flower makes room for the same flower, and a clump of flowers has no random offset ({@link FlowerClumps}).
  */
 @Mixin(BlockBehaviour.BlockStateBase.class)
 public class BlockStateBaseMixin {
@@ -97,13 +101,20 @@ public class BlockStateBaseMixin {
 
 	/**
 	 * A lily pad makes room for a decoration placed into it from any side, as a candle makes room for another candle. A standing head
-	 * makes room for a second head in its free half ({@link StackedHeads#takesHead}).
+	 * makes room for a second head in its free half ({@link StackedHeads#takesHead}), and a flower for the same flower in a free quarter
+	 * ({@link FlowerClumps#takesFlower}).
 	 */
 	@ModifyReturnValue(method = "canBeReplaced(Lnet/minecraft/world/item/context/BlockPlaceContext;)Z", at = @At("RETURN"))
 	private boolean bettervanillabuilding$padTakesDecoration(boolean replaceable, BlockPlaceContext context) {
 		BlockState state = (BlockState) (Object) this;
 		return replaceable || state.is(Blocks.LILY_PAD) && LilyPadDecorations.goesOnPad(context.getItemInHand())
-				|| StackedHeads.takesHead(state, context);
+				|| StackedHeads.takesHead(state, context) || FlowerClumps.takesFlower(state, context);
+	}
+
+	/** Vanilla moves each flower a random bit sideways; a clump's flowers stand in their quarters instead ({@link FlowerClumps}). */
+	@ModifyReturnValue(method = "getOffset", at = @At("RETURN"))
+	private Vec3 bettervanillabuilding$clumpInQuarters(Vec3 offset) {
+		return FlowerClumps.isClump((BlockState) (Object) this) ? Vec3.ZERO : offset;
 	}
 
 	/** Whenever a stack of heads breaks as a whole, the top head drops too, by its own loot table ({@link StackedHeads#topDrops}). */

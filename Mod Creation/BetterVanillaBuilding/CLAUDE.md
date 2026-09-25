@@ -430,3 +430,80 @@ whole stack", then removed it). The top head then **stays where it was**, half a
   them over the state's shape (all heads use the same particles and sound, so nothing else differs); a dragon head overlaps its
   neighbour; a wither skull on top of a stack doesn't count toward the wither summoning pattern (one at the bottom, or raised, does); multiplayer
   crack overlay follows the local player's aim.
+
+## Aimed leaf litter and flower beds
+Spec from Dylan (2026-09-25): leaf litter ("brown leaf pile"), pink petals and wildflowers ("2 flower piles") put each piece in the
+**quarter of the block you aim at**, instead of vanilla's fixed pattern. Aiming at a filled quarter places nothing (as a full pile).
+
+- Vanilla (`LeafLitterBlock`, `FlowerBedBlock`, the only `SegmentableBlock`s) stores `facing` + an amount 1-4: piece 1 is in the
+  `facing` quarter (north = NW, east = NE, south = SE, west = SW), each next piece one quarter counter-clockwise. Every quarter has
+  its own model (flowerbed_1..4 differ in height and stems; leaf litter uses combined models `_2` west half, `_3` SE, `_4` whole).
+- `block/AimedSegments` adds `segment_order` (`BlockMixin`): the order the pieces fill in, `1234` (vanilla, default, first value) |
+  `1342` | `1423`. The pieces present are the first `amount` of that order, so every set is covered: {1,3} is `1342` (diagonal),
+  {1,4} `1423`, {1,3,4} `1342`, {1,2,4} `1423`. Piece 1 is always the first one placed, so no piece changes model when another is
+  added. The amount stays the real count, so loot (drop count), bone meal (next piece in the order), worldgen, `/setblock` and
+  structure rotation are vanilla's untouched.
+- `mixin/SegmentedPileMixin` (`@Mixin({LeafLitterBlock, FlowerBedBlock})`, all `@ModifyReturnValue`):
+  - `canBeReplaced`: the same item only goes into an empty quarter (`isFree`). Other items keep vanilla's answer (leaf litter is
+    `replaceable()`). A filled quarter makes vanilla try the space above, where a pile can't survive, so nothing is placed.
+  - `getStateForPlacement` → `place`: a new pile gets `facing` = the aimed quarter; an existing one gets the quarter added and the
+    matching order (`1234` at 1 and 4).
+  - `getShape` → `shape`: non-vanilla orders get one box around their real pieces (`singleEncompassing`, as vanilla), cached.
+  - Aim (`aimedQuarter`): click point nudged 0.001 back into the clicked face, so the side of a piece is that piece and a
+    neighbour's side face gives the nearest quarter. Client and server see the same hit, so prediction matches.
+- Models: `assets/minecraft/blockstates/{pink_petals,wildflowers,leaf_litter}.json` override vanilla with multipart `"OR"`
+  conditions per order. Leaf litter needed one extra quarter model, `bettervanillabuilding:block/leaf_litter_ne` (template
+  `template_leaf_litter_ne`, uv = position like vanilla's, so the texture joins). No new textures.
+- **Support** (Dylan, 2026-09-25: "on the top of any full block", then "all leave blocks"): `AimedSegments.supports` = a sturdy
+  top face (vanilla leaf litter's rule) or `#leaves` (vanilla gives leaves an empty support shape, so they never count as sturdy).
+  `mixin/LeafLitterBlockMixin` widens leaf litter's `canSurvive` with it.
+  `mixin/VegetationBlockMixin` gives `FlowerBedBlock` the same rule by widening `VegetationBlock.mayPlaceOn` (`supports`,
+  plus vanilla's `#supports_vegetation`), so placing, popping off when the block below goes, and drops stay vanilla.
+- Known edges: a resource pack replacing those three blockstates draws non-`1234` piles in vanilla's order.
+
+## Mushrooms and fungi in any light
+Spec from Dylan (2026-09-25): brown/red mushrooms, shelf mushrooms and crimson/warped fungus go on grass, podzol, mycelium, dirt,
+coarse dirt, rooted dirt, mud, moss, pale moss, stone, granite, diorite, andesite, deepslate, tuff, oak log, sand, red sand,
+dripstone block and both nyliums **in any light**. Data only, no code: vanilla already reads these from block tags.
+
+- `data/minecraft/tags/block/overrides_mushroom_light_requirement.json` (`replace: false`): `MushroomBlock.canSurvive` lets a
+  mushroom stand on anything in this tag in any light (vanilla: mycelium, podzol, nyliums). Anywhere else vanilla's rule stays
+  (a solid block with raw light < 13). Mushroom spreading also uses `canSurvive`, so mushrooms spread over these blocks in daylight,
+  like they already do on mycelium.
+- `data/minecraft/tags/block/supports_warped_fungus.json` (`replace: false`): fungus has no light rule, only this tag
+  (`#supports_crimson_fungus` includes it). Adds the stones, oak log, sand, red sand and dripstone block; the rest were already in it. Bone meal
+  still only grows a huge fungus on its own nylium (vanilla).
+- Shelf mushrooms need nothing: vanilla puts them on the side of any block with a sturdy side face, in any light.
+
+## Flower clumps (up to four of the same flower in one block)
+Spec from Dylan (2026-09-25, from a picture): placing a flower onto the same flower adds another, like candles, up to 4, each full size
+and one per quarter. The 18 in his picture: dandelion, golden dandelion, poppy, blue orchid, allium, azure bluet, the four tulips, oxeye
+daisy, cornflower, lily of the valley, closed and open eyeblossom, wither rose, brown and red mushroom (not torchflower). His picks:
+**same flower only** (like candle colours), **the quarter you aim at** (like leaf litter), and it **breaks as a whole clump**, dropping
+every flower (like candles).
+
+- `block/FlowerClumps`: four booleans `north_west`/`north_east`/`south_east`/`south_west`, added by `BlockMixin` to every
+  `FlowerBlock` and `MushroomBlock` (by class: properties are added before blocks have ids) and forced false in the default state. All
+  false = vanilla's single flower, random offset and all. Only blocks in the tag `bettervanillabuilding:flower_clumps` (data, the 18
+  above) ever clump; the rest (torchflower, modded flowers) just carry unused properties.
+- **Placing:** `BlockStateBaseMixin.canBeReplaced` → `takesFlower`: in the tag, same item, not sneaking (candle rule), aimed quarter
+  free. Aim is `AimedSegments.aimedQuarter` (package-private, shared), so it matches leaf litter. `BlockMixin`'s `getStateForPlacement`
+  hook → `place`: a single flower becomes the aimed quarter + the one diagonally opposite (the first flower moves there), a clump gets
+  the aimed quarter. A full clump or a filled quarter places nothing (vanilla tries above, where a flower can't stand).
+- **Look:** `BlockStateBaseMixin.getOffset` is zero for a clump (vanilla's random sideways shift would break the grid).
+  `client/model/FlowerClumpModel` (via `modifyBlockModelAfterBake`) draws the flower's own vanilla model once per filled quarter, moved
+  ±4 px with a `QuadTransform`, so size, texture, cutout, the open eyeblossom's glow and resource packs are all vanilla's.
+  `mixin/FlowerClumpMixin` (`FlowerBlock` + `MushroomBlock` `getShape`): vanilla's shape of one flower in each quarter, one box around
+  them (`singleEncompassing`, as candles), cached per state.
+- **Drops:** data only. `data/minecraft/loot_table/blocks/<flower>.json` for the 18 copy vanilla's and add candle-style `set_count`
+  modifiers: `add` 1 per quarter set, then `add` -1 unless all are off (so the count never passes through 0), then `explosion_decay`
+  (as on candles; for a single flower the same odds as vanilla's `survives_explosion`). Hand, water, pistons and explosions all use it.
+- **Vanilla paths that would lose flowers:**
+  - `mixin/EyeblossomBlockMixin`: opening/closing swaps in the other eyeblossom's *default* state; `keepQuarters` keeps the clump.
+    The wave to nearby eyeblossoms (`filterState(s -> s == state)`) is widened to any state of that block, so clumps join in.
+  - `mixin/MushroomBlockMixin`: spreading copies the whole state; it now spreads one mushroom (`single`).
+  - `mixin/EndermanTakeBlockGoalMixin`: an enderman carries `defaultBlockState()`; it now carries the clump, puts it back as one, and
+    drops all of it on death (its death drop uses `getDrops`).
+- Known edges: bone meal on a mushroom clump grows one huge mushroom and the clump is used up (as a single mushroom is); structure
+  rotate/mirror doesn't turn a clump's quarters; `/setblock` can make a one-quarter state (one flower in a corner, drops 1); a
+  datapack replacing those 18 loot tables drops one flower per clump.
