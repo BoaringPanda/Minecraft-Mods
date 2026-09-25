@@ -2,7 +2,15 @@
 	"required": true,
 	"package": "com.boaringpanda.bettervanillabuilding.client.mixin",
 	"compatibilityLevel": "JAVA_25",
-	"mixins": [],
+	"mixins": [
+		"ClientLevelMixin",
+		"LevelExtractorMixin",
+		"MovingBlockRenderStateMixin",
+		"MultiPlayerGameModeMixin",
+		"PistonHeadRendererMixin",
+		"SkullBlockRendererMixin",
+		"SkullBlockRenderStateMixin"
+	],
 	"injectors": {
 		"defaultRequire": 1
 	}

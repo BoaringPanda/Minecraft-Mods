@@ -1,0 +1,6 @@
+{
+  "parent": "bettervanillabuilding:block/placed_rod",
+  "textures": {
+    "rod": "bettervanillabuilding:block/blaze_rod_3"
+  }
+}

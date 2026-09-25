@@ -1,0 +1,20 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "#rod"
+  },
+  "elements": [
+    {
+      "from": [ 7, 0, 7 ],
+      "to": [ 9, 16, 9 ],
+      "faces": {
+        "down":  { "uv": [ 10, 0, 12, 2 ], "texture": "#rod", "cullface": "down" },
+        "up":    { "uv": [ 8, 0, 10, 2 ], "texture": "#rod", "cullface": "up" },
+        "north": { "uv": [ 0, 0, 2, 16 ], "texture": "#rod" },
+        "east":  { "uv": [ 2, 0, 4, 16 ], "texture": "#rod" },
+        "south": { "uv": [ 4, 0, 6, 16 ], "texture": "#rod" },
+        "west":  { "uv": [ 6, 0, 8, 16 ], "texture": "#rod" }
+      }
+    }
+  ]
+}
