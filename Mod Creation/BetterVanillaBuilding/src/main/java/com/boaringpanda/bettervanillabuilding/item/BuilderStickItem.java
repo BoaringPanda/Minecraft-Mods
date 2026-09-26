@@ -75,7 +75,6 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.block.state.properties.WallSide;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -325,11 +324,11 @@ public class BuilderStickItem extends Item {
 				|| block instanceof AbstractBannerBlock || block instanceof AbstractSkullBlock || block instanceof CopperGolemStatueBlock;
 	}
 
-	/** An upright placed rod's arm on {@code side}: always turns off, but only turns on toward air or the same kind of rod. */
+	/** An upright placed rod's arm on {@code side}: on or off, whatever is beside it (a block, air or another rod). */
 	private static Option rodArm(Direction side) {
 		BooleanProperty arm = PlacedRodBlock.ARMS.get(side);
-		return new Option(side.getSerializedName(), state -> word(state.getValue(arm) ? "on" : "off"), (level, pos, state, player) ->
-				state.getValue(arm) || PlacedRodBlock.canHaveArm(state, level.getBlockState(pos.relative(side))) ? state.cycle(arm) : state);
+		return new Option(side.getSerializedName(), state -> word(state.getValue(arm) ? "on" : "off"),
+				(level, pos, state, player) -> state.cycle(arm));
 	}
 
 	/**

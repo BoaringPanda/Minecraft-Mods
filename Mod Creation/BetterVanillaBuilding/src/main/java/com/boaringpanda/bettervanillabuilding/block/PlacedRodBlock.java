@@ -32,8 +32,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * <p>
  * An upright rod (facing up or down) reaches an arm out at half height to a rod of the same kind lying beside it and pointing at it, from
  * its middle to the edge of its block, where the lying rod's end is. The arms are the fence's {@code north/east/south/west} properties, so
- * the Builder Stick's side options work on them. Like a fence side, an arm is only worked out again when the block on that side changes:
- * one the Builder Stick took away stays away, and a stub it added (toward air) stays until something is placed there.
+ * the Builder Stick's side options work on them (it can turn an arm on toward anything, a block included). Like a fence side, an arm is
+ * only worked out again when the block on that side changes, and a rod the Builder Stick changed is locked ({@link LockedBlocks}), so its
+ * arms stay as set.
  */
 public class PlacedRodBlock extends RodBlock {
 	public static final Map<Direction, BooleanProperty> ARMS = CrossCollisionBlock.PROPERTY_BY_DIRECTION;
@@ -73,11 +74,6 @@ public class PlacedRodBlock extends RodBlock {
 	/** Whether upright {@code rod} reaches out to {@code neighbour} on {@code side}: the same kind of rod, lying along that side's axis. */
 	private static boolean reachesTo(BlockState rod, BlockState neighbour, Direction side) {
 		return neighbour.is(rod.getBlock()) && neighbour.getValue(FACING).getAxis() == side.getAxis();
-	}
-
-	/** Whether the Builder Stick may give upright {@code rod} an arm toward {@code neighbour}: only toward air or the same kind of rod. */
-	public static boolean canHaveArm(BlockState rod, BlockState neighbour) {
-		return neighbour.isAir() || neighbour.is(rod.getBlock());
 	}
 
 	/** {@code state} with each arm worked out from its neighbours if it's upright, or with none if it isn't. */

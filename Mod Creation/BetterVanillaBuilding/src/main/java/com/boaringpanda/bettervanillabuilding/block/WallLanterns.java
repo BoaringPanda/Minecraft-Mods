@@ -75,14 +75,14 @@ public final class WallLanterns {
 	public static final TagKey<Block> LANTERNS = TagKey.create(Registries.BLOCK, BetterVanillaBuilding.id("wall_lanterns"));
 
 	/**
-	 * Wall on the north: vanilla's standing lantern 2 px up, hanging from the tip of a flat bracket: a 3x5 plate on the wall (y 9-14),
-	 * a top arm (y 13-14) and a curved brace stepping up from the plate's bottom to the arm. Nothing reaches the top pixel, so there's
-	 * a gap under any block above.
+	 * Wall on the north: vanilla's lantern 1 px up (where the hanging lantern's body is), hanging by a 3 px chain from the tip of a flat
+	 * bracket: a 3x6 plate on the wall (y 9-15), a top arm (y 13-14) and a curved brace stepping up from the plate's bottom to the arm.
+	 * Nothing reaches the top pixel, so there's a 1 px gap under any block above.
 	 */
 	private static final Map<Direction, VoxelShape> SHAPES = Shapes.rotateHorizontal(Shapes.or(
-			Block.column(6.0, 2.0, 9.0),
-			Block.column(4.0, 9.0, 11.0),
-			Block.box(6.5, 9.0, 0.0, 9.5, 14.0, 1.0),
+			Block.column(6.0, 1.0, 8.0),
+			Block.column(4.0, 8.0, 10.0),
+			Block.box(6.5, 9.0, 0.0, 9.5, 15.0, 1.0),
 			Block.box(7.5, 13.0, 1.0, 8.5, 14.0, 9.0),
 			Block.box(7.5, 10.0, 1.0, 8.5, 11.0, 2.0),
 			Block.box(7.5, 11.0, 2.0, 8.5, 12.0, 4.0),

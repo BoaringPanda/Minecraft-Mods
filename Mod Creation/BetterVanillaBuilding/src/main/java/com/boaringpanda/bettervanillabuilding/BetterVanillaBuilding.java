@@ -4,6 +4,7 @@ import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.resources.Identifier;
 
+import com.boaringpanda.bettervanillabuilding.block.ExtraStairsAndSlabs;
 import com.boaringpanda.bettervanillabuilding.block.FenceRopeInteraction;
 import com.boaringpanda.bettervanillabuilding.block.MixedSlabs;
 import com.boaringpanda.bettervanillabuilding.block.PlacedRods;
@@ -20,6 +21,7 @@ public class BetterVanillaBuilding implements ModInitializer {
 		FenceRopeInteraction.initialize();
 		PlacedRods.initialize();
 		MixedSlabs.initialize();
+		ExtraStairsAndSlabs.initialize();
 		RainbowCushions.initialize();
 		BuilderStick.initialize();
 	}

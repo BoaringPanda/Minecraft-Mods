@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
 
 import com.boaringpanda.bettervanillabuilding.block.MixedSlabCarrier;
 import com.boaringpanda.bettervanillabuilding.block.MixedSlabs;
@@ -37,6 +39,18 @@ public class PistonBaseBlockMixin {
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;hasBlockEntity()Z"))
 	private static boolean bettervanillabuilding$mixedSlabsArePushable(BlockState state, Operation<Boolean> original) {
 		return !MixedSlabs.is(state) && original.call(state);
+	}
+
+	/** A mixed block with an immovable half (an obsidian slab) stays put, as that slab would on its own. */
+	@ModifyReturnValue(method = "isPushable", at = @At("RETURN"))
+	private static boolean bettervanillabuilding$immovableHalfStays(boolean pushable, @Local(argsOnly = true) BlockState state,
+			@Local(argsOnly = true) Level level, @Local(argsOnly = true) BlockPos pos) {
+		if (!pushable || !MixedSlabs.is(state)) {
+			return pushable;
+		}
+		MixedSlabs.Halves halves = MixedSlabs.halves(level, pos);
+		return halves.bottomState().getPistonPushReaction() != PushReaction.IMMOVEABLE
+				&& halves.topState().getPistonPushReaction() != PushReaction.IMMOVEABLE;
 	}
 
 	/** Reads every pushed mixed block's slabs before any block moves, keyed by where it starts. */

@@ -65,8 +65,11 @@ click on fence 2 ties it.
   ropes don't warp. While a player carries the rope, vanilla draws it.
 - **Rope collision** (Dylan, 2026-09-24): `entity/RopeCollision` plus `mixin/EntityMixin`. A tied rope is an invisible wall of one of
   two heights (`wallHeight`):
-  - Unridden `Animal`s get 1.5 (fence collision height), which they can't jump, so ropes make animal pens.
-  - Players, every other `Mob` (hostile, villagers, golems) and player-ridden animals get 14/16 (the rope's height at the knots plus
+  - Unridden mobs in the `penned_by_ropes` entity tag (`RopeCollision.PENNED`, `data/bettervanillabuilding/tags/entity_type/`) get
+    1.5 (fence collision height), which they can't jump, so ropes make pens. Dylan's list (2026-09-26): chicken, cow, pig, sheep,
+    donkey, horse, mule, goat, llama, panda, mooshroom, sniffer, trader llama. It used to be every `Animal`. Camels were on it but
+    step straight over (vanilla step height 1.5 = the wall), so Dylan dropped them to the low wall rather than raise it.
+  - Players, every other `Mob` (other animals, hostile, villagers, golems) and player-ridden penned mobs get 14/16 (the rope's height at the knots plus
     its thickness). That's too high to step (0.6) but jumpable. Dylan's spec: solid for players and mobs, "but we can just jump over it".
   - Items, boats, arrows etc. get nothing.
   - The mixin `@WrapOperation`s the `Level.getEntityCollisions` call in `Entity.collide`, so the walls only affect what a moving
@@ -78,7 +81,7 @@ click on fence 2 ties it.
     2026-09-25, when ropes went to 3 up; it used to reach down to the lower fence's base). On stepped ground small animals may slip
     under a steep rope where the line is above the ground. The knot search box reaches `MAX_HEIGHT_DIFFERENCE` + 1.5 up and down.
   - Pathfinding only reads blocks, so mobs don't see ropes. `hopIfBlockedByRope` (the `@Inject` at `Entity.move` TAIL) makes a
-    non-animal mob on the ground with `horizontalCollision` against a rope jump (`JumpControl.jump()`). Animals just walk up to the
+    non-penned mob on the ground with `horizontalCollision` against a rope jump (`JumpControl.jump()`). Penned mobs just walk up to the
     rope and stop, as at a fence.
 - This was first built in the deleted old mod (commit `7b94e6b`). The render fixes above came from Dylan's reports there.
 - Known edges: a rope knot can sit on the same fence as a vanilla knot (both draw, overlapping). Vanilla's `getKnot` can return a rope
@@ -141,16 +144,16 @@ Slowness I while stood on, wearing off about 1 s after stepping off (his pick).
   edge of its block at half height, where the lying rod's end is. The upright rod is the one that reaches out.
   - `PlacedRodBlock` has the fence's `north/east/south/west` booleans (`ARMS` = `CrossCollisionBlock.PROPERTY_BY_DIRECTION`), always
     false unless upright. `getStateForPlacement` and the stick's facing change use `withArms` (all four from the neighbours).
-    `updateShape` works out **only the side that changed**, as a fence does. A stub toward
-    air stays until something is placed there. An arm the stick removed would grow back when a matching rod is placed on that side,
-    so a stick-changed rod is locked (Builder Stick → Locked blocks).
+    `updateShape` works out **only the side that changed**, as a fence does. An arm the stick removed would grow back when a matching
+    rod is placed on that side (and one it added would go), so a stick-changed rod is locked (Builder Stick → Locked blocks).
   - Hitbox: `getShapeForEachState` of `RodBlock`'s upright column plus a 4-px arm box per arm (`Shapes.rotateHorizontal`, the
     `CrossCollisionBlock` pattern), collision too. `rotate`/`mirror` move the arms with the rod (structures).
   - Models: template `block/placed_rod_arm` (`[7,7,0]`–`[9,9,7]`, toward north; the side-strip UVs, the east/west faces UV-rotated 90 so
     the grain runs along the arm; the outer end has the top cap's uv `[8,0,10,2]` so a stub is closed off, and there's no inner end face) and children `<rod>_arm_{1,2,3}`. Multipart `north=true` etc. with y 0/90/180/270.
-  - Builder Stick: on an upright rod the options are facing, north, east, south, west. A side always turns off, but only turns **on** (a
-    stub if nothing's there) toward air or the same kind of rod (`canHaveArm`, Dylan: "anywhere, but if a block is next to it that isn't
-    a stick, it won't"). Stick changes on rods are quiet (`FLAGS`, never neighbours): they were briefly in `updatesLikePlacing`, and
+  - Builder Stick: on an upright rod the options are facing, north, east, south, west, each a plain on/off toggle **toward anything**
+    (Dylan, 2026-09-26: rods don't connect to blocks when placed, "but can you at least allow the player to connect the n, e, s, w to a
+    block with the builder stick"). It replaced his first rule, on only toward air or the same kind of rod. The arm runs to the block's
+    edge, so it meets a neighbour's face; toward air it's a closed-off stub. Stick changes on rods are quiet (`FLAGS`, never neighbours): they were briefly in `updatesLikePlacing`, and
     Dylan saw that as a bug, because changing one rod re-worked the arm of the upright rod next to it. No lock (his pick): placing or
     breaking next to a rod still connects and disconnects as normal. Known edge: turning a lying rod with the stick leaves the upright
     rod's arm as it was, until something is placed or broken on that side.
@@ -210,7 +213,8 @@ follows its own rule (his pick): oak + stone broken by hand drops only the oak s
   saved as `bettervanillabuilding:mixed_slab`). After the moving block's `setBlock` in `tick` / `setBlockAndUpdate` in `finalTick`, the
   halves go into the new block entity. `moveBlocks` also runs on the client, so it carries them too. While moving it's drawn from a
   `MovingBlockRenderState`: `client/mixin/PistonHeadRendererMixin` hands it the halves and `MovingBlockRenderStateMixin` answers
-  `getBlockEntityRenderData` with them.
+  `getBlockEntityRenderData` with them. A mixed block with an immovable half (the obsidian slab, see "More stairs and slabs") isn't
+  pushable (`isPushable` return hook), as that slab alone isn't.
 - **Known edges (not done; can be added):** copper halves don't oxidise and an axe won't wax or scrape them; wooden halves don't burn
   (flammability is per block, no position); non-player breaks that call level event 2001 with the mixed state itself (e.g. a piston
   crushing it) show smooth-stone particles and a stone sound; see-through modded slabs are untested (the block is solid and opaque,
@@ -237,7 +241,7 @@ recipe, so it fits the 2×2 and 3×3 grids). It works **only** on blocks Dylan n
 | bell on the floor or ceiling | facing | rotate |
 | bell on a wall | facing | rotate, onto a side with a wall only; hangs between two walls when the opposite side is solid too |
 | end rod, lightning rods, placed stick/blaze rod/breeze rod (`RodBlock`) | facing | all 6 directions |
-| upright placed stick/blaze rod/breeze rod | facing, north, east, south, west (its arms) | all 6 directions / on, off (on only toward air or the same kind of rod) |
+| upright placed stick/blaze rod/breeze rod | facing, north, east, south, west (its arms) | all 6 directions / on, off (toward anything: a block, air or a rod) |
 | piston, sticky piston (`PistonBaseBlock`, retracted only), dispenser, dropper (`DispenserBlock`), observer | facing | all 6 directions |
 | hopper | shape, facing | down, side (points the way you look) / turn the side spout (nothing while it points down) |
 | comparator, repeater (`DiodeBlock`) | facing | rotate |
@@ -644,7 +648,7 @@ only** in a group. Without crouching it's all vanilla. Redstone torches aren't i
 ## Wall lanterns
 Spec from Dylan (2026-09-25): lanterns go on walls, hanging off a small bracket in the **colours of the chain** (his pick: the iron
 chain's own dark blue-grey for the lantern and soul lantern, and the matching copper chain stage for each copper lantern, so the bracket
-oxidises with it). The bracket stops **at least 1 px below the top** of its block (his pick), so it never touches a block above.
+oxidises with it). The bracket stops **exactly 1 px below the top** of its block (Dylan, 2026-09-26, was 2 px: "exactly 1 pixel below if a block is above it"), so it never touches a block above.
 **Where you click picks the form**, even with a block above: a wall's side gives a wall lantern, a ceiling's underside a hanging
 one, a floor's top a standing one. (Vanilla picks standing/hanging from where you *look*.)
 
@@ -659,14 +663,16 @@ one, a floor's top a standing one. (Vanilla picks standing/hanging from where yo
   - `canSurvive`: a wall lantern needs a full sturdy face behind it (the wall torch's rule), so a fence or pane side falls back to
     vanilla's choice. `updateShape`: vanilla only re-checks above/below; the wall side going now drops it too (the `LadderBlockMixin`
     pattern).
-  - `getShape`: vanilla's standing shape 2 px up plus the bracket's plate and arm, `Shapes.rotateHorizontal` per side.
+  - `getShape`: vanilla's standing shape 1 px up plus the bracket's plate and arm, `Shapes.rotateHorizontal` per side.
 - Look (wall on the north; blockstates rotate it y 90/180/270): `models/block/template_wall_lantern` = vanilla `template_lantern`'s
-  elements (same UVs) 2 px up (body y 2–9, handle to 13), hanging from the tip of a flat 1-px bracket (x 7.5–8.5), drawn from
-  Dylan's picture (2026-09-25, replacing a first plate + straight arm): a **3×5 base plate** on the wall (x 6.5–9.5, y 9–14,
-  z 0–1; Dylan, 2026-09-26, was 1 wide); a top arm y 13–14, z 1–9; a brace stepping up from the plate's bottom to the arm (z 1–2
+  elements 1 px up, where the hanging lantern's body is (body y 1–8, cap 8–10; Dylan, 2026-09-26, was 2 px up), hanging by a
+  3-px chain (y 10–13, the handle and chain planes lengthened with the hanging lantern's own UV rows) from the tip of a flat 1-px bracket (x 7.5–8.5), drawn from
+  Dylan's picture (2026-09-25, replacing a first plate + straight arm): a **3×6 base plate** on the wall (x 6.5–9.5, y 9–15,
+  z 0–1; Dylan, 2026-09-26: was 1 wide, then one more layer on top of the plate only, so it pokes up 1 px above the arm); a top arm y 13–14, z 1–9; a brace stepping up from the plate's bottom to the arm (z 1–2
   y 10, z 2–4 y 11, z 4–6 y 12; Dylan had the step's last pixel, z 6–7 next to the handle, removed), leaving a triangle hole
-  between them. Side view, wall on the left, y 13 at the top (the first column is the plate):
+  between them. Side view, wall on the left, y 14 at the top (the first column is the plate):
   ```
+  ■
   ■■■■■■■■■
   ■···■■
   ■·■■
@@ -678,8 +684,55 @@ one, a floor's top a standing one. (Vanilla picks standing/hanging from where yo
 - Textures `textures/block/lantern_bracket_{iron,copper,exposed_copper,weathered_copper,oxidized_copper}.png`: only each chain
   texture's own colours (mid with light and dark flecks, the brace's lower steps darker; exposed/weathered add their chain's
   weathering fleck). Layout: the arm and brace side view at x 1–8, y 0–3 (u = z out from the wall, v = 13 − y; the east faces flip
-  u); 1-px edge strips along v: top faces x 12, undersides x 13, ends x 14; the plate: front x 0–2 y 6–10 (two rivets), sides x 3
-  y 6–10, top x 0–2 y 11, bottom x 0–2 y 12. Made by a
-  throwaway Java/ImageIO script (not kept); edit the PNGs to change them.
+  u); 1-px edge strips along v: top faces x 12, undersides x 13, ends x 14; the plate: front x 0–2 y 5–10 (two rivets), sides x 3
+  y 5–10, top x 0–2 y 11, bottom x 0–2 y 12. Made by a
+  throwaway Java/ImageIO script (not kept); edit the PNGs to change them. The plate's sixth row (2026-09-26): its light top row
+  moved up to y 5 and y 6 became a copy of its rivet-free row (y 8).
 - Known edges: the Builder Stick doesn't turn lanterns (not asked for); a resource pack replacing the lantern blockstates draws wall
   lanterns with a missing model.
+
+## More stairs and slabs
+Spec from Dylan (2026-09-26): stairs and slabs for smooth stone (stairs only; vanilla has the slab), deepslate, moss, pale moss, snow
+block, packed ice, blue ice, calcite, obsidian, block of amethyst and terracotta (plain + all 16 colours, his pick; not glazed). All go
+in the stonecutter **except moss, pale moss and snow**. The Builder Stick works on them and every slab works with mixed slabs.
+53 blocks: 27 stairs, 26 slabs.
+
+- `block/ExtraStairsAndSlabs` registers them exactly as vanilla 26.3's `Blocks.registerStair` / `registerSlab` do: a plain
+  `StairBlock` with `Properties.ofFullCopy(base)`, a plain `SlabBlock` with `ofLegacyCopy(base)`, both with a copy of vanilla's private
+  `NEAR_PLANE_INTERSECTS_OUTLINE` view-blocking test. So hardness, blast resistance, sounds, map colour, ice friction, needs-a-tool and
+  obsidian's `IMMOVEABLE` come from the base block. Each gets a `BlockItem` registered the way `Items.registerBlock` does
+  (`useBlockDescriptionPrefix`, `registerBlocks(Item.BY_BLOCK, ...)`). Terracotta: `Blocks.TERRACOTTA` + `Blocks.DYED_TERRACOTTA.pick(color)`.
+- **No code for the stick or mixed slabs**: both go by class (`BuilderStickItem.optionsFor`, `LockedBlocks`, `MixedSlabs`,
+  `SlabBlockMixin`), so being real stairs/slabs is enough.
+- Creative tabs: smooth stone stairs after smooth stone, deepslate after deepslate, amethyst after the amethyst block, the rest at the
+  end of Building Blocks; terracotta in Colored Blocks after the last terracotta, every stair then every slab in vanilla's tab colour
+  order (the concrete stairs/slab layout).
+- **Drops (Dylan's pick: match vanilla):** packed/blue ice ones drop only with Silk Touch (nothing otherwise); snow ones need a shovel
+  (the snow block's `requiresCorrectToolForDrops`) and drop themselves with Silk Touch, else snowballs: stairs 3, slab 2, double slab 4
+  (the block is 4). Everything else drops itself (vanilla stair/slab loot).
+- Data (all JSON, made from vanilla's concrete stairs/slab files by a throwaway Java script, not kept): blockstates (a slab's `double`
+  is the vanilla block's own model), models over vanilla's `stairs`/`slab` parents and textures (deepslate: `deepslate_top` top and
+  bottom; snow: `block/snow`), item definitions, loot tables, crafting (6 → 4 stairs, 3 → 6 slabs; terracotta in groups
+  `terracotta_stairs`/`terracotta_slab`) and stonecutting (1 → 1 stairs, 1 → 2 slabs) recipes, a recipe-book advancement per recipe,
+  lang. Tags (`data/minecraft/tags/`): `stairs`/`slabs` (block + item), `mineable/pickaxe|hoe|shovel`, `needs_diamond_tool` and
+  `dragon_immune` (obsidian), `crystal_sound_blocks` and `vibration_resonators` (amethyst, so they chime when walked on).
+- **Smooth stone stairs have their own models** (Dylan, 2026-09-26: "missing some 1x1 pixel borders"). Vanilla's `stairs` /
+  `inner_stairs` / `outer_stairs` cut each face out of the texture by position (the step's side is uv `[0,0,8,8]`), so only edges
+  that happen to be the texture's edges get smooth stone's dark 1-px border: the side's inner L and a corner stair's outer corner had
+  none. His pick: **every face outlined all round**, like a block cut into the shape, so the crease where the step meets the lower
+  step shows a border on both faces. `models/block/smooth_stone_stairs{,_inner,_outer}.json` are full models, made by a throwaway
+  Java script (not kept): the shape in 4-px cubes; each exposed 4×4 tile takes its UV from the texture's edge on a side where the
+  next tile in the same plane is missing (block edge, L, corner, crease), and from the interior otherwise; tiles whose UVs run on are
+  merged. At an inside corner (both side neighbours there, the diagonal one missing) the two border lines leave one pixel out
+  (Dylan, 2026-09-26: "missing 1 more pixel in the corners"), so that tile is split into the corner pixel (a pixel of the texture's
+  left border column), the rest of its row and its other three rows. Each face is a flat element (vanilla `cullface` on the block's edges). Still `smooth_stone.png`, no new texture. The
+  blockstate's `uvlock` rotations stay right because the border is the same on every side. To change them, edit the JSONs.
+- **Vanilla's smooth stone slab, fixed to match** (Dylan, 2026-09-26: "this is a mojang's fault issue"): vanilla's
+  `smooth_stone_slab_side.png` gives each half a light top and left edge instead of smooth stone's dark border. He asked for every
+  edge to be dark. `assets/minecraft/models/block/smooth_stone_slab{,_top,_double}.json` override vanilla's models with plain
+  `smooth_stone.png`: each 8-px half is two 4-px layers, the upper taking its sides from the texture's top rows (uv `[0,0,16,4]`),
+  the lower from its bottom rows (`[0,12,16,16]`), so each half is outlined all round. The double slab keeps vanilla's look of two
+  outlined halves. Slab faces where two halves meet still have no `cullface`, so `MixedSlabModel` drops them as before. A
+  resource pack's own smooth stone slab models replace these.
+- Known edges (as with vanilla's own stairs/slabs): no base-block tricks, so moss doesn't spread with bone meal and amethyst doesn't
+  chime when an arrow hits it.
