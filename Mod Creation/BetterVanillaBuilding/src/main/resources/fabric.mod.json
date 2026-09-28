@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "bettervanillabuilding",
 	"version": "${version}",
-	"name": "Better Vanilla Building",
-	"description": "Adds extra blocks to Minecraft.",
+	"name": "BP's Better Vanilla Building",
+	"description": "Vanilla-style building extras: fence ropes, mixed slabs, stacked heads, lily pad decorations, wall lanterns, corner torches, flower clumps, the Builder Stick and more.",
 	"authors": [
 		"BoaringPanda"
 	],

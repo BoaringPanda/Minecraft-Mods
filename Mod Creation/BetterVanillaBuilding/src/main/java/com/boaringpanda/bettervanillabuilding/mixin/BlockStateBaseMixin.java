@@ -44,7 +44,7 @@ import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
  *
  * <p>A standing head makes room for a second head on top, and a stack of two heads drops both ({@link StackedHeads}).
  *
- * <p>A locked fence, pane, bars or wall ignores its neighbours ({@link LockedBlocks}).
+ * <p>A locked fence, pane, bars, wall, stair, fence gate or placed rod ignores its neighbours ({@link LockedBlocks}).
  *
  * <p>A flower makes room for the same flower, and a clump of flowers has no random offset ({@link FlowerClumps}). A group of torches
  * makes room for the same torch ({@link CornerTorches}).

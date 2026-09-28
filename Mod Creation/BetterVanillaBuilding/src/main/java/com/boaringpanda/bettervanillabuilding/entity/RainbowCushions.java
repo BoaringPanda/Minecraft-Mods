@@ -2,12 +2,12 @@ package com.boaringpanda.bettervanillabuilding.entity;
 
 import com.mojang.serialization.Codec;
 
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.world.entity.decoration.Cushion;
+
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.world.entity.decoration.Cushion;
 
 import com.boaringpanda.bettervanillabuilding.BetterVanillaBuilding;
 

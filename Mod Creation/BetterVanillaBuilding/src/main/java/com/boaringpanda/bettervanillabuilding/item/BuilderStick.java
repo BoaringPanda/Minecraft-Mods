@@ -20,8 +20,8 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import com.boaringpanda.bettervanillabuilding.BetterVanillaBuilding;
 
 /**
- * The Builder Stick: a survival debug stick for a few blocks (and armour stands) only, each with a few options ({@link BuilderStickItem}
- * lists them). Crafted from an amethyst shard above a stick.
+ * The Builder Stick: a survival debug stick for a few blocks (and armour stands, item frames and cushions) only, each with a few options
+ * ({@link BuilderStickItem} lists them). Crafted from an amethyst shard above a stick.
  */
 public class BuilderStick {
 	/** The name of the option a Builder Stick has selected (left click picks the next one), shared by every block. */

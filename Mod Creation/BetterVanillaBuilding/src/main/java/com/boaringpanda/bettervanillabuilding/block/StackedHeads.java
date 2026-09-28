@@ -252,7 +252,8 @@ public final class StackedHeads {
 		BlockState there = level.getBlockState(pos);
 		if (isRaised(there)) {
 			Head top = Head.at(level, pos, there.setValue(RAISED, false));
-			BlockState stacked = placed.setValue(TOP, Top.of(top.block())).setValue(LilyPadDecorations.LILY_PAD, there.getValue(LilyPadDecorations.LILY_PAD));
+			BlockState stacked = placed.setValue(TOP, Top.of(top.block()))
+					.setValue(LilyPadDecorations.LILY_PAD, there.getValue(LilyPadDecorations.LILY_PAD));
 			if (!level.setBlock(pos, stacked, Block.UPDATE_ALL_IMMEDIATE)) {
 				return false;
 			}

@@ -91,12 +91,12 @@ import com.boaringpanda.bettervanillabuilding.entity.RainbowCushions;
  * Works like vanilla's {@code DebugStickItem}, limited to a few blocks and a few {@link Option}s on each ({@link #optionsFor}): the sides
  * of fences, walls, glass panes and bars; a fence gate's facing and height; a door's facing and hinge; a trapdoor's facing, and an iron
  * trapdoor's open state; a stair's facing, shape and half; a slab's half (never double); the axis of chains, logs and a few pillar blocks; a
- * rod's direction, and an upright placed rod's arms; the facing of pistons (retracted), dispensers, droppers, observers, comparators, repeaters, buttons, signs, banners,
- * heads, stonecutters, grindstones and bells; a hopper's spout; a rail's shape and rotation; a copper golem statue's facing and pose; and
- * wool, wool stairs and slabs, carpets, stained glass and panes, beds and banners fading through every colour like a jeb_ sheep (as well
- * as their other options). Left click selects the block's next option (sneak: the previous
- * one), right click changes it. Both show an action-bar message worded like the debug stick's. It never breaks a block, and on any other
- * block both clicks only show "Can not be used on this block"; a right click there doesn't open doors, chests etc. either.
+ * rod's direction, and an upright placed rod's arms; the facing of pistons (retracted), dispensers, droppers, observers, comparators,
+ * repeaters, buttons, signs, banners, heads, stonecutters, grindstones and bells; a hopper's spout; a rail's shape and rotation; a copper
+ * golem statue's facing and pose; and wool, wool stairs and slabs, carpets, stained glass and panes, beds and banners fading through every
+ * colour like a jeb_ sheep (as well as their other options). Left click selects the block's next option (sneak: the previous one), right
+ * click changes it. Both show an action-bar message worded like the debug stick's. It never breaks a block, and on any other block both
+ * clicks only show "Can not be used on this block"; a right click there doesn't open doors, chests etc. either.
  * <p>
  * A changed fence, pane, bars, wall, stair, fence gate, placed rod or rail is {@link LockedBlocks locked}, so its neighbours never reshape
  * it afterwards.
@@ -528,7 +528,7 @@ public class BuilderStickItem extends Item {
 			DoubleBlockHalf half = changed.getValue(DoorBlock.HALF);
 			BlockPos otherPos = half == DoubleBlockHalf.LOWER ? pos.above() : pos.below();
 			BlockState other = level.getBlockState(otherPos);
-			if (other.is(block) &&other.getValue(DoorBlock.HALF) != half) {
+			if (other.is(block) && other.getValue(DoorBlock.HALF) != half) {
 				level.setBlock(otherPos, changed.setValue(DoorBlock.HALF, other.getValue(DoorBlock.HALF)), FLAGS);
 			}
 		} else if (block instanceof AbstractBedBlock) {

@@ -9,6 +9,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import net.minecraft.sounds.SoundEvent;
@@ -101,7 +102,8 @@ public abstract class BlockItemMixin {
 			method = "place",
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/world/item/BlockItem;getPlacementState(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;"))
-	private @Nullable BlockState bettervanillabuilding$standingHeadInStack(BlockItem item, BlockPlaceContext context, Operation<BlockState> original) {
+	private @Nullable BlockState bettervanillabuilding$standingHeadInStack(BlockItem item, BlockPlaceContext context,
+			Operation<BlockState> original) {
 		return StackedHeads.fillsStack(context) ? StackedHeads.placementState(context, getBlock()) : original.call(item, context);
 	}
 
@@ -134,6 +136,7 @@ public abstract class BlockItemMixin {
 	}
 
 	/** For a mixed block, the slab this item just placed; otherwise {@code state} unchanged. */
+	@Unique
 	private BlockState placedSlab(BlockState state) {
 		return MixedSlabs.is(state) ? getBlock().defaultBlockState() : state;
 	}

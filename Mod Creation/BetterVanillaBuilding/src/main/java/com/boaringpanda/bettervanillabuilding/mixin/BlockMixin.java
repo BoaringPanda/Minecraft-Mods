@@ -35,12 +35,12 @@ import com.boaringpanda.bettervanillabuilding.block.WallLanterns;
 
 /**
  * Gives every block that can stand on a lily pad the {@code lily_pad} property ({@link LilyPadDecorations}), off by default, every
- * standing head the {@code top_head} property ({@link StackedHeads}), fences, panes, bars, walls and rails the {@code locked}
- * property ({@link LockedBlocks}), off by default, and leaf litter, pink petals and wildflowers the {@code segment_order} property
- * ({@link AimedSegments}), vanilla's order by default, flowers and mushrooms the {@code flowers} count ({@link FlowerClumps}),
- * 1 by default, torches a property per quarter or a wall {@code side} ({@link CornerTorches}), vanilla's middle by default, wool,
- * carpets, stained glass, beds and banners the {@code rainbow} property ({@link Rainbow}), off by default, and lanterns the
- * {@code wall} property ({@link WallLanterns}), vanilla's {@code none} by default.
+ * standing head the {@code top_head} and {@code raised} properties ({@link StackedHeads}), fences, panes, bars, walls, stairs, fence
+ * gates, placed rods and rails the {@code locked} property ({@link LockedBlocks}), off by default, and leaf litter, pink petals and
+ * wildflowers the {@code segment_order} property ({@link AimedSegments}), vanilla's order by default, flowers and mushrooms the
+ * {@code flowers} count ({@link FlowerClumps}), 1 by default, torches a property per quarter or a wall {@code side}
+ * ({@link CornerTorches}), vanilla's middle by default, wool, carpets, stained glass, beds and banners the {@code rainbow} property
+ * ({@link Rainbow}), off by default, and lanterns the {@code wall} property ({@link WallLanterns}), vanilla's {@code none} by default.
  */
 @Mixin(Block.class)
 public class BlockMixin {

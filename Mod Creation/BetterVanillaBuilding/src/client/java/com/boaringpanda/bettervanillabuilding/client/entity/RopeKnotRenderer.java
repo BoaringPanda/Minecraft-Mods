@@ -29,9 +29,10 @@ import com.boaringpanda.bettervanillabuilding.entity.RopeKnotEntity;
  * Draws a {@link RopeKnotEntity}: vanilla's own knot model and texture, and, when it is tied to another fence's knot, a rope drawn here
  * instead of by vanilla, for two reasons (both read from the game's own {@code LeashFeatureRenderer}):
  * <ul>
- *   <li>Vanilla draws a leash as a <em>straight line</em> between its two attachment points, and only bends it when one end is higher than the
- *       other. So two fences at the same height never got any hang.</li>
- *   <li>Vanilla ends the rope 0.2 above the knot, off its position. Here both ends are near the top of the knot ({@link RopeKnotEntity#ROPE_HEIGHT}), where the rope leaves the knot's side.</li>
+ *   <li>Vanilla draws a leash as a <em>straight line</em> between its two attachment points, and only bends it when one end is higher than
+ *       the other. So two fences at the same height never got any hang.</li>
+ *   <li>Vanilla ends the rope 0.2 above the knot, off its position. Here both ends are near the top of the knot
+ *       ({@link RopeKnotEntity#ROPE_HEIGHT}), where the rope leaves the knot's side.</li>
  * </ul>
  * The rope sags in a smooth arc, the same at both ends, by an amount that grows with its length ({@link #SAG_PER_BLOCK}), so a short rope
  * is nearly taut and a long one hangs a little. It is the same thin two-tone ribbon in the same brown as vanilla's, with the same lighting
@@ -186,7 +187,8 @@ public class RopeKnotRenderer extends EntityRenderer<RopeKnotEntity, RopeKnotRen
 		return cy * progress - sag * 4.0F * progress * (1.0F - progress);
 	}
 
-	private static void addVertexPair(VertexConsumer buffer, Matrix4fc matrix, State state, float sx, float sz, float cx, float cy, float cz, float sag, float ux, float uz, int k, float progress, boolean backwards, float fudge) {
+	private static void addVertexPair(VertexConsumer buffer, Matrix4fc matrix, State state, float sx, float sz, float cx, float cy, float cz,
+			float sag, float ux, float uz, int k, float progress, boolean backwards, float fudge) {
 		int block = (int) Mth.lerp(progress, (float) state.startBlockLight, (float) state.endBlockLight);
 		int sky = (int) Mth.lerp(progress, (float) state.startSkyLight, (float) state.endSkyLight);
 		int light = LightCoordsUtil.pack(block, sky);
@@ -214,8 +216,10 @@ public class RopeKnotRenderer extends EntityRenderer<RopeKnotEntity, RopeKnotRen
 		float high = WIDTH / 2.0F - fudge;
 		float centreY = y + WIDTH / 2.0F;
 
-		buffer.addVertex(matrix, x + sideX + ux * nHorizontal * low, centreY + nVertical * low, z + sideZ + uz * nHorizontal * low).setColor(r, g, b, 1.0F).setLight(light);
-		buffer.addVertex(matrix, x - sideX + ux * nHorizontal * high, centreY + nVertical * high, z - sideZ + uz * nHorizontal * high).setColor(r, g, b, 1.0F).setLight(light);
+		buffer.addVertex(matrix, x + sideX + ux * nHorizontal * low, centreY + nVertical * low, z + sideZ + uz * nHorizontal * low)
+				.setColor(r, g, b, 1.0F).setLight(light);
+		buffer.addVertex(matrix, x - sideX + ux * nHorizontal * high, centreY + nVertical * high, z - sideZ + uz * nHorizontal * high)
+				.setColor(r, g, b, 1.0F).setLight(light);
 	}
 
 	/** What is needed to draw the rope, worked out on the render thread's extract step so drawing never touches the world. */

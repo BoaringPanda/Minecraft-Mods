@@ -40,7 +40,6 @@
 		"TorchParticlesMixin",
 		"VegetationBlockMixin"
 	],
-	"server": [],
 	"injectors": {
 		"defaultRequire": 1
 	}

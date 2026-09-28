@@ -3,6 +3,7 @@ package com.boaringpanda.bettervanillabuilding.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import net.minecraft.core.BlockPos;
@@ -31,6 +32,7 @@ public class HangingEntityItemMixin {
 		return framesPad(context) ? context.getClickedPos() : pos;
 	}
 
+	@Unique
 	private boolean framesPad(UseOnContext context) {
 		return (Object) this instanceof ItemFrameItem && context.getLevel().getBlockState(context.getClickedPos()).is(Blocks.LILY_PAD);
 	}

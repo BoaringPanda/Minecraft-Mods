@@ -33,7 +33,7 @@ import net.minecraft.world.phys.HitResult;
 import com.boaringpanda.bettervanillabuilding.BetterVanillaBuilding;
 
 /**
- * Any two different slabs stack into one block, the way two of the same slab make a vanilla double slab. There is one block for every
+ * Any two different slabs stack into one block, the way two of the same slab make a vanilla double slab. One block serves every
  * pair ({@link MixedSlabBlock}); its block entity ({@link MixedSlabBlockEntity}) remembers which slab is the bottom and which the top,
  * and the client model draws the two vanilla slab models. Every {@link SlabBlock} works, including other mods' slabs.
  * <ul>

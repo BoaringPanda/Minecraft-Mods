@@ -34,7 +34,7 @@ import com.boaringpanda.bettervanillabuilding.block.FenceRopeInteraction;
  *       neither: nothing leashed to it and no rope of its own. (An animal or another rope tied to the same fence keeps it alive.)</li>
  *   <li>When its fence is broken it drops its rope as a lead, as a leashed animal does when it dies.</li>
  * </ul>
- * Made by {@link com.boaringpanda.bettervanillabuilding.block.FenceRopeInteraction}.
+ * Made by {@link FenceRopeInteraction}.
  */
 public class RopeKnotEntity extends LeashFenceKnotEntity implements Leashable {
 	/**
@@ -72,7 +72,10 @@ public class RopeKnotEntity extends LeashFenceKnotEntity implements Leashable {
 		this.leashData = leashData;
 	}
 
-	/** The rope leaves from near the top of the knot. A rope between two knots is drawn by the mod's own renderer, which uses the same point at both ends. */
+	/**
+	 * The rope leaves from near the top of the knot. A rope between two knots is drawn by the mod's own renderer, which uses the same
+	 * point at both ends.
+	 */
 	@Override
 	public Vec3 getLeashOffset() {
 		return new Vec3(0.0, ROPE_HEIGHT, 0.0);

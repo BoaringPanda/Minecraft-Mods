@@ -14,12 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.object.cushion.CushionModel;
+import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.CushionRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.CushionRenderState;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
 import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.world.entity.decoration.Cushion;
@@ -36,7 +36,7 @@ import com.boaringpanda.bettervanillabuilding.entity.RainbowCushions;
 @Mixin(CushionRenderer.class)
 public class CushionRendererMixin {
 	@Unique
-	private static final SpriteId RAINBOW_CUSHION = new SpriteId(TextureAtlas.LOCATION_BLOCKS, BetterVanillaBuilding.id("block/rainbow_cushion"));
+	private static final SpriteId RAINBOW_CUSHION = Sheets.BLOCKS_MAPPER.apply(BetterVanillaBuilding.id("rainbow_cushion"));
 
 	@Shadow
 	@Final

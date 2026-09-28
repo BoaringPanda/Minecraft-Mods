@@ -1,6 +1,7 @@
 # BetterVanillaBuilding
 
-Fabric mod (mod id `bettervanillabuilding`, package `com.boaringpanda.bettervanillabuilding`) that extends vanilla building in
+Fabric mod (display name "BP's Better Vanilla Building", Dylan's pick 2026-09-28; mod id `bettervanillabuilding`, which never
+changes since saved blocks use it; package `com.boaringpanda.bettervanillabuilding`) that extends vanilla building in
 vanilla's own style: no new textures where vanilla's can be reused, and features behave the way the vanilla thing they extend does.
 
 ## Stack
@@ -293,7 +294,7 @@ option as well" (both new in 26.3); then "add beds, stained glass, stained glass
     `RainbowRenderStateMixin`), and while `submit` draws a rainbow banner, `submitPatternLayer`'s base layer (`Sheets.BANNER_PATTERN_BASE`)
     is drawn untinted from `rainbow_base` instead. Patterns stay their own colours on top. Items (`submitSpecial`) aren't changed.
   - Cushions (drawn by `CushionRenderer` from plain, non-atlas textures, which can't animate): `rainbow_cushion` is in the **block** atlas,
-    and `client/mixin/CushionRendererMixin` swaps the `submitModel` call for the sprite version (`SpriteId(LOCATION_BLOCKS, …)`).
+    and `client/mixin/CushionRendererMixin` swaps the `submitModel` call for the sprite version (`Sheets.BLOCKS_MAPPER`, the block atlas).
   - The texture strips and the 64 stair/slab/carpet/glass/pane/bed blockstates were generated from the game jar's own files by throwaway
     Java scripts (not kept); the banner strip multiplies `base.png` by each `DyeColor` diffuse colour.
 - Edges: a same-colour wool slab put into a rainbow half makes a rainbow double slab (vanilla's `SlabBlock.getStateForPlacement` keeps
