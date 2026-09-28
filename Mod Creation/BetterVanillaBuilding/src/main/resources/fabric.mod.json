@@ -11,6 +11,7 @@
 		"sources": "https://github.com/BoaringPanda/Minecraft-Mods"
 	},
 	"license": "MIT",
+	"icon": "assets/bettervanillabuilding/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [

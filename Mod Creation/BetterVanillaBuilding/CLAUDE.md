@@ -1,7 +1,8 @@
 # BetterVanillaBuilding
 
 Fabric mod (display name "BP's Better Vanilla Building", Dylan's pick 2026-09-28; mod id `bettervanillabuilding`, which never
-changes since saved blocks use it; package `com.boaringpanda.bettervanillabuilding`) that extends vanilla building in
+changes since saved blocks use it; package `com.boaringpanda.bettervanillabuilding`; icon `assets/bettervanillabuilding/icon.png`,
+Dylan's own art, scaled to 512×512) that extends vanilla building in
 vanilla's own style: no new textures where vanilla's can be reused, and features behave the way the vanilla thing they extend does.
 
 ## Stack
