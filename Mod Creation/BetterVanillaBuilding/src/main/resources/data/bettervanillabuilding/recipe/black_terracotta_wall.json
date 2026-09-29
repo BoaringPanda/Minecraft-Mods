@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "terracotta_wall",
+  "key": {
+    "#": "minecraft:black_terracotta"
+  },
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "result": {
+    "count": 6,
+    "id": "bettervanillabuilding:black_terracotta_wall"
+  }
+}

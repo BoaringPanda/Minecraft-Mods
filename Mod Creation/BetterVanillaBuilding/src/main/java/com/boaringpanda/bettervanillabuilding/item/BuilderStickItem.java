@@ -82,6 +82,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 
 import com.boaringpanda.bettervanillabuilding.block.LockedBlocks;
+import com.boaringpanda.bettervanillabuilding.block.MixedSlabBlockEntity;
+import com.boaringpanda.bettervanillabuilding.block.MixedSlabs;
 import com.boaringpanda.bettervanillabuilding.block.PlacedRodBlock;
 import com.boaringpanda.bettervanillabuilding.block.Rainbow;
 import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
@@ -94,7 +96,8 @@ import com.boaringpanda.bettervanillabuilding.entity.RainbowCushions;
  * rod's direction, and an upright placed rod's arms; the facing of pistons (retracted), dispensers, droppers, observers, comparators,
  * repeaters, buttons, signs, banners, heads, stonecutters, grindstones and bells; a hopper's spout; a rail's shape and rotation; a copper
  * golem statue's facing and pose; and wool, wool stairs and slabs, carpets, stained glass and panes, beds and banners fading through every
- * colour like a jeb_ sheep (as well as their other options). Left click selects the block's next option (sneak: the previous one), right
+ * colour like a jeb_ sheep (as well as their other options; a wool slab inside a mixed slab fades on its own, the half under the cursor).
+ * Left click selects the block's next option (sneak: the previous one), right
  * click changes it. Both show an action-bar message worded like the debug stick's. It never breaks a block, and on any other block both
  * clicks only show "Can not be used on this block"; a right click there doesn't open doors, chests etc. either.
  * <p>
@@ -250,6 +253,11 @@ public class BuilderStickItem extends Item {
 	private static List<Option> optionsFor(BlockState state) {
 		List<Option> options = shapeOptionsFor(state);
 		return state.hasProperty(Rainbow.RAINBOW) ? Stream.concat(options.stream(), Stream.of(RAINBOW)).toList() : options;
+	}
+
+	/** On a mixed slab, a wool half's fade is its only option (flipping one half of a mixed block would make no sense). */
+	private static List<Option> mixedHalfOptions(BlockState half) {
+		return half.hasProperty(Rainbow.RAINBOW) ? List.of(RAINBOW) : List.of();
 	}
 
 	/** {@link #optionsFor} without the rainbow option. */
@@ -448,11 +456,14 @@ public class BuilderStickItem extends Item {
 			Long last = LAST_LEFT_CLICK.get(player);
 			if (last == null || now - last >= REPEAT_TICKS) {
 				LAST_LEFT_CLICK.put(player, now);
-				// On a stack of heads, the head under the cursor.
-				if (StackedHeads.aimsAtTop(player, level, pos, state)) {
+				// On a stack of heads, the head under the cursor; on a mixed slab, the half under it.
+				boolean mixed = MixedSlabs.is(state);
+				if (mixed) {
+					state = MixedSlabs.targeted(level, pos, player);
+				} else if (StackedHeads.aimsAtTop(player, level, pos, state)) {
 					state = StackedHeads.top(level, pos, state).state();
 				}
-				List<Option> options = optionsFor(state);
+				List<Option> options = mixed ? mixedHalfOptions(state) : optionsFor(state);
 				if (options.isEmpty()) {
 					player.sendOverlayMessage(Component.translatable(KEY + ".not_allowed"));
 				} else {
@@ -482,10 +493,12 @@ public class BuilderStickItem extends Item {
 
 		BlockPos pos = hit.getBlockPos();
 		BlockState state = level.getBlockState(pos);
-		// On a stack of heads, the top head is changed as a head of its own when it's the one clicked (StackedHeads).
-		boolean topHead = StackedHeads.hitsTop(state, pos, hit.getLocation());
-		BlockState target = topHead ? StackedHeads.top(level, pos, state).state() : state;
-		List<Option> options = optionsFor(target);
+		// On a stack of heads, the top head is changed as a head of its own when it's the one clicked (StackedHeads); on a mixed slab,
+		// the half clicked.
+		boolean mixed = MixedSlabs.is(state);
+		boolean topHead = !mixed && StackedHeads.hitsTop(state, pos, hit.getLocation());
+		BlockState target = mixed ? MixedSlabs.targeted(level, pos, hit) : topHead ? StackedHeads.top(level, pos, state).state() : state;
+		List<Option> options = mixed ? mixedHalfOptions(target) : optionsFor(target);
 		if (options.isEmpty()) {
 			if (level.isClientSide()) {
 				player.sendOverlayMessage(Component.translatable(KEY + ".not_allowed"));
@@ -501,6 +514,14 @@ public class BuilderStickItem extends Item {
 		BlockState changed = option.change().apply(level, pos, target, player);
 		if (topHead) {
 			StackedHeads.setTopRotation(level, pos, state, changed.getValue(BlockStateProperties.ROTATION_16));
+			player.sendOverlayMessage(Component.translatable(KEY + ".update", option.name(), option.value().apply(changed)));
+			return InteractionResult.SUCCESS;
+		}
+		if (mixed) {
+			// The block entity keeps each half's fade, and sends it on to clients, which redraw the block.
+			if (level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) {
+				entity.setHalves(entity.halves().withRainbow(MixedSlabs.isUpperHalf(pos, hit), changed.getValue(Rainbow.RAINBOW)));
+			}
 			player.sendOverlayMessage(Component.translatable(KEY + ".update", option.name(), option.value().apply(changed)));
 			return InteractionResult.SUCCESS;
 		}

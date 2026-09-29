@@ -184,7 +184,8 @@ follows its own rule (his pick): oak + stone broken by hand drops only the oak s
 - **One block, not one per pair.** The deleted old mod registered 13,806 blocks (one per pair) plus generated models, the "tens of
   thousands of files" that made that project unmanageable. Now `block/MixedSlabs` registers one block, `bettervanillabuilding:mixed_slab`
   (`MixedSlabBlock`, no item), and a block entity (`MixedSlabBlockEntity`) that saves and syncs `MixedSlabs.Halves(bottom, top)`
-  (codec `{"bottom": id, "top": id}`). A slab from a removed mod fails the codec and the block falls back to smooth stone
+  (codec `{"bottom": id, "top": id, "bottom_rainbow": bool, "top_rainbow": bool}`, the flags optional/false so older saves load; see
+  rainbow things). A slab from a removed mod fails the codec and the block falls back to smooth stone
   (`Halves.FALLBACK`), which is also what a `/setblock`'d one shows.
 - **Placing:** `mixin/SlabBlockMixin` widens vanilla's two checks: `canBeReplaced`'s "is the item this slab" (compiled as
   `ItemStack.is(Object)`, the generic `TypedInstance.is(T)`) also accepts any slab item, and `getStateForPlacement` returns the mixed
@@ -230,13 +231,13 @@ recipe, so it fits the 2×2 and 3×3 grids). It works **only** on blocks Dylan n
 | Block | Options (left click cycles) | Right click |
 |---|---|---|
 | fence, glass pane, stained glass pane, iron bars, copper bars | north, east, south, west | on / off |
-| wall | north, east, south, west | on / off |
+| wall (every `WallBlock`, this mod's too) | north, east, south, west | on / off |
 | fence gate | facing, height (`in_wall`, "slightly up or down") | rotate / up, down |
 | door (every `DoorBlock`: wood, iron, copper) | facing, hinge ("flipped") | rotate / left, right |
 | trapdoor (every `TrapDoorBlock`) | facing | rotate |
 | iron trapdoor (only `Blocks.IRON_TRAPDOOR`; copper ones open by hand) | facing, state | rotate / open, closed |
-| stairs (every `StairBlock`) | facing, shape, half ("flipped") | rotate / 5 shapes / top, bottom |
-| slab (every `SlabBlock`, not while double; wool slabs see below) | half | top, bottom (never makes a double slab; a double slab is "not allowed") |
+| stairs (every `StairBlock`, this mod's too) | facing, shape, half ("flipped") | rotate / 5 shapes / top, bottom |
+| slab (every `SlabBlock`, this mod's too, not while double; wool slabs see below) | half | top, bottom (never makes a double slab; a double slab is "not allowed") |
 | chain, copper chains (`ChainBlock`) | axis | x, y, z |
 | every log, wood, stripped log, stripped wood (`#logs`, so nether stems and hyphae too), hay bale, quartz pillar, purpur pillar, polished basalt, deepslate, ancient debris, reinforced deepslate (`isPillar`) | axis | x, y, z |
 | stonecutter, grindstone (floats, so any way, on a wall too) | facing | rotate |
@@ -259,7 +260,7 @@ recipe, so it fits the 2×2 and 3×3 grids). It works **only** on blocks Dylan n
 | every wall head (`WallSkullBlock`) | facing | rotate, only onto a side with a block behind |
 | armour stand (an **entity**, not markers) | facing | turns 45° (vanilla's 8 placement directions) |
 | item frame, glow item frame (**entities**, `ItemFrame`) | frame | shown / hidden (Dylan, 2026-09-25: vanilla's own `Invisible` flag, which vanilla saves, syncs and draws: the item alone, flat to the wall; an empty hidden frame shows nothing but can still be aimed at) |
-| rainbow things: wool, wool stairs, wool slabs, carpets (not moss), stained glass, stained glass panes, beds, banners (standing + wall), cushions (an **entity**) | rainbow, added after the block's own options (stairs: facing, shape, half, rainbow; slabs: half, rainbow; panes: north…west, rainbow; banners: facing, rainbow; everything else, double wool slabs included: rainbow only) | on / off (fades through every colour like a sheep named jeb_, but slower: 3.5 s a colour) |
+| rainbow things: wool, wool stairs, wool slabs, carpets (not moss), stained glass, stained glass panes, beds, banners (standing + wall), cushions (an **entity**) | rainbow, added after the block's own options (stairs: facing, shape, half, rainbow; slabs: half, rainbow; panes: north…west, rainbow; banners: facing, rainbow; everything else, double wool slabs included: rainbow only; a wool slab half of a mixed slab: rainbow only, the half under the cursor, the other half "not allowed") | on / off (fades through every colour like a sheep named jeb_, but slower: 3.5 s a colour) |
 
 Rainbow things (Dylan, 2026-09-25): "on wool blocks, they change colours like sheep when you name them jeb_"; then, after trying it,
 "slow down the colour changing" (2x slower, then "tiny bit slower", then "3.5": 70 ticks) and "let the wool stairs and slabs have that
@@ -298,9 +299,14 @@ option as well" (both new in 26.3); then "add beds, stained glass, stained glass
     and `client/mixin/CushionRendererMixin` swaps the `submitModel` call for the sprite version (`Sheets.BLOCKS_MAPPER`, the block atlas).
   - The texture strips and the 64 stair/slab/carpet/glass/pane/bed blockstates were generated from the game jar's own files by throwaway
     Java scripts (not kept); the banner strip multiplies `base.png` by each `DyeColor` diffuse colour.
+- **Mixed slabs** (Dylan, 2026-09-29: "use the builders stick on a wool slab to make it rainbow if that wool slab is mixed with another
+  slab"): `MixedSlabs.Halves` keeps a rainbow flag per half, and `bottomState()`/`topState()` set `rainbow` on a half that has it, so the
+  model, particles and sounds need nothing new (the wool slab blockstate overrides draw it). The stick on a mixed block works on
+  `MixedSlabs.targeted` (the half under the cursor) with `mixedHalfOptions`: only `RAINBOW`, only on a wool half; a right click writes
+  it back with `Halves.withRainbow` + `setHalves` (which syncs). `BlockItemMixin` keeps the fade of a rainbow wool slab something is
+  stacked onto; the slab placed is always plain. Pistons carry the flags with the rest of `Halves`.
 - Edges: a same-colour wool slab put into a rainbow half makes a rainbow double slab (vanilla's `SlabBlock.getStateForPlacement` keeps
-  the existing state). A rainbow wool slab stacked with a *different* slab becomes a mixed slab, which saves only block ids
-  (`MixedSlabs.Halves`), so that half goes back to its plain colour. Picking up / breaking anything rainbow gives the plain item.
+  the existing state). Picking up / breaking anything rainbow gives the plain item.
 
 Fourth batch (Dylan, 2026-09-24): logs/wood (all four kinds), hay, quartz and purpur pillars, polished basalt, deepslate ("directions" =
 their axis), stonecutter, bell and grindstone rotation. Ancient debris ("netherite debris") and reinforced deepslate are plain `Block`s
@@ -736,5 +742,25 @@ in the stonecutter **except moss, pale moss and snow**. The Builder Stick works 
   the lower from its bottom rows (`[0,12,16,16]`), so each half is outlined all round. The double slab keeps vanilla's look of two
   outlined halves. Slab faces where two halves meet still have no `cullface`, so `MixedSlabModel` drops them as before. A
   resource pack's own smooth stone slab models replace these.
+- **Walls** (Dylan, 2026-09-29: "walls of all terracotta blocks, deepslate, packed and blue ice, calcite, smooth stone, and obsidian",
+  then "moss, pale moss, snow, and amethyst block walls"): 27 walls, one for every material above (terracotta plain + 16 colours,
+  deepslate, packed ice, blue ice, calcite, smooth stone, obsidian, moss, pale moss, snow, amethyst; vanilla 26.3 has none of them) in
+  the same class, registered as `Blocks.registerWall` does: a plain `WallBlock` with `ofLegacyCopy(base).forceSolidOn()`. The Builder
+  Stick and locking go by class (`WallBlock`), so nothing new there. Data made from vanilla's cobblestone wall files by throwaway Java
+  scripts (not kept): multipart blockstate over `template_wall_post|side|side_tall` + `wall_inventory` models (one texture each, the
+  base block's; deepslate uses its side texture, snow `block/snow`), item definitions, loot (ice: Silk Touch only, like the stairs;
+  snow: itself with Silk Touch, else **4 snowballs**, Dylan's pick: the recipe is 1 block → 1 wall), crafting (6 → 6, terracotta in
+  group `terracotta_wall`, no category like vanilla's) and stonecutting (1 → 1; not moss, pale moss or snow, like their stairs), recipe
+  advancements under `recipes/decorations/` (where vanilla's walls are), lang, tags `walls` (block + item, new files), the same
+  mining/sound tags as each material's stairs, and `needs_diamond_tool` + `dragon_immune` for obsidian. Tabs: each wall after its
+  slab (smooth stone after vanilla's smooth stone slab), terracotta walls after the terracotta slabs in the tab colour order.
+- **Smooth stone wall has its own models** (Dylan, 2026-09-29: vanilla's wall models left "missing a bunch of edges"): like the
+  stairs, every face outlined all round. The border depends on the whole block (a straight run meets mid-block with no line; a side
+  meeting a post is a crease with one), so its blockstate is `variants`, one model per `up` × 4 sides (162,
+  `models/block/smooth_stone_wall/[post_]<n|l|t for N,E,S,W>.json`), plus `smooth_stone_wall_inventory.json` (parent
+  `wall_inventory` for its display). A throwaway Java script (not kept) built each shape in 1-px cubes; a face pixel whose neighbour
+  in the same plane is missing (air, a crease, the block's edge) takes the texture's border column/row, an inside corner takes a
+  border pixel, and every other pixel vanilla's own (uvlock-style) pixel; runs are merged into flat elements (`cullface` on the
+  block's edges). Still `smooth_stone.png`. To change them, edit the JSONs (or regenerate).
 - Known edges (as with vanilla's own stairs/slabs): no base-block tricks, so moss doesn't spread with bone meal and amethyst doesn't
   chime when an arrow hits it.

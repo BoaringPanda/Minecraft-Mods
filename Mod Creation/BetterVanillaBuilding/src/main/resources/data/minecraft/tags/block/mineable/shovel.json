@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "bettervanillabuilding:snow_stairs",
-    "bettervanillabuilding:snow_slab"
+    "bettervanillabuilding:snow_slab",
+    "bettervanillabuilding:snow_wall"
   ]
 }

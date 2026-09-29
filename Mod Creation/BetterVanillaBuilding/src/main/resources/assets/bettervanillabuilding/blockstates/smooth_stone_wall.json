@@ -1,0 +1,490 @@
+{
+  "variants": {
+    "east=none,north=none,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nnnn"
+    },
+    "east=none,north=none,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nnnl"
+    },
+    "east=none,north=none,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nnnt"
+    },
+    "east=none,north=none,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nnln"
+    },
+    "east=none,north=none,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nnll"
+    },
+    "east=none,north=none,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nnlt"
+    },
+    "east=none,north=none,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nntn"
+    },
+    "east=none,north=none,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nntl"
+    },
+    "east=none,north=none,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nntt"
+    },
+    "east=low,north=none,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nlnn"
+    },
+    "east=low,north=none,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nlnl"
+    },
+    "east=low,north=none,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nlnt"
+    },
+    "east=low,north=none,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nlln"
+    },
+    "east=low,north=none,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nlll"
+    },
+    "east=low,north=none,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nllt"
+    },
+    "east=low,north=none,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nltn"
+    },
+    "east=low,north=none,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nltl"
+    },
+    "east=low,north=none,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nltt"
+    },
+    "east=tall,north=none,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ntnn"
+    },
+    "east=tall,north=none,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ntnl"
+    },
+    "east=tall,north=none,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ntnt"
+    },
+    "east=tall,north=none,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ntln"
+    },
+    "east=tall,north=none,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ntll"
+    },
+    "east=tall,north=none,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ntlt"
+    },
+    "east=tall,north=none,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nttn"
+    },
+    "east=tall,north=none,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nttl"
+    },
+    "east=tall,north=none,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_nttt"
+    },
+    "east=none,north=low,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lnnn"
+    },
+    "east=none,north=low,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lnnl"
+    },
+    "east=none,north=low,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lnnt"
+    },
+    "east=none,north=low,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lnln"
+    },
+    "east=none,north=low,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lnll"
+    },
+    "east=none,north=low,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lnlt"
+    },
+    "east=none,north=low,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lntn"
+    },
+    "east=none,north=low,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lntl"
+    },
+    "east=none,north=low,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lntt"
+    },
+    "east=low,north=low,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_llnn"
+    },
+    "east=low,north=low,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_llnl"
+    },
+    "east=low,north=low,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_llnt"
+    },
+    "east=low,north=low,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_llln"
+    },
+    "east=low,north=low,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_llll"
+    },
+    "east=low,north=low,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lllt"
+    },
+    "east=low,north=low,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lltn"
+    },
+    "east=low,north=low,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lltl"
+    },
+    "east=low,north=low,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lltt"
+    },
+    "east=tall,north=low,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ltnn"
+    },
+    "east=tall,north=low,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ltnl"
+    },
+    "east=tall,north=low,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ltnt"
+    },
+    "east=tall,north=low,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ltln"
+    },
+    "east=tall,north=low,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ltll"
+    },
+    "east=tall,north=low,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ltlt"
+    },
+    "east=tall,north=low,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lttn"
+    },
+    "east=tall,north=low,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lttl"
+    },
+    "east=tall,north=low,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_lttt"
+    },
+    "east=none,north=tall,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tnnn"
+    },
+    "east=none,north=tall,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tnnl"
+    },
+    "east=none,north=tall,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tnnt"
+    },
+    "east=none,north=tall,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tnln"
+    },
+    "east=none,north=tall,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tnll"
+    },
+    "east=none,north=tall,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tnlt"
+    },
+    "east=none,north=tall,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tntn"
+    },
+    "east=none,north=tall,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tntl"
+    },
+    "east=none,north=tall,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tntt"
+    },
+    "east=low,north=tall,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tlnn"
+    },
+    "east=low,north=tall,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tlnl"
+    },
+    "east=low,north=tall,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tlnt"
+    },
+    "east=low,north=tall,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tlln"
+    },
+    "east=low,north=tall,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tlll"
+    },
+    "east=low,north=tall,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tllt"
+    },
+    "east=low,north=tall,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tltn"
+    },
+    "east=low,north=tall,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tltl"
+    },
+    "east=low,north=tall,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tltt"
+    },
+    "east=tall,north=tall,south=none,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ttnn"
+    },
+    "east=tall,north=tall,south=none,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ttnl"
+    },
+    "east=tall,north=tall,south=none,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ttnt"
+    },
+    "east=tall,north=tall,south=low,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ttln"
+    },
+    "east=tall,north=tall,south=low,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ttll"
+    },
+    "east=tall,north=tall,south=low,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_ttlt"
+    },
+    "east=tall,north=tall,south=tall,up=true,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tttn"
+    },
+    "east=tall,north=tall,south=tall,up=true,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tttl"
+    },
+    "east=tall,north=tall,south=tall,up=true,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/post_tttt"
+    },
+    "east=none,north=none,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nnnn"
+    },
+    "east=none,north=none,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nnnl"
+    },
+    "east=none,north=none,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nnnt"
+    },
+    "east=none,north=none,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nnln"
+    },
+    "east=none,north=none,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nnll"
+    },
+    "east=none,north=none,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nnlt"
+    },
+    "east=none,north=none,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nntn"
+    },
+    "east=none,north=none,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nntl"
+    },
+    "east=none,north=none,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nntt"
+    },
+    "east=low,north=none,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nlnn"
+    },
+    "east=low,north=none,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nlnl"
+    },
+    "east=low,north=none,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nlnt"
+    },
+    "east=low,north=none,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nlln"
+    },
+    "east=low,north=none,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nlll"
+    },
+    "east=low,north=none,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nllt"
+    },
+    "east=low,north=none,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nltn"
+    },
+    "east=low,north=none,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nltl"
+    },
+    "east=low,north=none,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nltt"
+    },
+    "east=tall,north=none,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ntnn"
+    },
+    "east=tall,north=none,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ntnl"
+    },
+    "east=tall,north=none,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ntnt"
+    },
+    "east=tall,north=none,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ntln"
+    },
+    "east=tall,north=none,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ntll"
+    },
+    "east=tall,north=none,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ntlt"
+    },
+    "east=tall,north=none,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nttn"
+    },
+    "east=tall,north=none,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nttl"
+    },
+    "east=tall,north=none,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/nttt"
+    },
+    "east=none,north=low,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lnnn"
+    },
+    "east=none,north=low,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lnnl"
+    },
+    "east=none,north=low,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lnnt"
+    },
+    "east=none,north=low,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lnln"
+    },
+    "east=none,north=low,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lnll"
+    },
+    "east=none,north=low,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lnlt"
+    },
+    "east=none,north=low,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lntn"
+    },
+    "east=none,north=low,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lntl"
+    },
+    "east=none,north=low,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lntt"
+    },
+    "east=low,north=low,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/llnn"
+    },
+    "east=low,north=low,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/llnl"
+    },
+    "east=low,north=low,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/llnt"
+    },
+    "east=low,north=low,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/llln"
+    },
+    "east=low,north=low,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/llll"
+    },
+    "east=low,north=low,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lllt"
+    },
+    "east=low,north=low,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lltn"
+    },
+    "east=low,north=low,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lltl"
+    },
+    "east=low,north=low,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lltt"
+    },
+    "east=tall,north=low,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ltnn"
+    },
+    "east=tall,north=low,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ltnl"
+    },
+    "east=tall,north=low,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ltnt"
+    },
+    "east=tall,north=low,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ltln"
+    },
+    "east=tall,north=low,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ltll"
+    },
+    "east=tall,north=low,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ltlt"
+    },
+    "east=tall,north=low,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lttn"
+    },
+    "east=tall,north=low,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lttl"
+    },
+    "east=tall,north=low,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/lttt"
+    },
+    "east=none,north=tall,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tnnn"
+    },
+    "east=none,north=tall,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tnnl"
+    },
+    "east=none,north=tall,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tnnt"
+    },
+    "east=none,north=tall,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tnln"
+    },
+    "east=none,north=tall,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tnll"
+    },
+    "east=none,north=tall,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tnlt"
+    },
+    "east=none,north=tall,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tntn"
+    },
+    "east=none,north=tall,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tntl"
+    },
+    "east=none,north=tall,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tntt"
+    },
+    "east=low,north=tall,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tlnn"
+    },
+    "east=low,north=tall,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tlnl"
+    },
+    "east=low,north=tall,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tlnt"
+    },
+    "east=low,north=tall,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tlln"
+    },
+    "east=low,north=tall,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tlll"
+    },
+    "east=low,north=tall,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tllt"
+    },
+    "east=low,north=tall,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tltn"
+    },
+    "east=low,north=tall,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tltl"
+    },
+    "east=low,north=tall,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tltt"
+    },
+    "east=tall,north=tall,south=none,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ttnn"
+    },
+    "east=tall,north=tall,south=none,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ttnl"
+    },
+    "east=tall,north=tall,south=none,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ttnt"
+    },
+    "east=tall,north=tall,south=low,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ttln"
+    },
+    "east=tall,north=tall,south=low,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ttll"
+    },
+    "east=tall,north=tall,south=low,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/ttlt"
+    },
+    "east=tall,north=tall,south=tall,up=false,west=none": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tttn"
+    },
+    "east=tall,north=tall,south=tall,up=false,west=low": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tttl"
+    },
+    "east=tall,north=tall,south=tall,up=false,west=tall": {
+      "model": "bettervanillabuilding:block/smooth_stone_wall/tttt"
+    }
+  }
+}

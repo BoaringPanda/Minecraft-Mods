@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.properties.SlabType;
 import com.boaringpanda.bettervanillabuilding.block.LilyPadDecorations;
 import com.boaringpanda.bettervanillabuilding.block.MixedSlabBlockEntity;
 import com.boaringpanda.bettervanillabuilding.block.MixedSlabs;
+import com.boaringpanda.bettervanillabuilding.block.Rainbow;
 import com.boaringpanda.bettervanillabuilding.block.StackedHeads;
 
 /**
@@ -49,9 +50,11 @@ public abstract class BlockItemMixin {
 		if (placed && MixedSlabs.is(placementState) && replaced.getBlock() instanceof SlabBlock
 				&& context.getLevel().getBlockEntity(context.getClickedPos()) instanceof MixedSlabBlockEntity entity) {
 			Block old = replaced.getBlock();
+			// A fading wool slab keeps fading; the slab just placed never does, as with any placed by hand.
+			boolean oldRainbow = replaced.hasProperty(Rainbow.RAINBOW) && replaced.getValue(Rainbow.RAINBOW);
 			entity.setHalves(replaced.getValue(SlabBlock.TYPE) == SlabType.TOP
-					? new MixedSlabs.Halves(getBlock(), old)
-					: new MixedSlabs.Halves(old, getBlock()));
+					? new MixedSlabs.Halves(getBlock(), old, false, oldRainbow)
+					: new MixedSlabs.Halves(old, getBlock(), oldRainbow, false));
 		}
 		return placed;
 	}

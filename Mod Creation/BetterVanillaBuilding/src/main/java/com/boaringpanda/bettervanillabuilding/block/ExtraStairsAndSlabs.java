@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.phys.AABB;
 
@@ -28,9 +29,9 @@ import com.boaringpanda.bettervanillabuilding.BetterVanillaBuilding;
 
 /**
  * Stairs and slabs for blocks vanilla has none for: smooth stone (stairs only, vanilla has the slab), deepslate, moss, pale moss, snow,
- * packed ice, blue ice, calcite, obsidian, amethyst, and terracotta in every colour. They're plain vanilla {@link StairBlock}s and
- * {@link SlabBlock}s made the way vanilla makes its own ({@code Blocks.registerStair} / {@code registerSlab}), copying the base block's
- * properties, so the Builder Stick, locked stairs and mixed slabs pick them up by class. Models, loot, recipes and tags are data.
+ * packed ice, blue ice, calcite, obsidian, amethyst, and terracotta in every colour; and walls for all of those too. They're plain vanilla {@link StairBlock}s, {@link SlabBlock}s and {@link WallBlock}s
+ * made the way vanilla makes its own ({@code Blocks.registerStair} / {@code registerSlab} / {@code registerWall}), copying the base
+ * block's properties, so the Builder Stick, locked blocks and mixed slabs pick them up by class. Models, loot, recipes and tags are data.
  */
 public class ExtraStairsAndSlabs {
 	/** A copy of vanilla's private {@code Blocks.NEAR_PLANE_INTERSECTS_OUTLINE}, which every vanilla stair and slab uses. */
@@ -69,6 +70,20 @@ public class ExtraStairsAndSlabs {
 	public static final Map<DyeColor, Block> DYED_TERRACOTTA_SLABS = byColor(color -> slab(color.getName() + "_terracotta",
 			Blocks.DYED_TERRACOTTA.pick(color)));
 
+	public static final Block SMOOTH_STONE_WALL = wall("smooth_stone", Blocks.SMOOTH_STONE);
+	public static final Block DEEPSLATE_WALL = wall("deepslate", Blocks.DEEPSLATE);
+	public static final Block PACKED_ICE_WALL = wall("packed_ice", Blocks.PACKED_ICE);
+	public static final Block BLUE_ICE_WALL = wall("blue_ice", Blocks.BLUE_ICE);
+	public static final Block CALCITE_WALL = wall("calcite", Blocks.CALCITE);
+	public static final Block OBSIDIAN_WALL = wall("obsidian", Blocks.OBSIDIAN);
+	public static final Block MOSS_WALL = wall("moss", Blocks.MOSS_BLOCK);
+	public static final Block PALE_MOSS_WALL = wall("pale_moss", Blocks.PALE_MOSS_BLOCK);
+	public static final Block SNOW_WALL = wall("snow", Blocks.SNOW_BLOCK);
+	public static final Block AMETHYST_WALL = wall("amethyst", Blocks.AMETHYST_BLOCK);
+	public static final Block TERRACOTTA_WALL = wall("terracotta", Blocks.TERRACOTTA);
+	public static final Map<DyeColor, Block> DYED_TERRACOTTA_WALLS = byColor(color -> wall(color.getName() + "_terracotta",
+			Blocks.DYED_TERRACOTTA.pick(color)));
+
 	/** Vanilla's colour order in the Colored Blocks tab ({@code CreativeModeTabs}' {@code gameplayColorOrder}, a local there). */
 	private static final List<DyeColor> TAB_COLOR_ORDER = List.of(DyeColor.WHITE, DyeColor.LIGHT_GRAY, DyeColor.GRAY, DyeColor.BLACK,
 			DyeColor.BROWN, DyeColor.RED, DyeColor.ORANGE, DyeColor.YELLOW, DyeColor.LIME, DyeColor.GREEN, DyeColor.CYAN, DyeColor.LIGHT_BLUE,
@@ -83,6 +98,12 @@ public class ExtraStairsAndSlabs {
 	private static Block slab(String material, Block base) {
 		return register(material + "_slab", SlabBlock::new,
 				BlockBehaviour.Properties.ofLegacyCopy(base).isViewBlocking(NEAR_PLANE_INTERSECTS_OUTLINE));
+	}
+
+	/** As vanilla's {@code Blocks.registerWall}. */
+	@SuppressWarnings("deprecation")
+	private static Block wall(String material, Block base) {
+		return register(material + "_wall", WallBlock::new, BlockBehaviour.Properties.ofLegacyCopy(base).forceSolidOn());
 	}
 
 	private static Map<DyeColor, Block> byColor(Function<DyeColor, Block> factory) {
@@ -107,20 +128,24 @@ public class ExtraStairsAndSlabs {
 	public static void initialize() {
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
 			output.insertAfter(Items.SMOOTH_STONE, SMOOTH_STONE_STAIRS);
-			output.insertAfter(Items.DEEPSLATE, DEEPSLATE_STAIRS, DEEPSLATE_SLAB);
-			output.insertAfter(Items.AMETHYST_BLOCK, AMETHYST_STAIRS, AMETHYST_SLAB);
-			for (Block block : List.of(CALCITE_STAIRS, CALCITE_SLAB, OBSIDIAN_STAIRS, OBSIDIAN_SLAB, PACKED_ICE_STAIRS, PACKED_ICE_SLAB,
-					BLUE_ICE_STAIRS, BLUE_ICE_SLAB, SNOW_STAIRS, SNOW_SLAB, MOSS_STAIRS, MOSS_SLAB, PALE_MOSS_STAIRS, PALE_MOSS_SLAB)) {
+			output.insertAfter(Items.SMOOTH_STONE_SLAB, SMOOTH_STONE_WALL);
+			output.insertAfter(Items.DEEPSLATE, DEEPSLATE_STAIRS, DEEPSLATE_SLAB, DEEPSLATE_WALL);
+			output.insertAfter(Items.AMETHYST_BLOCK, AMETHYST_STAIRS, AMETHYST_SLAB, AMETHYST_WALL);
+			for (Block block : List.of(CALCITE_STAIRS, CALCITE_SLAB, CALCITE_WALL, OBSIDIAN_STAIRS, OBSIDIAN_SLAB, OBSIDIAN_WALL,
+					PACKED_ICE_STAIRS, PACKED_ICE_SLAB, PACKED_ICE_WALL, BLUE_ICE_STAIRS, BLUE_ICE_SLAB, BLUE_ICE_WALL, SNOW_STAIRS, SNOW_SLAB,
+					SNOW_WALL, MOSS_STAIRS, MOSS_SLAB, MOSS_WALL, PALE_MOSS_STAIRS, PALE_MOSS_SLAB, PALE_MOSS_WALL)) {
 				output.accept(block);
 			}
 		});
-		// Like vanilla's concrete stairs and slabs: every stair, then every slab, after the last terracotta.
+		// Like vanilla's concrete stairs and slabs: every stair, then every slab, then every wall, after the last terracotta.
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.COLORED_BLOCKS).register(output -> {
 			List<Block> terracotta = new ArrayList<>();
 			terracotta.add(TERRACOTTA_STAIRS);
 			TAB_COLOR_ORDER.forEach(color -> terracotta.add(DYED_TERRACOTTA_STAIRS.get(color)));
 			terracotta.add(TERRACOTTA_SLAB);
 			TAB_COLOR_ORDER.forEach(color -> terracotta.add(DYED_TERRACOTTA_SLABS.get(color)));
+			terracotta.add(TERRACOTTA_WALL);
+			TAB_COLOR_ORDER.forEach(color -> terracotta.add(DYED_TERRACOTTA_WALLS.get(color)));
 			output.insertAfter(Items.DYED_TERRACOTTA.pick(TAB_COLOR_ORDER.getLast()), terracotta.toArray(Block[]::new));
 		});
 	}

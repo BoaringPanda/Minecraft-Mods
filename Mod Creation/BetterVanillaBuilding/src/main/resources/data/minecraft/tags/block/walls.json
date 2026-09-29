@@ -1,0 +1,32 @@
+{
+  "replace": false,
+  "values": [
+    "bettervanillabuilding:smooth_stone_wall",
+    "bettervanillabuilding:deepslate_wall",
+    "bettervanillabuilding:packed_ice_wall",
+    "bettervanillabuilding:blue_ice_wall",
+    "bettervanillabuilding:calcite_wall",
+    "bettervanillabuilding:obsidian_wall",
+    "bettervanillabuilding:terracotta_wall",
+    "bettervanillabuilding:white_terracotta_wall",
+    "bettervanillabuilding:orange_terracotta_wall",
+    "bettervanillabuilding:magenta_terracotta_wall",
+    "bettervanillabuilding:light_blue_terracotta_wall",
+    "bettervanillabuilding:yellow_terracotta_wall",
+    "bettervanillabuilding:lime_terracotta_wall",
+    "bettervanillabuilding:pink_terracotta_wall",
+    "bettervanillabuilding:gray_terracotta_wall",
+    "bettervanillabuilding:light_gray_terracotta_wall",
+    "bettervanillabuilding:cyan_terracotta_wall",
+    "bettervanillabuilding:purple_terracotta_wall",
+    "bettervanillabuilding:blue_terracotta_wall",
+    "bettervanillabuilding:brown_terracotta_wall",
+    "bettervanillabuilding:green_terracotta_wall",
+    "bettervanillabuilding:red_terracotta_wall",
+    "bettervanillabuilding:black_terracotta_wall",
+    "bettervanillabuilding:moss_wall",
+    "bettervanillabuilding:pale_moss_wall",
+    "bettervanillabuilding:snow_wall",
+    "bettervanillabuilding:amethyst_wall"
+  ]
+}

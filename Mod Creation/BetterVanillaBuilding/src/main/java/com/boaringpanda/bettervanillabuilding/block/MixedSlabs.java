@@ -48,30 +48,49 @@ public class MixedSlabs {
 			BetterVanillaBuilding.id("mixed_slab"), new BlockEntityType<>(MixedSlabBlockEntity::new, Set.of(MIXED_SLAB)));
 
 	/**
-	 * The two slabs of a mixed block. {@link #FALLBACK} (two smooth stone slabs) stands in when a block has no data, e.g. one made
-	 * with {@code /setblock}, so it's never invisible.
+	 * The two slabs of a mixed block, and whether each is fading like a jeb_ sheep ({@link Rainbow}; only wool slabs can, the flag is
+	 * ignored on any other slab). {@link #FALLBACK} (two smooth stone slabs) stands in when a block has no data, e.g. one made with
+	 * {@code /setblock}, so it's never invisible.
 	 */
-	public record Halves(Block bottom, Block top) {
+	public record Halves(Block bottom, Block top, boolean bottomRainbow, boolean topRainbow) {
 		public static final Halves FALLBACK = new Halves(Blocks.SMOOTH_STONE_SLAB, Blocks.SMOOTH_STONE_SLAB);
 
 		/** A slab block by id. A slab from a mod that has since been removed fails to load, and the block falls back to {@link #FALLBACK}. */
 		private static final Codec<Block> SLAB = BuiltInRegistries.BLOCK.byNameCodec().validate(
 				block -> block instanceof SlabBlock ? DataResult.success(block) : DataResult.error(() -> "Not a slab: " + block));
+		/** The rainbow flags are optional, so mixed blocks saved before they existed load with neither half fading. */
 		public static final Codec<Halves> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				SLAB.fieldOf("bottom").forGetter(Halves::bottom),
-				SLAB.fieldOf("top").forGetter(Halves::top)).apply(instance, Halves::new));
+				SLAB.fieldOf("top").forGetter(Halves::top),
+				Codec.BOOL.optionalFieldOf("bottom_rainbow", false).forGetter(Halves::bottomRainbow),
+				Codec.BOOL.optionalFieldOf("top_rainbow", false).forGetter(Halves::topRainbow)).apply(instance, Halves::new));
+
+		/** Neither half fading. */
+		public Halves(Block bottom, Block top) {
+			this(bottom, top, false, false);
+		}
 
 		public BlockState bottomState() {
-			return bottom.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+			return halfState(bottom, SlabType.BOTTOM, bottomRainbow);
 		}
 
 		public BlockState topState() {
-			return top.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
+			return halfState(top, SlabType.TOP, topRainbow);
 		}
 
 		/** The bottom slab if {@code upper} is false, else the top one (as a half slab). */
 		public BlockState half(boolean upper) {
 			return upper ? topState() : bottomState();
+		}
+
+		/** These halves with the top ({@code upper}) or bottom slab's fade turned on or off. */
+		public Halves withRainbow(boolean upper, boolean on) {
+			return upper ? new Halves(bottom, top, bottomRainbow, on) : new Halves(bottom, top, on, topRainbow);
+		}
+
+		private static BlockState halfState(Block slab, SlabType type, boolean rainbow) {
+			BlockState state = slab.defaultBlockState().setValue(SlabBlock.TYPE, type);
+			return state.hasProperty(Rainbow.RAINBOW) ? state.setValue(Rainbow.RAINBOW, rainbow) : state;
 		}
 
 		/**
@@ -130,7 +149,8 @@ public class MixedSlabs {
 		return targeted(level, pos, player.pick(player.blockInteractionRange(), 1.0F, false));
 	}
 
-	private static boolean isUpperHalf(BlockPos pos, @Nullable HitResult hit) {
+	/** Whether {@code hit} points at the top half of the block at {@code pos} (or isn't on this block at all). */
+	public static boolean isUpperHalf(BlockPos pos, @Nullable HitResult hit) {
 		if (hit instanceof BlockHitResult blockHit && blockHit.getType() == HitResult.Type.BLOCK && blockHit.getBlockPos().equals(pos)) {
 			return blockHit.getLocation().y - pos.getY() >= 0.5;
 		}

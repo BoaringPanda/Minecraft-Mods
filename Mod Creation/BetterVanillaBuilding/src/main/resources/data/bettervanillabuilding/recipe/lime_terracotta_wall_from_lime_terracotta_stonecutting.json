@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": "minecraft:lime_terracotta",
+  "result": {
+    "id": "bettervanillabuilding:lime_terracotta_wall"
+  }
+}
