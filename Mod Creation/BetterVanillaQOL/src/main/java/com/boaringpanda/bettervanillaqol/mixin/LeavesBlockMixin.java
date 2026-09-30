@@ -21,14 +21,14 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import com.boaringpanda.bettervanillaqol.PlacedLogs;
 
-// Leaves cut off from their logs are all gone within 3 seconds instead of waiting for a random tick (about a minute on average).
+// Leaves cut off from their logs are all gone within 2 seconds instead of waiting for a random tick (about a minute on average).
 // Player-placed leaves are persistent, so vanilla's decaying() is false for them and they never decay, same as vanilla. Player-placed
 // logs don't hold up natural leaves (PlacedLogs).
 @Mixin(LeavesBlock.class)
 public abstract class LeavesBlockMixin {
-	// Up to 50 ticks after a leaf is cut off, on top of the up to ~6 ticks it takes vanilla to spread the distance through the tree.
+	// Up to 35 ticks after a leaf is cut off, on top of the up to ~6 ticks it takes vanilla to spread the distance through the tree.
 	private static final int MIN_DECAY_DELAY = 2;
-	private static final int MAX_DECAY_DELAY = 50;
+	private static final int MAX_DECAY_DELAY = 35;
 
 	@Shadow
 	protected abstract boolean decaying(BlockState state);

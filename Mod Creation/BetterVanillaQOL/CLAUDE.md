@@ -18,14 +18,13 @@ Run from this folder (where `gradlew` is), not the repo root. `JAVA_HOME` must p
 - `./gradlew build` builds the mod and copies the jar into `jars/` (git-ignored, jars never go to GitHub).
 - `./gradlew runClient` starts a dev game with the mod.
 
-## Crops protect farmland (Dylan, 2026-09-26)
-Jumping or falling onto farmland with a crop growing on it no longer tramples it to dirt, so the crop doesn't break. Empty farmland
-still tramples like vanilla.
-- `mixin/FarmlandBlockMixin` `@WrapWithCondition`s the `turnToBaseBlock` call in `FarmlandBlock.fallOn`, so only the trampling is
-  skipped (fall damage and the rest of `fallOn` still run). No config or tag controls trampling in vanilla, hence the mixin.
-- Which blocks protect it: block tag `bettervanillaqol:protects_farmland` (`data/bettervanillaqol/tags/block/`):
-  `#minecraft:crops` (so other mods' crops count too) plus the grown stages vanilla's tag leaves out: attached pumpkin/melon stems
-  and a grown torchflower.
+## Farmland can't be trampled (Dylan, 2026-09-26, empty farmland too since 2026-09-30)
+Jumping or falling onto farmland never tramples it to dirt, with or without a crop on it, for players and mobs. It started as
+crops-only (a `protects_farmland` block tag); Dylan then asked for empty farmland too, so the tag is gone. Farmland still turns to
+dirt the other vanilla ways (dried out with nothing planted, a solid block placed on top), and with a hoe (below).
+- `mixin/FarmlandBlockMixin` `@WrapWithCondition`s the `turnToBaseBlock` call in `FarmlandBlock.fallOn` with `false`, so only the
+  trampling is skipped (fall damage and the rest of `fallOn` still run). No config or tag controls trampling in vanilla, hence the
+  mixin.
 
 ## No tempt delay (Dylan, 2026-09-26)
 Animals follow food the moment it's held, and again straight after it's put away and taken back out (vanilla waits 5 s). All tempting
@@ -110,11 +109,12 @@ torchflower seed could be planted (farmland), so decorative ones aren't touched.
   whose top goes missing. No tool damage (vanilla doesn't damage hoes on crops).
 
 ## Fast leaf decay (Dylan, 2026-09-27)
-Leaves cut off from their logs (whole trunk broken) are all gone within 3 s, in a random wave, instead of waiting for a random tick
+Leaves cut off from their logs (whole trunk broken) are all gone within 2 s, in a random wave, instead of waiting for a random tick
 (~68 s on average in vanilla). Drops are vanilla's. Player-placed leaves are `PERSISTENT`, so vanilla's `decaying()` is false and
 they never decay, same as vanilla (custom trees are safe). Which blocks hold leaves up is vanilla's `#minecraft:prevents_nearby_leaf_decay`.
 - `mixin/LeavesBlockMixin` on `LeavesBlock.tick` (the scheduled tick vanilla uses to recompute `DISTANCE`, which spreads through the
-  tree at one block per tick). TAIL: if the leaf is now `decaying()`, schedule another tick 2-50 ticks later. HEAD: if it's still
+  tree at one block per tick). TAIL: if the leaf is now `decaying()`, schedule another tick 2-35 ticks later
+  (was 2-50 until Dylan asked for slightly faster, 2026-09-30). HEAD: if it's still
   `decaying()` after a fresh `updateDistance` (both `@Shadow`ed), `dropResources` + `removeBlock` like `randomTick`, and cancel.
   Only a natural log growing next to it in the meantime saves it. Only one tick per pos+block can be pending (`LevelChunkTicks.schedule`),
   so neighbours' 1-tick updates can't bring the decay forward.
@@ -136,3 +136,11 @@ from the bottom face, and only with air above (all like vanilla's path-making). 
   `minecraft:shovel` entry of the `block_transformer` data registry. The mod ships its own `data/minecraft/block_transformer/shovel.json`
   (overrides vanilla's): vanilla's rule copied as-is plus a second rule, `minecraft:dirt_path` + air above -> `minecraft:dirt`.
   If vanilla changes its `shovel.json` in an update, copy the change into ours (it replaces vanilla's whole file).
+
+## Hoe turns farmland back to dirt (Dylan, 2026-09-30)
+Right-clicking farmland with a hoe turns it back into dirt, the reverse of tilling: same till sound, 1 durability, not from the bottom
+face, and only with air above, so farmland with a crop on it can't be un-tilled. Any moisture. All hoes, since it's vanilla's own hoe
+action.
+- No code, same as the shovel: the mod ships its own `data/minecraft/block_transformer/hoe.json` (overrides vanilla's): vanilla's
+  file copied as-is plus a third rule in the first transform, `minecraft:farmland` + air above -> `minecraft:dirt`.
+  If vanilla changes its `hoe.json` in an update, copy the change into ours (it replaces vanilla's whole file).
