@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "com.boaringpanda.lumberjackmod.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"BlockItemMixin",
+		"LevelChunkMixin",
+		"StonecutterMenuMixin",
+		"VillagerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

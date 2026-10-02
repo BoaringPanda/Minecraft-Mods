@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/stonecutter",
+  "textures": {
+    "particle": "minecraft:block/oak_planks",
+    "bottom": "minecraft:block/oak_planks",
+    "top": "minecraft:block/oak_planks",
+    "side": "minecraft:block/stripped_oak_log"
+  }
+}
