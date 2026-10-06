@@ -1,0 +1,14 @@
+pluginManagement {
+	repositories {
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}
+
+// The project's name. The mod ID is the lowercase form of this name (vsbetterqol), because Fabric mod IDs
+// can't contain capital letters. The jar has its own name, set in build.gradle.
+rootProject.name = 'VSBetterQOL'

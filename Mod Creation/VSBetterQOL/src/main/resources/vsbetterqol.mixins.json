@@ -1,0 +1,20 @@
+{
+	"required": true,
+	"package": "com.boaringpanda.vsbetterqol.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"BlockBehaviourMixin",
+		"BlockItemMixin",
+		"FarmlandBlockMixin",
+		"FollowTemptationMixin",
+		"LeavesBlockMixin",
+		"LevelChunkMixin",
+		"PlayerMixin",
+		"SensorAccessor",
+		"TemptGoalMixin",
+		"TemptingSensorMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
