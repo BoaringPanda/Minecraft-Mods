@@ -3,7 +3,11 @@
 	"package": "com.boaringpanda.vsbetterqol.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"AbstractContainerScreenAccessor",
+		"HudMixin",
+		"ItemEnchantmentsMixin",
 		"ItemStackMixin",
+		"ItemStackTooltipMixin",
 		"LocalPlayerMixin"
 	],
 	"injectors": {

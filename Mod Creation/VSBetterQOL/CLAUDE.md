@@ -146,6 +146,100 @@ shows once either way. No toggle yet (Dylan may add one later). Client only, so 
   `display.shows(DAMAGE)` (so `tooltip_display`-hidden damage stays hidden). `@ModifyExpressionValue` on the method's only `isDamaged()`
   call → false skips vanilla's own uncoloured line.
 
+## About to break warning (Dylan, 2026-10-07)
+When a player's item drops to 7 durability or less, a red "Your axe is about to break" shows above the hotbar (actionbar) with a quiet
+note block bass, only for that player. It fires once per drop: only when crossing from above 7 (a hit from 9 to 5 still warns, and it
+doesn't repeat at 6, 5...). After Mending or an anvil takes it back above 7, the next drop warns again. Creative never loses durability,
+so it never warns. Server side, so it needs the mod on the server. Players without it still read English (`translatableWithFallback`).
+- `mixin/ItemStackMixin` (common; the client one with the same name is the tooltip): HEAD of private `ItemStack.applyDamage`, where both
+  `hurtAndBreak` and `hurtWithoutBreaking` set the new damage after Unbreaking. Calls `DurabilityWarning.onDamage` when there's a player.
+- `DurabilityWarning`: the item's word comes from an ordered list. Item tags come first (axes, pickaxes, shovels, hoes, swords, spears,
+  head/chest/leg/foot armor, so other mods' gear counts if tagged), then the other vanilla damageable items one by one (bow, crossbow,
+  trident, mace, shield, elytra, fishing rod, shears, flint and steel, brush, carrot/warped fungus on a stick). Anything else gets
+  "Your <item name> is about to break". Each type has its own lang key `message.vsbetterqol.about_to_break.<type>`, so the grammar is
+  right ("leggings/boots/shears are"). The sound is sent with `ClientboundSoundPacket`, because `Player.playSound` skips that player.
+  Wolf armour has no player, so it never warns.
+
+## Sort button (Dylan, 2026-10-07)
+A small 10x10 "Sort A-Z" button sits just above the top-right slot, centred on it (`slot.x + 3`, `slot.y - 13`, Dylan's
+screenshot 2026-10-07). In the survival inventory it sorts the 27 main slots (hotbar,
+armour and offhand stay put, Dylan's pick). Chests, barrels, ender chests, chest minecarts/boats (all `ChestMenu`) and shulker boxes get two:
+one above the container's top-right slot, and one for the player's inventory. Order: hover name A-Z ignoring case (renamed items by their
+name), then item id, then bigger stacks first. Same item + components merge first, so partial stacks join up and empties end up at the
+bottom. Creative gets the player button too (Dylan, 2026-10-07), only on the Survival Inventory tab (other tabs don't show the main
+inventory). Needs the mod on the server (the button only shows if it can send the packet).
+- Creative: `CreativeModeInventoryScreen`'s menu is client-only, so its button sends `player.inventoryMenu.containerId` (what the server
+  has open in creative). On the inventory tab its `SlotWrapper`s use the menu index as the container slot, and 9..35 is the main
+  inventory both ways, so `sortableSlots` finds them. Tabs swap the slots without a re-init, so the button is looked up every frame and
+  hidden when there's no slot.
+- `InventorySorting` (main): `sort_inventory` payload (`containerId`, `playerInventory`). The server re-checks the open menu's id and not
+  spectator. `sortableSlots` (shared with the client) = menu slots whose container is the player's `Inventory` with container slot 9..35,
+  or for `ChestMenu`/`ShulkerBoxMenu` the other slots. It writes back with `Slot.set`, then `broadcastChanges`.
+- `client/SortButtons`: Fabric `ScreenEvents.AFTER_INIT` for `InventoryScreen`/`ContainerScreen`/`ShulkerBoxScreen` adds an `ImageButton`
+  (sprites `vsbetterqol:sort_button(_highlighted)`) via `Screens.getWidgets`, above `sortableSlots(...).get(8)`. `beforeExtract` re-places
+  it every frame from `client/mixin/AbstractContainerScreenAccessor` (`leftPos`/`topPos`), because the recipe book moves the GUI without
+  a re-init.
+
+## Saturation display (Dylan, 2026-10-07)
+Saturation (hidden in vanilla) shows as a bright green outline around the hunger shanks, AppleSkin-style: 1 saturation = half a shank,
+right to left like the shanks. Hovering a food shows two rows of icons under its name: hunger shanks, then saturation as green-outlined empty
+shanks (rounded to the nearest half; Dylan picked icons over numbers). If saturation rounds to 0 (cookie, pufferfish...) there's only the
+hunger row, and no empty space for the other. Holding food you can eat (main hand, else offhand; `player.canEat(canAlwaysEat)`) slowly flashes
+the shanks and outlines eating it would add (alpha 0.2-0.8, 2 s sine), using vanilla's `FoodData.add` maths: food capped at 20, saturation at the new
+food level. Client only.
+- Sprites `textures/gui/sprites/hud/saturation_full.png` / `saturation_half.png`: vanilla's `hud/food_empty` black border pixels turned
+  #55FF55. Half = the border pixels with x + y >= 8 (the lower-right part, like vanilla's half shank), made with a one-off Java program.
+- `client/mixin/HudMixin`: TAIL of `Hud.extractFood` draws them at vanilla's shank spots (`xRight - i*8 - 9`, `yLineBase`). Shanks only
+  jiggle at 0 saturation, when there's nothing to draw. The eating preview is drawn in the same inject with the ARGB `blitSprite` overload,
+  only where the "after" sprite differs from the current one (Hunger effect sprites when the player has Hunger).
+- Tooltip: `client/mixin/ItemStackTooltipMixin` `@ModifyReturnValue`s `ItemStack.getTooltipImage` to `client/FoodTooltip` for anything with
+  `DataComponents.FOOD`, unless it already has an image. `ClientTooltipComponentCallback` (in `VSBetterQOLClient`) maps it to
+  `client/ClientFoodTooltip`, drawn with the HUD sprites. Vanilla puts the image right under the name.
+
+## Enchanted book descriptions (Dylan, 2026-10-06)
+Hovering an enchanted book shows "Hold Shift for info". Holding Shift shows what each enchantment does, under its name (dark gray, wrapped at
+200 px, indented by a space). Books only, so enchanted gear stays vanilla (Dylan's pick). Descriptions are Dylan's own text with only the typos
+fixed. Client only.
+- Text: `enchantment.<namespace>.<id>.desc` in `assets/vsbetterqol/lang/en_us.json`, the common convention other mods use. All 43 vanilla 26.3
+  enchantments have one. Enchantments with no key show nothing. If a book has no keyed enchantments at all, there's no Shift line either. If an
+  update adds an enchantment, add its key.
+- `client/mixin/ItemEnchantmentsMixin` on `ItemEnchantments.addToTooltip`: `@WrapOperation` on both `Consumer.accept` calls (vanilla's two
+  name loops, `@Local Holder<Enchantment>`) adds the description after the name. A TAIL `@Inject` adds the Shift hint. "Is a book" =
+  `components.get(STORED_ENCHANTMENTS) == this`.
+
+## Blast furnaces smelt blocks too (Dylan, 2026-10-07)
+Blast furnaces do every non-food furnace recipe (Dylan's list plus the ones he missed, chorus fruit included at his request): stone,
+deepslate, cracked bricks/tiles, glass, brick, terracotta + all 16 glazed, nether brick, smooth basalt/stone/sandstones/quartz, charcoal,
+sponge, green + lime dye, leaf litter, popped chorus fruit, resin brick. Food stays smoker/furnace only. Same XP and blast furnace speed.
+- No code: 39 `data/vsbetterqol/recipe/*_from_blasting.json`, each vanilla's smelting recipe with `type` → `minecraft:blasting`
+  (vanilla's 26.3 blasting recipes all use `cookingtime` 200 too). Picked by a one-off script: every vanilla smelting recipe with no
+  blasting and no smoking version (smoking = food). Iron nuggets were skipped, since vanilla already blasts them (same items, other order).
+- 39 recipe-book unlocks in `data/vsbetterqol/advancement/recipes/<vanilla's folder>/`: vanilla's advancement for the smelting recipe with
+  the recipe id swapped, so they show in the blast furnace recipe book when the furnace one unlocks.
+- If an update adds or changes a vanilla smelting recipe, regenerate these from the new jar.
+
+## Lapis stays in enchanting tables (Dylan, 2026-10-07)
+Lapis left in an enchanting table is still there next time, Bedrock-style. It belongs to the table (Dylan's pick): anyone who opens it gets it,
+it's saved with the world, and breaking the table drops it. The enchanted item still comes back to you on close, like vanilla. No hoppers.
+- `EnchantingLapis`: persistent Fabric data attachment `vsbetterqol:lapis` (`ItemStack.CODEC`) on the `EnchantingTableBlockEntity`.
+  `take` removes and returns it, `store` merges up to a full stack (the leftover stays in the given stack). Both `setChanged()`.
+- `mixin/EnchantmentMenuMixin`: constructor TAIL `take`s the table's lapis into `enchantSlots` slot 1, so it lives only in that menu while
+  open (a second player opening the same table sees none, no dupes). `@WrapOperation` on `clearContainer` in `lambda$removed$0`
+  `store`s slot 1 back first, then vanilla gives the rest to the player (also all of it if the table is gone). Server only: client menus have
+  `ContainerLevelAccess.NULL`.
+- `mixin/BlockEntityMixin`: HEAD of `BlockEntity.preRemoveSideEffects` (where containers drop their items) drops an enchanting table's stored
+  lapis.
+
+## Double doors open together (Dylan, 2026-10-07)
+Right-clicking one door of a double door opens or closes the other one too. Sneak-click (empty hand) only moves the clicked door (Dylan's pick).
+Any two hand-openable doors pair up, e.g. oak + spruce or wood + copper (Dylan's pick). Iron doors still need redstone. Only right-clicks:
+redstone, villagers and wind charges are vanilla.
+- `mixin/DoorBlockMixin`: TAIL of `DoorBlock.useWithoutItem` (the final `return SUCCESS`, after vanilla toggled; iron doors `PASS` earlier).
+  Partner = `pos.relative(hinge == RIGHT ? facing.getCounterClockWise() : facing.getClockWise())`, which is how vanilla's `getHinge` hinges
+  a door placed next to another. It must be a `DoorBlock` with `canOpenByHand`, the same `FACING` and `HALF`, and the opposite `HINGE`. Then
+  `setOpen(player, …, newOpen)` (vanilla's sound + game event), so out-of-sync pairs end up matching. Runs client and server like vanilla's
+  toggle.
+
 ## Shovel turns paths back to dirt (Dylan, 2026-09-27)
 Right-clicking a dirt path with a shovel turns it back into dirt, the reverse of making a path: same flatten sound, 1 durability, not
 from the bottom face, and only with air above (all like vanilla's path-making). All shovels, since it's vanilla's own shovel action.

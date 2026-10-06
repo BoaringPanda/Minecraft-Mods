@@ -5,6 +5,7 @@ import com.boaringpanda.vsbetterqol.NameTagRenaming.RenamePayload;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.ClientTooltipComponentCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 
 import net.minecraft.client.Minecraft;
@@ -30,5 +31,9 @@ public class VSBetterQOLClient implements ClientModInitializer {
 			Minecraft.getInstance().gui.setScreen(new NameTagScreen(hand, stack));
 			return InteractionResult.SUCCESS;
 		});
+
+		SortButtons.register();
+		// Draws the hunger/saturation image foods get in their tooltip (mixin/ItemStackTooltipMixin).
+		ClientTooltipComponentCallback.EVENT.register(data -> data instanceof FoodTooltip food ? new ClientFoodTooltip(food) : null);
 	}
 }

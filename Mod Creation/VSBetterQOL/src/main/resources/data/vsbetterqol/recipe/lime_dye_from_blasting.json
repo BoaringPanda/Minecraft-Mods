@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:blasting",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "ingredient": "minecraft:sea_pickle",
+  "result": {
+    "id": "minecraft:lime_dye"
+  }
+}
