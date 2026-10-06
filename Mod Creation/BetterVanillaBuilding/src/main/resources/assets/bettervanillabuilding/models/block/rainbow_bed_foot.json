@@ -1,9 +1,0 @@
-{
-  "parent": "minecraft:block/template_bed_foot",
-  "textures": {
-    "east": "bettervanillabuilding:block/rainbow_bed_foot_east",
-    "south": "bettervanillabuilding:block/rainbow_bed_foot_south",
-    "up": "bettervanillabuilding:block/rainbow_bed_foot_up",
-    "west": "bettervanillabuilding:block/rainbow_bed_foot_west"
-  }
-}

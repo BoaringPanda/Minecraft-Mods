@@ -1,0 +1,25 @@
+{
+  "variants": {
+    "hanging=false,wall=none": {
+      "model": "minecraft:block/lantern"
+    },
+    "hanging=true,wall=none": {
+      "model": "minecraft:block/lantern_hanging"
+    },
+    "wall=north": {
+      "model": "vsbetterbuilding:block/wall_lantern"
+    },
+    "wall=east": {
+      "model": "vsbetterbuilding:block/wall_lantern",
+      "y": 90
+    },
+    "wall=south": {
+      "model": "vsbetterbuilding:block/wall_lantern",
+      "y": 180
+    },
+    "wall=west": {
+      "model": "vsbetterbuilding:block/wall_lantern",
+      "y": 270
+    }
+  }
+}

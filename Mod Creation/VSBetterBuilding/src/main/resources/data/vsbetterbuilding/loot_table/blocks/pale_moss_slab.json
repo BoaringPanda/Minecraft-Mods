@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "modifier": [
+            {
+              "type": "minecraft:set_count",
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "vsbetterbuilding:pale_moss_slab",
+                "state": {
+                  "type": "double"
+                }
+              },
+              "count": 2
+            },
+            {
+              "type": "minecraft:explosion_decay"
+            }
+          ],
+          "name": "vsbetterbuilding:pale_moss_slab"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "vsbetterbuilding:blocks/pale_moss_slab"
+}

@@ -5,4 +5,4 @@ its own `jars/` folder for finished jars.
 
 | Mod | Folder | What it is |
 | --- | --- | --- |
-| Better Vanilla Building | [Mod Creation/BetterVanillaBuilding/](<Mod Creation/BetterVanillaBuilding/>) | Fabric mod for Minecraft 26.3 |
+| VS Better Building | [Mod Creation/VSBetterBuilding/](<Mod Creation/VSBetterBuilding/>) | Fabric mod for Minecraft 26.3 |

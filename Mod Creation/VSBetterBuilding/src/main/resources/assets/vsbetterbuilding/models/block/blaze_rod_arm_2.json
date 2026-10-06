@@ -1,0 +1,6 @@
+{
+  "parent": "vsbetterbuilding:block/placed_rod_arm",
+  "textures": {
+    "rod": "vsbetterbuilding:block/blaze_rod_2"
+  }
+}

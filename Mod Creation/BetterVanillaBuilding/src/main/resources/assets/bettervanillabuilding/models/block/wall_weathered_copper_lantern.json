@@ -1,7 +1,0 @@
-{
-  "parent": "bettervanillabuilding:block/template_wall_lantern",
-  "textures": {
-    "lantern": "minecraft:block/weathered_copper_lantern",
-    "bracket": "bettervanillabuilding:block/lantern_bracket_weathered_copper"
-  }
-}

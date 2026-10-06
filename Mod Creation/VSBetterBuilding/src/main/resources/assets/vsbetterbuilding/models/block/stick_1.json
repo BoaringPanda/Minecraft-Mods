@@ -1,0 +1,6 @@
+{
+  "parent": "vsbetterbuilding:block/placed_rod",
+  "textures": {
+    "rod": "vsbetterbuilding:block/stick_1"
+  }
+}

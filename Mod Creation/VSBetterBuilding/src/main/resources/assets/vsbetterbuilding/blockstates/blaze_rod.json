@@ -1,0 +1,84 @@
+{
+  "multipart": [
+    {
+      "when": { "facing": "down" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_1", "x": 180 },
+        { "model": "vsbetterbuilding:block/blaze_rod_2", "x": 180 },
+        { "model": "vsbetterbuilding:block/blaze_rod_3", "x": 180 }
+      ]
+    },
+    {
+      "when": { "facing": "east" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_1", "x": 90, "y": 90 },
+        { "model": "vsbetterbuilding:block/blaze_rod_2", "x": 90, "y": 90 },
+        { "model": "vsbetterbuilding:block/blaze_rod_3", "x": 90, "y": 90 }
+      ]
+    },
+    {
+      "when": { "facing": "north" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_1", "x": 90 },
+        { "model": "vsbetterbuilding:block/blaze_rod_2", "x": 90 },
+        { "model": "vsbetterbuilding:block/blaze_rod_3", "x": 90 }
+      ]
+    },
+    {
+      "when": { "facing": "south" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_1", "x": 90, "y": 180 },
+        { "model": "vsbetterbuilding:block/blaze_rod_2", "x": 90, "y": 180 },
+        { "model": "vsbetterbuilding:block/blaze_rod_3", "x": 90, "y": 180 }
+      ]
+    },
+    {
+      "when": { "facing": "up" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_1" },
+        { "model": "vsbetterbuilding:block/blaze_rod_2" },
+        { "model": "vsbetterbuilding:block/blaze_rod_3" }
+      ]
+    },
+    {
+      "when": { "facing": "west" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_1", "x": 90, "y": 270 },
+        { "model": "vsbetterbuilding:block/blaze_rod_2", "x": 90, "y": 270 },
+        { "model": "vsbetterbuilding:block/blaze_rod_3", "x": 90, "y": 270 }
+      ]
+    },
+    {
+      "when": { "north": "true" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_1" },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_2" },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_3" }
+      ]
+    },
+    {
+      "when": { "east": "true" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_1", "y": 90 },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_2", "y": 90 },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_3", "y": 90 }
+      ]
+    },
+    {
+      "when": { "south": "true" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_1", "y": 180 },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_2", "y": 180 },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_3", "y": 180 }
+      ]
+    },
+    {
+      "when": { "west": "true" },
+      "apply": [
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_1", "y": 270 },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_2", "y": 270 },
+        { "model": "vsbetterbuilding:block/blaze_rod_arm_3", "y": 270 }
+      ]
+    }
+  ]
+}

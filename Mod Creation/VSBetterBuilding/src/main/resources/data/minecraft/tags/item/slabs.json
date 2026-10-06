@@ -1,0 +1,31 @@
+{
+  "replace": false,
+  "values": [
+    "vsbetterbuilding:deepslate_slab",
+    "vsbetterbuilding:moss_slab",
+    "vsbetterbuilding:pale_moss_slab",
+    "vsbetterbuilding:snow_slab",
+    "vsbetterbuilding:packed_ice_slab",
+    "vsbetterbuilding:blue_ice_slab",
+    "vsbetterbuilding:calcite_slab",
+    "vsbetterbuilding:obsidian_slab",
+    "vsbetterbuilding:amethyst_slab",
+    "vsbetterbuilding:terracotta_slab",
+    "vsbetterbuilding:white_terracotta_slab",
+    "vsbetterbuilding:orange_terracotta_slab",
+    "vsbetterbuilding:magenta_terracotta_slab",
+    "vsbetterbuilding:light_blue_terracotta_slab",
+    "vsbetterbuilding:yellow_terracotta_slab",
+    "vsbetterbuilding:lime_terracotta_slab",
+    "vsbetterbuilding:pink_terracotta_slab",
+    "vsbetterbuilding:gray_terracotta_slab",
+    "vsbetterbuilding:light_gray_terracotta_slab",
+    "vsbetterbuilding:cyan_terracotta_slab",
+    "vsbetterbuilding:purple_terracotta_slab",
+    "vsbetterbuilding:blue_terracotta_slab",
+    "vsbetterbuilding:brown_terracotta_slab",
+    "vsbetterbuilding:green_terracotta_slab",
+    "vsbetterbuilding:red_terracotta_slab",
+    "vsbetterbuilding:black_terracotta_slab"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+	"required": true,
+	"package": "com.boaringpanda.vsbetterbuilding.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"BannerRendererMixin",
+		"ClientLevelMixin",
+		"CushionRendererMixin",
+		"EntityHitboxDebugRendererMixin",
+		"LevelExtractorMixin",
+		"MovingBlockRenderStateMixin",
+		"MultiPlayerGameModeMixin",
+		"PistonHeadRendererMixin",
+		"RainbowRenderStateMixin",
+		"SkullBlockRendererMixin",
+		"SkullBlockRenderStateMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/template_bed_head",
+  "textures": {
+    "east": "vsbetterbuilding:block/rainbow_bed_head_east",
+    "up": "vsbetterbuilding:block/rainbow_bed_head_up",
+    "west": "vsbetterbuilding:block/rainbow_bed_head_west"
+  }
+}

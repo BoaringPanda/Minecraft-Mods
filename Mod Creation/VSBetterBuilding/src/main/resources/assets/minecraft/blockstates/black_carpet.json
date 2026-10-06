@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "rainbow=false": {
+      "model": "minecraft:block/black_carpet"
+    },
+    "rainbow=true": {
+      "model": "vsbetterbuilding:block/rainbow_carpet"
+    }
+  }
+}

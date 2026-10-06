@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:stonecutting",
-  "ingredient": "minecraft:blue_ice",
-  "result": {
-    "count": 2,
-    "id": "bettervanillabuilding:blue_ice_slab"
-  }
-}

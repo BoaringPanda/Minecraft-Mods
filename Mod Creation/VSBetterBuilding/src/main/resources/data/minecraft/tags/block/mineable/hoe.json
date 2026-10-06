@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "vsbetterbuilding:moss_stairs",
+    "vsbetterbuilding:moss_slab",
+    "vsbetterbuilding:pale_moss_stairs",
+    "vsbetterbuilding:pale_moss_slab",
+    "vsbetterbuilding:moss_wall",
+    "vsbetterbuilding:pale_moss_wall"
+  ]
+}

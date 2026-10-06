@@ -1,0 +1,32 @@
+{
+  "replace": false,
+  "values": [
+    "vsbetterbuilding:smooth_stone_stairs",
+    "vsbetterbuilding:deepslate_stairs",
+    "vsbetterbuilding:moss_stairs",
+    "vsbetterbuilding:pale_moss_stairs",
+    "vsbetterbuilding:snow_stairs",
+    "vsbetterbuilding:packed_ice_stairs",
+    "vsbetterbuilding:blue_ice_stairs",
+    "vsbetterbuilding:calcite_stairs",
+    "vsbetterbuilding:obsidian_stairs",
+    "vsbetterbuilding:amethyst_stairs",
+    "vsbetterbuilding:terracotta_stairs",
+    "vsbetterbuilding:white_terracotta_stairs",
+    "vsbetterbuilding:orange_terracotta_stairs",
+    "vsbetterbuilding:magenta_terracotta_stairs",
+    "vsbetterbuilding:light_blue_terracotta_stairs",
+    "vsbetterbuilding:yellow_terracotta_stairs",
+    "vsbetterbuilding:lime_terracotta_stairs",
+    "vsbetterbuilding:pink_terracotta_stairs",
+    "vsbetterbuilding:gray_terracotta_stairs",
+    "vsbetterbuilding:light_gray_terracotta_stairs",
+    "vsbetterbuilding:cyan_terracotta_stairs",
+    "vsbetterbuilding:purple_terracotta_stairs",
+    "vsbetterbuilding:blue_terracotta_stairs",
+    "vsbetterbuilding:brown_terracotta_stairs",
+    "vsbetterbuilding:green_terracotta_stairs",
+    "vsbetterbuilding:red_terracotta_stairs",
+    "vsbetterbuilding:black_terracotta_stairs"
+  ]
+}

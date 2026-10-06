@@ -1,7 +1,0 @@
-{
-  "type": "minecraft:stonecutting",
-  "ingredient": "minecraft:obsidian",
-  "result": {
-    "id": "bettervanillabuilding:obsidian_wall"
-  }
-}

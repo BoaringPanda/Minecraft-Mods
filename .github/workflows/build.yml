@@ -12,7 +12,7 @@ jobs:
     # Each mod lives in its own folder. To add another mod, copy this job and change the folder name.
     defaults:
       run:
-        working-directory: "Mod Creation/BetterVanillaBuilding"
+        working-directory: "Mod Creation/VSBetterBuilding"
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
