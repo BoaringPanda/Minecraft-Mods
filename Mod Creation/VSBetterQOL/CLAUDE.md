@@ -10,7 +10,7 @@ Dylan renamed it 2026-10-04 to match the VS series, before any release. Worlds f
 ## Stack
 - Minecraft 26.3 (date-based versions, **Mojang mappings**: `net.minecraft.resources.Identifier`, `net.minecraft.client.Minecraft`),
   Fabric Loader 0.19.5, Fabric API 0.160.7+26.3, Loom 1.18.2, Gradle wrapper 9.7.1, Java 25. Versions live in `gradle.properties`.
-- Split source sets: `src/main` (common + server) and `src/client` (client only: renderers).
+- Split source sets: `src/main` (common + server) and `src/client` (client only: screens, HUD, tooltips).
 - Mixins: `vsbetterqol.mixins.json` (common, `mixin/`) and `vsbetterqol.client.mixins.json` (client only,
   `src/client/.../client/mixin/`, listed in `fabric.mod.json` with `"environment": "client"`).
 - Game source for reading: `./gradlew genSources`, then the `*-sources.jar` files under `.gradle/loom-cache/minecraftMaven/net/minecraft/`.
@@ -54,19 +54,9 @@ before: wood 2, stone 3, copper 3.5, iron 4.5, diamond 6.75, netherite 10.125 (i
   tags, so other mods' glass counts too if they tag it). Only the 7 vanilla pickaxes get it, because item tags aren't loaded when the
   event runs. The same class adds the axe bamboo rule (below).
 
-## Rename name tags in hand (Dylan, 2026-09-27)
-Right-clicking with a name tag opens a rename screen (text box, Accept, Cancel). Accept renames the tag (the whole stack, like the
-anvil) and uses one ink sac from anywhere in the inventory. Creative needs no ink sac. With no ink sac the screen doesn't open and the
-actionbar says "Ink sac needed" (Dylan's pick). Accept is greyed out for a blank or unchanged name, so names can't be removed this way
-(the anvil still does that).
-- Client: `VSBetterQOLClient` registers a `UseItemCallback` (client side only; it also fires for the singleplayer server).
-  "Use item" only runs after mob/block interactions, so a named tag still names a mob and chests still open. Does nothing (vanilla
-  behaviour) if the server can't receive the packet, i.e. doesn't have the mod. `NameTagScreen` is modelled on vanilla's
-  `DirectJoinServerScreen`.
-- Server: `NameTagRenaming` registers the `rename_name_tag` payload (hand + name) and re-checks everything: name tag in that hand,
-  `canRename` (creative or has an ink sac), anvil name rules (`StringUtil.filterText`, not blank, max 50, text filter). Plays
-  `INK_SAC_USE` via `level().playSound(null, ...)` (`Player.playSound` would skip the player who renamed).
-- Text: `assets/vsbetterqol/lang/en_us.json`.
+## Removed: renaming name tags in hand (Dylan, 2026-10-07)
+Right-click a name tag → rename screen, costing an ink sac (added 2026-09-27) was taken out in the 2026-10-07 clean-up. Name tags are
+vanilla again (anvil only). Don't bring it back unless Dylan asks.
 
 ## Swords are weapons, axes cut bamboo (Dylan, 2026-09-27)
 Swords hit mobs through grass/flowers/small plants and can't break any block except cobwebs and bamboo. Axes break bamboo instantly
@@ -193,6 +183,21 @@ cursor), and the hotbar on item tabs gets cleared like vanilla shift-click does 
 - **26.x input is SDL:** left mouse is `InputConstants.MOUSE_BUTTON_LEFT` = 1 (right = 3), not GLFW's 0. The container-click button passed
   to `slotClicked` is still 0 = left (vanilla's `getContainerClickButton` maps it).
 - `client/mixin/CreativeModeInventoryScreenInvoker`: calls private `isCreativeSlot` to skip the item list.
+
+## Status effects on the HUD (Dylan, 2026-10-07)
+Active effects show in a column in the top right instead of vanilla's rows: each is vanilla's icon box at 3/4 size and the time at half size (Dylan's picks, so more fit; ambient background for beacons,
+same last-10-seconds blink) with the time left to its left (the inventory's `m:ss` / infinity text). Good effects first, then the rest
+(Dylan's picks: compact icon + time, good first). A full column carries on in a new column to its left, so 40+ effects still fit. Columns
+stop 50px above the bottom so they never cover the hotbar/hearts/food. Vanilla's effect list beside the
+survival and creative inventories is removed (Dylan: messy), so the column stays visible behind those screens instead. Client only.
+- `client/mixin/EffectHudMixin`: HEAD of private `Hud.extractEffects`, always cancelled (replaces the layout), keeping vanilla's early-outs.
+  Vanilla's `Ordering.natural().reverse()` order and `showIcon()` filter, then a stable beneficial-first split. Box + icon drawn at vanilla's
+  24/18px inside a `pose()` `scale(0.75)` (`ICON_SCALE`), so 19px rows; the time text in its own `scale(0.5)` (`TEXT_SCALE`).
+  Each column is as wide as its widest time, next column 4px to its left. Sprites `hud/effect_background(_ambient)`,
+  `Hud.getMobEffectSprite`, time `MobEffectUtil.formatDuration(instance, 1, tickrate)`.
+- `client/mixin/EffectsInInventoryMixin`: `EffectsInInventory.extractRenderState` cancelled (no list, no hover tooltip) and `canSeeEffects`
+  → false. Only `InventoryScreen` and `CreativeModeInventoryScreen` use it; their `showsActiveEffects()` returns `canSeeEffects()`, which
+  is vanilla's "hide the HUD effects" check, so the HUD column keeps drawing under them.
 
 ## Coloured armor bar (Dylan, 2026-10-07)
 Each worn armor piece colours the armor points it gives (1 armor = half an icon) in its material's colour, helmet first from the left

@@ -8,6 +8,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -31,6 +32,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 // Text is lang key enchantment.<namespace>.<id>.desc, so other mods' enchantments without one show nothing. Gear stays vanilla.
 @Mixin(ItemEnchantments.class)
 public abstract class ItemEnchantmentsMixin {
+	@Unique
 	private static final int VSBETTERQOL$WRAP_WIDTH = 200;
 
 	// Both of vanilla's loops (tooltip order, then the rest) add each name with this call.
@@ -60,10 +62,12 @@ public abstract class ItemEnchantmentsMixin {
 	}
 
 	// Stored enchantments are the book's; a sword's ENCHANTMENTS component is a different object.
+	@Unique
 	private boolean vsbetterqol$isBook(DataComponentGetter components) {
 		return components.get(DataComponents.STORED_ENCHANTMENTS) == (Object) this;
 	}
 
+	@Unique
 	private static @Nullable String vsbetterqol$descriptionKey(Holder<Enchantment> enchantment) {
 		return enchantment.unwrapKey()
 				.map(key -> Util.makeDescriptionId("enchantment", key.identifier()) + ".desc")

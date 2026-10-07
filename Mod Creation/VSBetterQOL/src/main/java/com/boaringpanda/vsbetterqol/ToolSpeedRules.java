@@ -41,11 +41,11 @@ public final class ToolSpeedRules {
 			Items.NETHERITE_AXE, Float.MAX_VALUE,
 			Items.GOLDEN_AXE, Float.MAX_VALUE);
 
-	private ToolSpeedRules() {
-	}
-
 	private static final List<Item> SWORDS = List.of(
 			Items.WOODEN_SWORD, Items.STONE_SWORD, Items.COPPER_SWORD, Items.IRON_SWORD, Items.DIAMOND_SWORD, Items.NETHERITE_SWORD, Items.GOLDEN_SWORD);
+
+	private ToolSpeedRules() {
+	}
 
 	public static void register() {
 		addSpeedRule(PICKAXE_GLASS_SPEEDS, BREAKS_FASTER_WITH_PICKAXE);

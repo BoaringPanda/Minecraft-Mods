@@ -10,7 +10,6 @@ public class VSBetterQOL implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ToolSpeedRules.register();
-		NameTagRenaming.register();
 		PlacedLogs.register();
 		EnchantingLapis.register();
 		InventorySorting.register();

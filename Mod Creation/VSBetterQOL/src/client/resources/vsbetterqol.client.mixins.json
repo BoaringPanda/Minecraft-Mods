@@ -6,6 +6,8 @@
 		"AbstractContainerScreenAccessor",
 		"ArmorBarMixin",
 		"CreativeModeInventoryScreenInvoker",
+		"EffectHudMixin",
+		"EffectsInInventoryMixin",
 		"HudMixin",
 		"ItemEnchantmentsMixin",
 		"ItemStackMixin",

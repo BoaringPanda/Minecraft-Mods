@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -30,9 +31,11 @@ import com.boaringpanda.vsbetterqol.VSBetterQOL;
 @Mixin(Player.class)
 public abstract class PlayerMixin {
 	// The only blocks a sword can break (cobwebs, and bamboo through vanilla's own #minecraft:sword_instantly_mines).
+	@Unique
 	private static final TagKey<Block> SWORDS_CAN_BREAK = TagKey.create(Registries.BLOCK, VSBetterQOL.id("swords_can_break"));
 
 	// Entities a sword hit does nothing to.
+	@Unique
 	private static final TagKey<EntityType<?>> SWORDS_CANT_BREAK = TagKey.create(Registries.ENTITY_TYPE, VSBetterQOL.id("swords_cant_break"));
 
 	// This is vanilla's adventure-mode "can't break this" check, used by both the client and the server, so a sword on any other

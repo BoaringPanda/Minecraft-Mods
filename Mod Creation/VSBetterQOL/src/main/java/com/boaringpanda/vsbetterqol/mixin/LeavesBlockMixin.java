@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,7 +29,9 @@ import com.boaringpanda.vsbetterqol.PlacedLogs;
 public abstract class LeavesBlockMixin {
 	// 8-30 ticks after a leaf is cut off, on top of the up to ~6 ticks it takes vanilla to spread the distance through the tree. Same
 	// as VSLumberjackMod's Tree Falling (FallingCanopy), so both kinds of chopping look the same when both mods are installed.
+	@Unique
 	private static final int MIN_DECAY_DELAY = 8;
+	@Unique
 	private static final int MAX_DECAY_DELAY = 30;
 
 	@Shadow

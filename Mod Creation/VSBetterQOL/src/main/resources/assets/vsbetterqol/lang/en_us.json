@@ -1,8 +1,5 @@
 {
-	"gui.vsbetterqol.name_tag": "Name Tag",
-	"gui.vsbetterqol.name_tag.accept": "Accept",
 	"gui.vsbetterqol.sort": "Sort A-Z",
-	"message.vsbetterqol.ink_sac_needed": "Ink sac needed",
 	"message.vsbetterqol.about_to_break": "Your %s is about to break",
 	"message.vsbetterqol.about_to_break.axe": "Your axe is about to break",
 	"message.vsbetterqol.about_to_break.pickaxe": "Your pickaxe is about to break",
