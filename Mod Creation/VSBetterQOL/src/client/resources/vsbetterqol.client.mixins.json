@@ -3,16 +3,22 @@
 	"package": "com.boaringpanda.vsbetterqol.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"AbstractContainerScreenAccessor",
 		"ArmorBarMixin",
+		"AvatarRendererMixin",
 		"CreativeModeInventoryScreenInvoker",
 		"EffectHudMixin",
 		"EffectsInInventoryMixin",
+		"FirstPersonHandsAndItemsRendererMixin",
+		"HumanoidModelMixin",
 		"HudMixin",
 		"ItemEnchantmentsMixin",
 		"ItemStackMixin",
 		"ItemStackTooltipMixin",
 		"LocalPlayerMixin",
-		"QuickMoveDragMixin"
+		"MouseHandlerMixin",
+		"QuickMoveDragMixin",
+		"StonecutterScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

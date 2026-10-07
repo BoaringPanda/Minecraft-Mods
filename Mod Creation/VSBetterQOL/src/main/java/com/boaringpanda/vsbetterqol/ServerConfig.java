@@ -6,6 +6,8 @@ import java.util.Set;
 
 import io.netty.buffer.ByteBuf;
 
+import org.jspecify.annotations.Nullable;
+
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -40,8 +42,9 @@ public final class ServerConfig {
 			"true = on, false = off (yes/no works too). Changes apply the next time the world or server starts.",
 			"Singleplayer uses this file. On a server only the server's copy counts, and it applies to every player."), ALL);
 
-	// Keys of the settings the connected server has on, as it sent them. Client side only; empty until the server sends them.
-	private static volatile Set<String> clientView = Set.of();
+	// Keys of the settings the connected server has on, as it sent them. Client side only; null until the server sends them (never, on a
+	// server without the mod).
+	private static volatile @Nullable Set<String> clientView;
 
 	private ServerConfig() {
 	}
@@ -72,10 +75,20 @@ public final class ServerConfig {
 
 	// Whether a setting is on for this side: the server's own file on the server, what the server sent on the client.
 	public static boolean on(Option option, LevelAccessor level) {
-		return level.isClientSide() ? clientView.contains(option.key) : option.on;
+		Set<String> view = clientView;
+		return level.isClientSide() ? view != null && view.contains(option.key) : option.on;
+	}
+
+	// Client side: the connected server has the mod (it sent its settings). Features that need the mod on both sides check this.
+	public static boolean clientServerHasMod() {
+		return clientView != null;
 	}
 
 	// Client side: a new connection clears it (VSBetterQOLClient), then the server's SyncPayload fills it.
+	public static void clearClientView() {
+		clientView = null;
+	}
+
 	public static void setClientView(Collection<String> on) {
 		clientView = Set.copyOf(on);
 	}

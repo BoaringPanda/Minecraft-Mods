@@ -293,6 +293,92 @@ it's saved with the world, and breaking the table drops it. The enchanted item s
   `ContainerLevelAccess.NULL`.
 - `mixin/BlockEntityMixin`: HEAD of `BlockEntity.preRemoveSideEffects` (where containers drop their items) drops an enchanting table's stored
   lapis.
+- Picking the table up and carrying it (below) takes the lapis along: `mixin/EnchantingTableBlockEntityMixin` TAILs of
+  `collectImplicitComponents` (lapis → the carried stack's `minecraft:container`, so dying while carrying spills it too) and
+  `applyImplicitComponents` (placed → `store`). Needed because Fabric
+  attachments aren't saved by `saveCustomOnly`, the block entity data vanilla copies onto items.
+
+## Pick up lanterns, carry containers (Dylan, 2026-10-07/08)
+**Right-click** (Dylan meant right-click; it was first built as left-click by mistake) a lantern (any, `#minecraft:lanterns`) with an
+**empty hand** and it goes straight into the inventory, creative too. Sneak + right-click with an empty hand picks up a chest, trapped chest,
+copper chest, barrel, ender chest, enchanting table, brewing stand, beehive (not bee nests) or stonecutter **with everything inside** and the player
+**carries** it (below) until they right-click a block to set it down. Shulker boxes go straight into the inventory instead (Dylan: that
+makes sense for shulkers). With something in hand it's vanilla (Dylan: placing a chest against a chest must still work), and a plain
+right-click still opens containers. Always on, no config switch (Dylan's pick). The server does the work, so players without the mod can
+pick up and carry too; only the visuals and the client-side key locks need the mod.
+- `PickingUp`: Fabric `UseBlockCallback` (both sides, before vanilla's right-click on a block; main hand only). Carrying → `Carrying.place`.
+  Otherwise `canPickUp`: not spectator, empty main hand, `mayInteract` (spawn protection), not `blockActionRestricted` (adventure mode),
+  block in a tag (sneaking for containers). Client returns SUCCESS (arm swing, sends the use packet, doesn't try the off-hand item); server
+  picks up. Fires `PlayerBlockBreakEvents.BEFORE` (claim mods), vanilla's break particles/sound (`LevelEvent` 2001), `BLOCK_DESTROY` game
+  event, piglin anger for `#minecraft:guarded_by_piglins`. Removed with `UPDATE_ALL | UPDATE_SKIP_BLOCK_ENTITY_SIDEEFFECTS` (skips
+  `preRemoveSideEffects`, so nothing drops; fluid kept for waterlogged chests). Lanterns/shulkers: `Inventory.placeItemBackInInventory`.
+- Containers become an item stack = vanilla's creative Ctrl+pick-block copy: `getCloneItemStack(…, true)` + private static
+  `ServerGamePacketListenerImpl.addBlockDataToItem` (`mixin/ServerGamePacketListenerImplInvoker`): `BLOCK_ENTITY_DATA` + `collectComponents`
+  (`CONTAINER`, `BEES`, name, lock). Brewing fuel/progress ride in `BLOCK_ENTITY_DATA`, beehive honey in the clone stack's block state.
+  Unopened loot chests are unpacked first. Double chest: only the clicked half.
+- Which blocks: tags `vsbetterqol:picked_up_by_hand` and `vsbetterqol:picked_up_by_sneaking` (shulkers are told apart with
+  `#minecraft:shulker_boxes`).
+
+### Carrying (Dylan, 2026-10-08)
+Dylan noticed that full chests going into the inventory made every container a shulker box, so containers are carried instead and never
+become an inventory item (the earlier no-nesting rules, `PackedItems` + three shulker/bundle mixins + "too heavy", were removed with that).
+While carrying: Slowness I, no sprinting, hotbar locked (Dylan's picks), and nothing else works: no mining, hitting, using items or
+entities, no inventory/drop/swap-hands/pick-block keys. Right-click a block to set it down where a block would be placed. Dying spills it
+like it broke (Dylan: "hilarious"): contents scatter, the empty block drops. Logging out keeps it carried.
+- `Carrying`: persistent attachment `vsbetterqol:carried` (`ItemStack.CODEC`), synced to every client (`syncWith(ItemStack.STREAM_CODEC,
+  all())`) for drawing. `pickUp` sets it + endless Slowness I (`MobEffectInstance.INFINITE_DURATION`, amplifier 0). `place`:
+  `BlockItem.place(new BlockPlaceContext(player, hand, stack.copy(), hit))`, both sides (client prediction: block and sound at once); on
+  server success removes the attachment and only our Slowness (endless + amplifier 0). Fabric `AttackBlock`/`AttackEntity`/`UseEntity`/
+  `UseItem` callbacks FAIL while carrying (both sides). `ServerLivingEntityEvents.AFTER_DEATH`: spill (`CONTAINER` items dropped, then the
+  item without `CONTAINER`/`BLOCK_ENTITY_DATA`).
+- A carried brewing stand keeps brewing (Dylan, 2026-10-08; it can't be opened while carried, his pick): `CarriedBrewing` runs vanilla's
+  `BrewingStandBlockEntity.serverTick` every tick (`END_LEVEL_TICK`) on a stand that isn't in the world, loaded from the carried item
+  (`BLOCK_ENTITY_DATA.loadInto`, then `applyComponentsFromItemStack`, BlockItem's order), at the player's `blockPosition()` with an **air**
+  block state: that skips vanilla's `setBlock` for the bottle states and the comparator update, while the brew-done sound and leftover
+  items happen at the player. Written back into the item (the Ctrl+pick-block copy) every 20 ticks and on `flush` before placing, dying and
+  `DISCONNECT`; only synced when it changed. Cache = `WeakHashMap<ServerPlayer, BrewingStandBlockEntity>`, `forget` on a new pick-up.
+  **Vanilla bug fixed for this** (first version didn't work, 2026-10-08): loading a brewing stand from an item reads `BrewTime` before
+  the items (they come from the `container` component afterwards), so its remembered `ingredient` is air and the next tick resets the
+  brew. `mixin/BlockEntityMixin` TAIL of `BlockEntity.applyComponents`: a brewing stand with brew time left remembers slot 3's item
+  (`mixin/BrewingStandBlockEntityAccessor`). Covers the carried stand and setting it down.
+- `mixin/LivingEntityMixin`: `@ModifyVariable` HEAD of `LivingEntity.setSprinting` → false while carrying (LivingEntity's override is
+  where the sprint speed modifier goes, so `Entity`'s wouldn't do).
+- Hotbar: `mixin/ServerGamePacketListenerImplMixin` cancels `handleSetCarriedItem` (after its thread hop) and sends the slot back;
+  `client/mixin/MouseHandlerMixin` `@WrapWithCondition`s `Inventory.setSelectedSlot` in `onScroll`; `VSBetterQOLClient`
+  `START_CLIENT_TICK` eats `keyInventory`/`keyDrop`/`keySwapOffhand`/`keyPickItem`/`keyHotbarSlots` presses before vanilla reads them.
+- Looks (client): `client/CarriedBlockLayer` (player render layer via `LivingEntityRenderLayerRegistrationCallback` for `AvatarRenderer`):
+  the carried item (`ItemDisplayContext.NONE`, so a 1-block cube, scaled 0.6) at the front of the body (`body.translateAndRotate`, so it
+  leans with a crouch). Its `ItemStackRenderState` is Fabric render-state data `CARRIED`, filled by `client/mixin/AvatarRendererMixin`
+  (TAIL of `extractRenderState`, also clears both hand items). `client/mixin/HumanoidModelMixin`: TAIL of `setupAnim`, both arms forward
+  (-1.1 rad, +0.4 crouching) and turned in 0.3. First person: `client/mixin/FirstPersonHandsAndItemsRendererMixin` cancels
+  `submitHandsWithItems` and draws the block low in the middle of the view instead. Sizes/offsets are constants at the top of each class.
+## Stonecutter storage (Dylan, 2026-10-08)
+The stonecutter gets a row of 9 storage slots between the recipes and the "Inventory" label (Dylan's screenshot). Only blocks the stonecutter
+can cut go in. While crafting, when the input runs out it refills from storage with the **same block** (Dylan's pick), so the picked recipe
+stays up until that block is used up, and shift-clicking the result cuts all of it in one go. A manual take-out of the input doesn't refill.
+**One player at a time** (Dylan's pick): anyone else gets "The stonecutter is currently being used". Breaking it drops the storage. It can be
+carried (Carrying) with its storage. Needs the mod on both sides; a player without it (or on a server without it) gets the vanilla stonecutter.
+- `StonecutterStorage`: no block entity, so a persistent chunk attachment `vsbetterqol:stonecutter_storage` = `Map<String (BlockPos.asLong),
+  ItemContainerContents>`, always replaced, removed when empty (like `PlacedLogs`). `take`/`store`/`takeInto`; `dropRemoved` from
+  `mixin/LevelChunkMixin` (old state stonecutter, new state not; covers mining, explosions, pistons, commands). `enabledFor(player)`: server
+  `ServerPlayNetworking.canSend(player, SyncPayload.TYPE)`, client `ServerConfig.clientServerHasMod()` (the server sent its settings;
+  `clientView` is null until then). `inUse` scans `level.players()` for another open `StonecutterMenu` at the pos (stateless, no stale locks).
+- `mixin/StonecutterMenuMixin` (extends `AbstractContainerMenu` for `moveItemStackTo`/`clearContainer`, implements `StonecutterMenuStorage`):
+  `@ModifyArg` on `addStandardInventorySlots` y +22; constructor TAIL remembers the pos (every server menu, for the lock) and adds 9
+  `StonecutterStorage.StorageSlot`s (`mayPlace` = vanilla's `stonecutterRecipes().acceptsInput`) as slots **38-46** at y 75, after vanilla's,
+  so vanilla's hard-coded indices still work; server fills them with `takeInto`. `slotsChanged` HEAD: while crafting, an empty input is
+  refilled (up to a stack, `isSameItemSameComponents` with vanilla's previous `input`) before vanilla compares items, so the recipe list isn't
+  reset. `quickMoveStack`: storage → inventory (HEAD); inventory → input like vanilla, leftovers → storage (`@WrapOperation` ordinal 2).
+  `removed` TAIL: `store` back, or `clearContainer` to the player if the stonecutter is gone.
+- `mixin/StonecutterResultSlotMixin` (vanilla's unnamed result slot `StonecutterMenu$2`): sets the crafting flag around `inputSlot.remove(1)`
+  in `onTake`, which covers click and shift-click (vanilla's shift-click loop keeps going while the refill keeps the result).
+- `mixin/StonecutterBlockMixin`: HEAD of `useWithoutItem`, in use by someone else → actionbar `message.vsbetterqol.stonecutter_in_use`.
+  `PickingUp` refuses too.
+- `client/mixin/StonecutterScreenMixin` (+ `client/mixin/AbstractContainerScreenAccessor`, `imageHeight` is final): height 166 → 188,
+  `inventoryLabelY` +22; the background `blit` is drawn from vanilla's own texture in pieces (no new art): rows 0-72, two copies of the plain
+  rows 72-83, the inventory's top slot row (7,83 162×18) at y 74 for the storage, then rows 72-166 at +22.
+- Carrying: `minecraft:stonecutter` is in `picked_up_by_sneaking`; `PickingUp` puts `StonecutterStorage.take` into the carried stack's
+  `minecraft:container` (so dying spills it), and `mixin/BlockItemMixin` stores a placed stonecutter's `container` at its new pos.
 
 ## Double doors open together (Dylan, 2026-10-07)
 Right-clicking one door of a double door opens or closes the other one too. Sneak-click (empty hand) only moves the clicked door (Dylan's pick).

@@ -30,6 +30,11 @@ public final class EnchantingLapis {
 		return lapis;
 	}
 
+	// The table's lapis without removing it (empty if none). Don't change the returned stack.
+	public static ItemStack stored(EnchantingTableBlockEntity table) {
+		return table.getAttachedOrElse(LAPIS, ItemStack.EMPTY);
+	}
+
 	// Puts lapis back into the table, up to a full stack. Whatever doesn't fit stays in the given stack.
 	public static void store(EnchantingTableBlockEntity table, ItemStack lapis) {
 		if (lapis.isEmpty()) {

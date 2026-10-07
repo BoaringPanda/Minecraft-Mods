@@ -39,6 +39,7 @@
 	"message.vsbetterqol.about_to_break.brush": "Your brush is about to break",
 	"message.vsbetterqol.about_to_break.carrot_on_a_stick": "Your carrot on a stick is about to break",
 	"message.vsbetterqol.about_to_break.warped_fungus_on_a_stick": "Your warped fungus on a stick is about to break",
+	"message.vsbetterqol.stonecutter_in_use": "The stonecutter is currently being used",
 	"tooltip.vsbetterqol.hold_shift": "Hold Shift for info",
 	"enchantment.minecraft.protection.desc": "Provides extra protection against flat damage (all armor)",
 	"enchantment.minecraft.fire_protection.desc": "Provides extra protection against all fire/lava sources (all armor)",
