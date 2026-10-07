@@ -13,7 +13,6 @@ public class VSBetterQOL implements ModInitializer {
 		ToolSpeedRules.register();
 		PlacedLogs.register();
 		EnchantingLapis.register();
-		InventorySorting.register();
 	}
 
 	public static Identifier id(String path) {

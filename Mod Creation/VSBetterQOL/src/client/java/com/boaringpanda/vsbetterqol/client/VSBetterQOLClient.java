@@ -17,7 +17,6 @@ public class VSBetterQOLClient implements ClientModInitializer {
 		// mod (which never sends them) those stay vanilla.
 		ClientPlayConnectionEvents.INIT.register((handler, client) -> ServerConfig.setClientView(List.of()));
 		ClientPlayNetworking.registerGlobalReceiver(ServerConfig.SyncPayload.TYPE, (payload, context) -> ServerConfig.setClientView(payload.on()));
-		SortButtons.register();
 		// Draws the hunger/saturation image foods get in their tooltip (mixin/ItemStackTooltipMixin).
 		ClientTooltipComponentCallback.EVENT.register(data -> data instanceof FoodTooltip food ? new ClientFoodTooltip(food) : null);
 	}

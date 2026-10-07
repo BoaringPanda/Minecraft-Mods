@@ -25,7 +25,7 @@ import com.boaringpanda.vsbetterqol.config.Option;
 // client side stays vanilla.
 public final class ServerConfig {
 	public static final Option SWORDS_ARE_WEAPONS = new Option("swords_are_weapons",
-			"Swords only break cobwebs and bamboo, can't hit item frames, armor stands, paintings and other decorations, and hit mobs through grass and flowers. Off: swords work like vanilla.");
+			"true: swords can't break blocks (except cobwebs and bamboo) and hit mobs straight through grass, flowers and other plants. false: swords break blocks and hit plants like normal.");
 	public static final Option FAST_LEAF_DECAY = new Option("fast_leaf_decay",
 			"Leaves cut off from their tree are gone within about 1.5 seconds, and logs placed by players don't keep natural leaves alive. Off: leaves decay like vanilla.");
 	public static final Option DOUBLE_DOORS = new Option("double_doors",

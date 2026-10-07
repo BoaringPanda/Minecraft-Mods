@@ -35,7 +35,9 @@ starts, e.g. on a server host; Dylan 2026-10-07) and read again on every `SERVER
 restart). Singleplayer uses the player's own file; on a server only the server's copy counts, for everyone.
 - `swords_are_weapons` (`PlayerMixin` all three + client `LocalPlayerMixin` hit-through). Off: also restores vanilla's "swords break
   nothing in creative", because `ToolSpeedRules` sets `canDestroyBlocksInCreative` on the 7 vanilla swords at startup (default item
-  components can't depend on a per-world setting): `blockActionRestricted` returns true for `isVanillaSword` in creative.
+  components can't depend on a per-world setting): `blockActionRestricted` returns true for `isVanillaSword` in creative. Dylan
+  checked 2026-10-07: keep that exact-vanilla creative behaviour (vanilla 26.3 swords break nothing in creative, cobwebs included).
+  The file comment only mentions blocks + plants (Dylan's pick); the decorations rule is still part of this switch.
 - `fast_leaf_decay` (`LeavesBlockMixin` all three, so off = fully vanilla leaves, placed logs hold leaves again; chosen
   2026-10-07 so "off" means vanilla, Dylan can split it if he wants). `PlacedLogs` keeps tracking either way, so turning it back on is right straight away.
 - `double_doors` (`DoorBlockMixin`), `durability_warning` (`DurabilityWarning.onDamage`).
@@ -61,7 +63,7 @@ restart). Singleplayer uses the player's own file; on a server only the server's
   (slider 50-200%, step 10, default 100 = the original look; Dylan 2026-10-07, for players who can't see small icons well:
   `EffectHudMixin` multiplies `ICON_SCALE`/`TEXT_SCALE` by it and works the box/row size out from that), `armor_bar_colors`
   (`ArmorBarMixin`), `durability_tooltip` (client `ItemStackMixin`: off = vanilla, F3+H only), `enchanted_book_info`
-  (`ItemEnchantmentsMixin`), `shift_drag` (`QuickMoveDragMixin`), `sort_buttons` (`SortButtons`, on screen init).
+  (`ItemEnchantmentsMixin`), `shift_drag` (`QuickMoveDragMixin`).
 - New client feature → add an `Option` to `ClientConfig.ALL`, its two lang keys, and a check in the feature.
 - Mod icon (Dylan's art, 2026-10-07): `assets/vsbetterqol/icon.png` (`"icon"` in fabric.mod.json), shrunk from his 2000×2000 original to
   512×512 (107 KB) so the jar stays small; the full-size original is for Modrinth.
@@ -195,25 +197,10 @@ so it never warns. Server side, so it needs the mod on the server. Players witho
   right ("leggings/boots/shears are"). The sound is sent with `ClientboundSoundPacket`, because `Player.playSound` skips that player.
   Wolf armour has no player, so it never warns.
 
-## Sort button (Dylan, 2026-10-07)
-A small 10x10 "Sort A-Z" button sits just above the top-right slot, centred on it (`slot.x + 3`, `slot.y - 13`, Dylan's
-screenshot 2026-10-07). In the survival inventory it sorts the 27 main slots (hotbar,
-armour and offhand stay put, Dylan's pick). Chests, barrels, ender chests, chest minecarts/boats (all `ChestMenu`) and shulker boxes get two:
-one above the container's top-right slot, and one for the player's inventory. Order: hover name A-Z ignoring case (renamed items by their
-name), then item id, then bigger stacks first. Same item + components merge first, so partial stacks join up and empties end up at the
-bottom. Creative gets the player button too (Dylan, 2026-10-07), only on the Survival Inventory tab (other tabs don't show the main
-inventory). Needs the mod on the server (the button only shows if it can send the packet).
-- Creative: `CreativeModeInventoryScreen`'s menu is client-only, so its button sends `player.inventoryMenu.containerId` (what the server
-  has open in creative). On the inventory tab its `SlotWrapper`s use the menu index as the container slot, and 9..35 is the main
-  inventory both ways, so `sortableSlots` finds them. Tabs swap the slots without a re-init, so the button is looked up every frame and
-  hidden when there's no slot.
-- `InventorySorting` (main): `sort_inventory` payload (`containerId`, `playerInventory`). The server re-checks the open menu's id and not
-  spectator. `sortableSlots` (shared with the client) = menu slots whose container is the player's `Inventory` with container slot 9..35,
-  or for `ChestMenu`/`ShulkerBoxMenu` the other slots. It writes back with `Slot.set`, then `broadcastChanges`.
-- `client/SortButtons`: Fabric `ScreenEvents.AFTER_INIT` for `InventoryScreen`/`ContainerScreen`/`ShulkerBoxScreen` adds an `ImageButton`
-  (sprites `vsbetterqol:sort_button(_highlighted)`) via `Screens.getWidgets`, above `sortableSlots(...).get(8)`. `beforeExtract` re-places
-  it every frame from `client/mixin/AbstractContainerScreenAccessor` (`leftPos`/`topPos`), because the recipe book moves the GUI without
-  a re-init.
+## Removed: sort buttons (Dylan, 2026-10-07)
+The Sort A-Z buttons (inventory/chests/shulker boxes, `InventorySorting` + `client/SortButtons`) were taken out. Dylan may make a
+separate Terraria-style sorting mod instead (press a button, items go into chests). Don't bring them back unless he asks; the code is in
+git history before this removal.
 
 ## Shift-drag quick-move (Dylan, 2026-10-07)
 Holding shift and dragging the left mouse across slots quick-moves each one, as if each was shift-clicked (Mouse Tweaks style). Every

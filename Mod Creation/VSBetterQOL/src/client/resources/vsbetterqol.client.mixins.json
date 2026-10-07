@@ -3,7 +3,6 @@
 	"package": "com.boaringpanda.vsbetterqol.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"AbstractContainerScreenAccessor",
 		"ArmorBarMixin",
 		"CreativeModeInventoryScreenInvoker",
 		"EffectHudMixin",

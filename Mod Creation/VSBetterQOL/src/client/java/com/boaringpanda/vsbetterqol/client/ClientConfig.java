@@ -26,12 +26,10 @@ public final class ClientConfig {
 			"Hold Shift on an enchanted book to read what each enchantment does.");
 	public static final Option SHIFT_DRAG = new Option("shift_drag",
 			"Hold Shift and drag the left mouse across slots to quick-move each one. Using Mouse Tweaks or another inventory mod that does this? Turn this off so they don't clash.");
-	public static final Option SORT_BUTTONS = new Option("sort_buttons",
-			"Shows Sort A-Z buttons on your inventory, chests, barrels, ender chests and shulker boxes. Needs the mod on the server too. Using another inventory sorting mod? Turn this off so they don't clash.");
 
 	// File and settings screen order (two per row on the screen, so the effect column and its size share a row).
 	public static final List<Setting> ALL = List.of(SATURATION_BAR, FOOD_TOOLTIP, EFFECT_COLUMN, EFFECT_COLUMN_SIZE, ARMOR_BAR_COLORS,
-			DURABILITY_TOOLTIP, ENCHANTED_BOOK_INFO, SHIFT_DRAG, SORT_BUTTONS);
+			DURABILITY_TOOLTIP, ENCHANTED_BOOK_INFO, SHIFT_DRAG);
 
 	private static final ConfigFile FILE = new ConfigFile("vsbetterqol-client.properties", List.of(
 			"VS Better QOL: your own settings (they only change your game).",
