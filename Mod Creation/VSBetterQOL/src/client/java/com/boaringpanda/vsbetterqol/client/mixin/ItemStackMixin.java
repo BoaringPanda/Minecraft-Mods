@@ -2,6 +2,7 @@ package com.boaringpanda.vsbetterqol.client.mixin;
 
 import java.util.function.Consumer;
 
+import com.boaringpanda.vsbetterqol.client.ClientConfig;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,17 +41,17 @@ public abstract class ItemStackMixin {
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/TooltipFlag;isAdvanced()Z"))
 	private void vsbetterqol$addDurability(Item.TooltipContext context, TooltipDisplay display, Player player, TooltipFlag tooltipFlag,
 			Consumer<Component> builder, CallbackInfo ci) {
-		if (this.isDamaged() && display.shows(DataComponents.DAMAGE)) {
+		if (ClientConfig.DURABILITY_TOOLTIP.on && this.isDamaged() && display.shows(DataComponents.DAMAGE)) {
 			builder.accept(Component.translatable("item.durability", this.getMaxDamage() - this.getDamageValue(), this.getMaxDamage())
 					.withColor(this.getBarColor()));
 		}
 	}
 
-	// Skips vanilla's uncoloured F3+H line, so durability never shows twice.
+	// Skips vanilla's uncoloured F3+H line, so durability never shows twice. Switched off (ClientConfig), it's all vanilla.
 	@ModifyExpressionValue(
 			method = "addDetailsToTooltip",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isDamaged()Z"))
 	private boolean vsbetterqol$skipVanillaDurability(boolean damaged) {
-		return false;
+		return !ClientConfig.DURABILITY_TOOLTIP.on && damaged;
 	}
 }

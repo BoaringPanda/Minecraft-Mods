@@ -28,6 +28,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import com.boaringpanda.vsbetterqol.ServerConfig;
 import com.boaringpanda.vsbetterqol.VSBetterQOL;
 
 @Mixin(LocalPlayer.class)
@@ -51,7 +52,8 @@ public abstract class LocalPlayerMixin {
 			Entity cameraEntity, double range, float a, boolean withLiquids, Operation<HitResult> original,
 			@Share("plantHit") LocalRef<HitResult> plantHit) {
 		HitResult hit = original.call(cameraEntity, range, a, withLiquids);
-		if (!(cameraEntity instanceof Player player) || !player.getMainHandItem().is(ItemTags.SWORDS)) {
+		if (!(cameraEntity instanceof Player player) || !player.getMainHandItem().is(ItemTags.SWORDS)
+				|| !ServerConfig.on(ServerConfig.SWORDS_ARE_WEAPONS, player.level())) {
 			return hit;
 		}
 

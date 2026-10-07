@@ -1,6 +1,7 @@
 package com.boaringpanda.vsbetterqol.client.mixin;
 
 import com.boaringpanda.vsbetterqol.VSBetterQOL;
+import com.boaringpanda.vsbetterqol.client.ClientConfig;
 
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,6 +45,9 @@ public abstract class HudMixin {
 	// Same spots as vanilla's shanks. They only jiggle at 0 saturation, when there's no outline.
 	@Inject(method = "extractFood", at = @At("TAIL"))
 	private void vsbetterqol$extractSaturation(GuiGraphicsExtractor graphics, Player player, int yLineBase, int xRight, CallbackInfo ci) {
+		if (!ClientConfig.SATURATION_BAR.on) {
+			return;
+		}
 		FoodData foodData = player.getFoodData();
 		int food = foodData.getFoodLevel();
 		float saturation = foodData.getSaturationLevel();

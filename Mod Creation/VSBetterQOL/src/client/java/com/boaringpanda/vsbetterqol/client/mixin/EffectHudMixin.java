@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.boaringpanda.vsbetterqol.client.ClientConfig;
 import com.google.common.collect.Ordering;
 
 import net.minecraft.client.DeltaTracker;
@@ -37,15 +38,14 @@ public abstract class EffectHudMixin {
 	private static final Identifier EFFECT_BACKGROUND = Identifier.withDefaultNamespace("hud/effect_background");
 	@Unique
 	private static final Identifier EFFECT_BACKGROUND_AMBIENT = Identifier.withDefaultNamespace("hud/effect_background_ambient");
+	// At the size slider's 100% (ClientConfig); the slider scales both.
 	@Unique
 	private static final float ICON_SCALE = 0.75F;
 	@Unique
 	private static final float TEXT_SCALE = 0.5F;
-	// Vanilla's 24px box at ICON_SCALE, and a 1px gap.
+	// Vanilla's effect box.
 	@Unique
-	private static final int BOX = 18;
-	@Unique
-	private static final int ROW_HEIGHT = BOX + 1;
+	private static final int BACKGROUND_SIZE = 24;
 	// Columns stop this far above the bottom, so outer columns never cover the hotbar, hearts, armor, food or air.
 	@Unique
 	private static final int BOTTOM_SPACE = 50;
@@ -56,6 +56,10 @@ public abstract class EffectHudMixin {
 
 	@Inject(method = "extractEffects", at = @At("HEAD"), cancellable = true)
 	private void vsbetterqol$extractEffectColumns(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+		// Switched off: vanilla's rows of icons.
+		if (!ClientConfig.EFFECT_COLUMN.on) {
+			return;
+		}
 		ci.cancel();
 		// Vanilla's checks: nothing to show, or a screen already lists them (none in vanilla now, see EffectsInInventoryMixin).
 		Collection<MobEffectInstance> active = this.minecraft.player.getActiveEffects();
@@ -72,10 +76,17 @@ public abstract class EffectHudMixin {
 		}
 		effects.addAll(rest);
 
+		float size = ClientConfig.EFFECT_COLUMN_SIZE.value / 100.0F;
+		float iconScale = ICON_SCALE * size;
+		float textScale = TEXT_SCALE * size;
+		// The scaled box (18px at 100%), and a 1px gap.
+		int box = Mth.ceil(BACKGROUND_SIZE * iconScale);
+		int rowHeight = box + 1;
+
 		Font font = this.minecraft.font;
 		float tickrate = this.minecraft.level.tickRateManager().tickrate();
 		int top = this.minecraft.isDemo() ? 16 : 1;
-		int rows = Math.max((graphics.guiHeight() - BOTTOM_SPACE - top) / ROW_HEIGHT, 1);
+		int rows = Math.max((graphics.guiHeight() - BOTTOM_SPACE - top) / rowHeight, 1);
 		int right = graphics.guiWidth() - 1;
 		for (int start = 0; start < effects.size(); start += rows) {
 			List<MobEffectInstance> column = effects.subList(start, Math.min(start + rows, effects.size()));
@@ -84,16 +95,16 @@ public abstract class EffectHudMixin {
 			for (MobEffectInstance instance : column) {
 				Component time = MobEffectUtil.formatDuration(instance, 1.0F, tickrate);
 				times.add(time);
-				textWidth = Math.max(textWidth, Mth.ceil(font.width(time) * TEXT_SCALE));
+				textWidth = Math.max(textWidth, Mth.ceil(font.width(time) * textScale));
 			}
-			int x = right - BOX;
+			int x = right - box;
 			for (int row = 0; row < column.size(); row++) {
 				MobEffectInstance instance = column.get(row);
-				int y = top + row * ROW_HEIGHT;
-				// Vanilla's box and icon at vanilla's sizes, scaled down.
+				int y = top + row * rowHeight;
+				// Vanilla's box and icon at vanilla's sizes, scaled.
 				graphics.pose().pushMatrix();
 				graphics.pose().translate(x, y);
-				graphics.pose().scale(ICON_SCALE);
+				graphics.pose().scale(iconScale);
 				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, instance.isAmbient() ? EFFECT_BACKGROUND_AMBIENT : EFFECT_BACKGROUND, 0, 0, 24, 24);
 				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, Hud.getMobEffectSprite(instance.getEffect()), 3, 3, 18, 18,
 						ARGB.white(vsbetterqol$alpha(instance)));
@@ -101,8 +112,8 @@ public abstract class EffectHudMixin {
 				// The time, right-aligned 2px left of the box and centred on it.
 				Component time = times.get(row);
 				graphics.pose().pushMatrix();
-				graphics.pose().translate(x - 2 - font.width(time) * TEXT_SCALE, y + (BOX - font.lineHeight * TEXT_SCALE) / 2.0F);
-				graphics.pose().scale(TEXT_SCALE);
+				graphics.pose().translate(x - 2 - font.width(time) * textScale, y + (box - font.lineHeight * textScale) / 2.0F);
+				graphics.pose().scale(textScale);
 				graphics.text(font, time, 0, 0, 0xFFFFFFFF);
 				graphics.pose().popMatrix();
 			}

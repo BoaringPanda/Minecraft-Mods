@@ -21,6 +21,51 @@ Run from this folder (where `gradlew` is), not the repo root. `JAVA_HOME` must p
 - `./gradlew build` builds the mod and copies the jar into `jars/` (git-ignored, jars never go to GitHub).
 - `./gradlew runClient` starts a dev game with the mod.
 
+## Config files (Dylan, 2026-10-07)
+Two files: the player's own client settings (with a Mod Menu screen) and the world/server settings (file only). Everything not listed
+is always on (Dylan: nobody wants those off, e.g. blast furnace recipes).
+- Shared code in `config/`: sealed `Setting` (key + English comment) with `Option` (on/off, default on; `false`/`no`/`off` = off,
+  anything else = on) and `Slider` (a percentage: min/max/step/default; clamped and rounded to a step, junk keeps the value).
+  `ConfigFile` reads with `java.util.Properties` and re-saves after every load (new settings appear after updates; not saved over if
+  the read failed), written by hand with a header and a comment per setting so it reads well in Notepad.
+
+### Server config
+`ServerConfig` (main), `config/vsbetterqol-server.properties`, created/read at launch (so it can be edited before any world or server
+starts, e.g. on a server host; Dylan 2026-10-07) and read again on every `SERVER_STARTING` (singleplayer: reopen the world, no game
+restart). Singleplayer uses the player's own file; on a server only the server's copy counts, for everyone.
+- `swords_are_weapons` (`PlayerMixin` all three + client `LocalPlayerMixin` hit-through). Off: also restores vanilla's "swords break
+  nothing in creative", because `ToolSpeedRules` sets `canDestroyBlocksInCreative` on the 7 vanilla swords at startup (default item
+  components can't depend on a per-world setting): `blockActionRestricted` returns true for `isVanillaSword` in creative.
+- `fast_leaf_decay` (`LeavesBlockMixin` all three, so off = fully vanilla leaves, placed logs hold leaves again; chosen
+  2026-10-07 so "off" means vanilla, Dylan can split it if he wants). `PlacedLogs` keeps tracking either way, so turning it back on is right straight away.
+- `double_doors` (`DoorBlockMixin`), `durability_warning` (`DurabilityWarning.onDamage`).
+- Sync: swords and doors run on both sides, so on `ServerPlayConnectionEvents.JOIN` the server sends `SyncPayload` (`server_settings`:
+  the keys that are on) and the client side reads `ServerConfig.on(option, level)` = `level.isClientSide() ? clientView : option.on`.
+  Separate fields, so singleplayer's shared JVM can't mix them up. `ClientPlayConnectionEvents.INIT` clears `clientView`, so on a
+  server without the mod (never sends it) swords/doors are vanilla on the client too (before 2026-10-07 the client still restricted
+  swords there).
+
+### Client config
+- `client/ClientConfig`: the client `Option`s/`Slider` and their `ALL` order (two per row on screen, so the effect column and its size
+  share a row), `config/vsbetterqol-client.properties`. Each feature checks its setting every call, so changes apply instantly.
+- `client/ClientConfigScreen`: extends vanilla's `OptionsSubScreen` (Video Settings look), one widget per setting, two per row,
+  tooltip `option.vsbetterqol.<key>.tooltip`: `OptionInstance.createBoolean` ON/OFF button, or for a `Slider` an `OptionInstance`
+  over `IntRange(min/step, max/step).xmap(×step)` (vanilla's Max Framerate pattern; `xmap` has no codec, so `Codec.intRange` is passed)
+  labelled with vanilla's `options.percent_value`. `removed()` saves our file instead of options.txt.
+- `client/ModMenuIntegration` (`ModMenuApi`, `"modmenu"` entrypoint): Mods → VS Better QOL → settings. Mod Menu is optional for
+  players (no `depends`). Dev: `implementation("com.terraformersmc:modmenu:21.0.0") { transitive = false }` from
+  `https://maven.terraformersmc.com/` (its POM only lists Fabric API modules we already have), so runClient has it and it's not in our jar.
+  Dylan approved this download; ask before adding any other dependency.
+- Options and where they're checked: `saturation_bar` (`HudMixin`), `food_tooltip` (`ItemStackTooltipMixin`), `effect_column`
+  (`EffectHudMixin` + `EffectsInInventoryMixin`: off = vanilla HUD icons and the inventory effect list is back), `effect_column_size`
+  (slider 50-200%, step 10, default 100 = the original look; Dylan 2026-10-07, for players who can't see small icons well:
+  `EffectHudMixin` multiplies `ICON_SCALE`/`TEXT_SCALE` by it and works the box/row size out from that), `armor_bar_colors`
+  (`ArmorBarMixin`), `durability_tooltip` (client `ItemStackMixin`: off = vanilla, F3+H only), `enchanted_book_info`
+  (`ItemEnchantmentsMixin`), `shift_drag` (`QuickMoveDragMixin`), `sort_buttons` (`SortButtons`, on screen init).
+- New client feature → add an `Option` to `ClientConfig.ALL`, its two lang keys, and a check in the feature.
+- Mod icon (Dylan's art, 2026-10-07): `assets/vsbetterqol/icon.png` (`"icon"` in fabric.mod.json), shrunk from his 2000×2000 original to
+  512×512 (107 KB) so the jar stays small; the full-size original is for Modrinth.
+
 ## Farmland can't be trampled (Dylan, 2026-09-26, empty farmland too since 2026-09-30)
 Jumping or falling onto farmland never tramples it to dirt, with or without a crop on it, for players and mobs. It started as
 crops-only (a `protects_farmland` block tag); Dylan then asked for empty farmland too, so the tag is gone. Farmland still turns to
@@ -197,7 +242,8 @@ survival and creative inventories is removed (Dylan: messy), so the column stays
   `Hud.getMobEffectSprite`, time `MobEffectUtil.formatDuration(instance, 1, tickrate)`.
 - `client/mixin/EffectsInInventoryMixin`: `EffectsInInventory.extractRenderState` cancelled (no list, no hover tooltip) and `canSeeEffects`
   → false. Only `InventoryScreen` and `CreativeModeInventoryScreen` use it; their `showsActiveEffects()` returns `canSeeEffects()`, which
-  is vanilla's "hide the HUD effects" check, so the HUD column keeps drawing under them.
+  is vanilla's "hide the HUD effects" check, so the HUD column keeps drawing under them. Both only while `effect_column` is on
+  (Client config): switched off, the HUD and the inventory list are fully vanilla again (Dylan, 2026-10-07).
 
 ## Coloured armor bar (Dylan, 2026-10-07)
 Each worn armor piece colours the armor points it gives (1 armor = half an icon) in its material's colour, helmet first from the left

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import com.boaringpanda.vsbetterqol.VSBetterQOL;
+import com.boaringpanda.vsbetterqol.client.ClientConfig;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -69,6 +70,9 @@ public abstract class ArmorBarMixin {
 	// Same spots as vanilla's icons. Only reached with armor above 0, vanilla returns before the tail otherwise.
 	@Inject(method = "extractArmor", at = @At("TAIL"))
 	private static void vsbetterqol$tintArmor(GuiGraphicsExtractor graphics, Player player, int yLineBase, int numHealthRows, int healthRowHeight, int xLeft, CallbackInfo ci) {
+		if (!ClientConfig.ARMOR_BAR_COLORS.on) {
+			return;
+		}
 		int armor = player.getArmorValue();
 		int[] colors = new int[Math.min(armor, 20)];
 		int itemArmor = 0;

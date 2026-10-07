@@ -9,6 +9,7 @@ public class VSBetterQOL implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ServerConfig.register();
 		ToolSpeedRules.register();
 		PlacedLogs.register();
 		EnchantingLapis.register();

@@ -10,6 +10,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.level.block.Block;
@@ -57,6 +58,11 @@ public final class ToolSpeedRules {
 			Tool tool = builder.get(DataComponents.TOOL);
 			builder.set(DataComponents.TOOL, new Tool(tool.rules(), tool.defaultMiningSpeed(), tool.damagePerBlock(), true));
 		}));
+	}
+
+	// The 7 vanilla swords that get canDestroyBlocksInCreative above.
+	public static boolean isVanillaSword(ItemStack stack) {
+		return SWORDS.contains(stack.getItem());
 	}
 
 	// Adds a speed-only rule (like vanilla's sword-on-cobweb one) in front of each item's tool rules, so drops are untouched and

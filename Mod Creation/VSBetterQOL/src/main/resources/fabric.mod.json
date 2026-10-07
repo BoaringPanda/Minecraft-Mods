@@ -11,6 +11,7 @@
 		"sources": "https://github.com/BoaringPanda/Minecraft-Mods"
 	},
 	"license": "MIT",
+	"icon": "assets/vsbetterqol/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
@@ -18,6 +19,9 @@
 		],
 		"client": [
 			"com.boaringpanda.vsbetterqol.client.VSBetterQOLClient"
+		],
+		"modmenu": [
+			"com.boaringpanda.vsbetterqol.client.ModMenuIntegration"
 		]
 	},
 	"mixins": [

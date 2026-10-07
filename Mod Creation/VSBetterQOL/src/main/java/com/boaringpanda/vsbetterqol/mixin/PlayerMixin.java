@@ -20,14 +20,17 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
+import com.boaringpanda.vsbetterqol.ServerConfig;
+import com.boaringpanda.vsbetterqol.ToolSpeedRules;
 import com.boaringpanda.vsbetterqol.VSBetterQOL;
 
 // Swords are weapons: they only break cobwebs and bamboo, and can't hit decorations (item frames, armor stands, paintings, ...).
-// Any #minecraft:swords item counts, other mods' swords too.
+// Any #minecraft:swords item counts, other mods' swords too. All of it follows ServerConfig's swords_are_weapons.
 @Mixin(Player.class)
 public abstract class PlayerMixin {
 	// The only blocks a sword can break (cobwebs, and bamboo through vanilla's own #minecraft:sword_instantly_mines).
@@ -42,7 +45,12 @@ public abstract class PlayerMixin {
 	// block gets no cracks and no break, exactly like adventure mode.
 	@ModifyReturnValue(method = "blockActionRestricted", at = @At("RETURN"))
 	private boolean vsbetterqol$swordsOnlyBreakAllowedBlocks(boolean restricted, Level level, BlockPos pos, GameType gameType) {
-		return restricted || ((Player) (Object) this).getMainHandItem().is(ItemTags.SWORDS) && !level.getBlockState(pos).is(SWORDS_CAN_BREAK);
+		ItemStack held = ((Player) (Object) this).getMainHandItem();
+		if (!ServerConfig.on(ServerConfig.SWORDS_ARE_WEAPONS, level)) {
+			// Switched off: vanilla, where swords break nothing in creative (ToolSpeedRules turned that on for this feature).
+			return restricted || gameType.isCreative() && ToolSpeedRules.isVanillaSword(held);
+		}
+		return restricted || held.is(ItemTags.SWORDS) && !level.getBlockState(pos).is(SWORDS_CAN_BREAK);
 	}
 
 	// Player.attack does nothing at all when this is true (client and server), so the item frame keeps its item, the armor stand
@@ -50,7 +58,9 @@ public abstract class PlayerMixin {
 	// check (skipAttackInteraction) is what breaks item frames, paintings and cushions.
 	@Inject(method = "cannotAttack", at = @At("HEAD"), cancellable = true)
 	private void vsbetterqol$swordsCantBreakDecorations(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-		if (((Player) (Object) this).getMainHandItem().is(ItemTags.SWORDS) && entity.is(SWORDS_CANT_BREAK)) {
+		Player player = (Player) (Object) this;
+		if (player.getMainHandItem().is(ItemTags.SWORDS) && entity.is(SWORDS_CANT_BREAK)
+				&& ServerConfig.on(ServerConfig.SWORDS_ARE_WEAPONS, player.level())) {
 			cir.setReturnValue(true);
 		}
 	}
@@ -64,6 +74,7 @@ public abstract class PlayerMixin {
 					target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
 	private boolean vsbetterqol$sweepSkipsDecorations(
 			LivingEntity nearby, ServerLevel level, DamageSource source, float damage, Operation<Boolean> original) {
-		return !nearby.is(SWORDS_CANT_BREAK) && original.call(nearby, level, source, damage);
+		boolean skip = nearby.is(SWORDS_CANT_BREAK) && ServerConfig.on(ServerConfig.SWORDS_ARE_WEAPONS, level);
+		return !skip && original.call(nearby, level, source, damage);
 	}
 }

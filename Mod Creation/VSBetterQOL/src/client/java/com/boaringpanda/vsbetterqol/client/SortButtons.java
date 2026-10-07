@@ -37,7 +37,7 @@ public final class SortButtons {
 
 	public static void register() {
 		ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
-			if (!ClientPlayNetworking.canSend(SortPayload.TYPE)) {
+			if (!ClientConfig.SORT_BUTTONS.on || !ClientPlayNetworking.canSend(SortPayload.TYPE)) {
 				return;
 			}
 			if (screen instanceof InventoryScreen || screen instanceof ContainerScreen || screen instanceof ShulkerBoxScreen) {

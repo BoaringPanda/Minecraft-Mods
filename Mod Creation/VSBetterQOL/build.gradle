@@ -21,6 +21,14 @@ loom {
 	}
 }
 
+repositories {
+	// Mod Menu's own maven (TerraformersMC, its authors).
+	maven {
+		name = "Terraformers"
+		url = "https://maven.terraformersmc.com/"
+	}
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -28,6 +36,13 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Mod Menu, for the settings button (client/ModMenuIntegration). Optional for players, so it's not a dependency in
+	// fabric.mod.json and never goes inside our jar; here it's only so we can build against it and runClient has it. Not
+	// transitive: the only things it pulls are Fabric API modules we already have.
+	implementation("com.terraformersmc:modmenu:${project.modmenu_version}") {
+		transitive = false
+	}
 
 	// Only for the prodClient/prodServer tasks below: the one Fabric API jar, exactly as a player downloads it
 	// (not transitive, or its modules would load a second time next to the copies already inside it).

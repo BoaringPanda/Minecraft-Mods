@@ -21,10 +21,12 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import com.boaringpanda.vsbetterqol.PlacedLogs;
+import com.boaringpanda.vsbetterqol.ServerConfig;
 
 // Leaves cut off from their logs are all gone within about 1.5 seconds instead of waiting for a random tick (about a minute on average).
 // Player-placed leaves are persistent, so vanilla's decaying() is false for them and they never decay, same as vanilla. Player-placed
-// logs don't hold up natural leaves (PlacedLogs).
+// logs don't hold up natural leaves (PlacedLogs). All of it follows ServerConfig's fast_leaf_decay (PlacedLogs keeps tracking either
+// way, so turning it back on finds the right logs).
 @Mixin(LeavesBlock.class)
 public abstract class LeavesBlockMixin {
 	// 8-30 ticks after a leaf is cut off, on top of the up to ~6 ticks it takes vanilla to spread the distance through the tree. Same
@@ -50,7 +52,8 @@ public abstract class LeavesBlockMixin {
 					target = "Lnet/minecraft/world/level/block/LeavesBlock;getDistanceAt(Lnet/minecraft/world/level/block/state/BlockState;)I"))
 	private static int vsbetterqol$ignorePlacedLogs(
 			BlockState neighbour, Operation<Integer> original, @Local(argsOnly = true) LevelAccessor level, @Local BlockPos.MutableBlockPos neighborPos) {
-		if (neighbour.is(BlockTags.PREVENTS_NEARBY_LEAF_DECAY) && PlacedLogs.isPlaced(level, neighborPos)) {
+		if (neighbour.is(BlockTags.PREVENTS_NEARBY_LEAF_DECAY) && ServerConfig.on(ServerConfig.FAST_LEAF_DECAY, level)
+				&& PlacedLogs.isPlaced(level, neighborPos)) {
 			return LeavesBlock.DECAY_DISTANCE;
 		}
 		return original.call(neighbour);
@@ -60,7 +63,7 @@ public abstract class LeavesBlockMixin {
 	// grew next to it in the meantime, vanilla's tick runs instead and saves it (a placed log doesn't, see above).
 	@Inject(method = "tick", at = @At("HEAD"), cancellable = true)
 	private void vsbetterqol$decay(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
-		if (this.decaying(state) && this.decaying(updateDistance(state, level, pos))) {
+		if (ServerConfig.FAST_LEAF_DECAY.on && this.decaying(state) && this.decaying(updateDistance(state, level, pos))) {
 			Block.dropResources(state, level, pos);
 			level.removeBlock(pos, false);
 			ci.cancel();
@@ -72,7 +75,7 @@ public abstract class LeavesBlockMixin {
 	@Inject(method = "tick", at = @At("TAIL"))
 	private void vsbetterqol$scheduleDecay(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
 		BlockState newState = level.getBlockState(pos);
-		if (newState.getBlock() == (Object) this && this.decaying(newState)) {
+		if (ServerConfig.FAST_LEAF_DECAY.on && newState.getBlock() == (Object) this && this.decaying(newState)) {
 			level.scheduleTick(pos, (Block) (Object) this, MIN_DECAY_DELAY + random.nextInt(MAX_DECAY_DELAY - MIN_DECAY_DELAY + 1));
 		}
 	}

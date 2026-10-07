@@ -51,6 +51,9 @@ public final class DurabilityWarning {
 
 	// Called with the damage the stack is about to be set to (after Unbreaking).
 	public static void onDamage(ItemStack stack, ServerPlayer player, int newDamage) {
+		if (!ServerConfig.DURABILITY_WARNING.on) {
+			return;
+		}
 		int max = stack.getMaxDamage();
 		int leftBefore = max - stack.getDamageValue();
 		int leftAfter = max - newDamage;

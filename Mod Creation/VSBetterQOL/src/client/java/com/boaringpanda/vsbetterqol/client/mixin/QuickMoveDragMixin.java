@@ -1,5 +1,7 @@
 package com.boaringpanda.vsbetterqol.client.mixin;
 
+import com.boaringpanda.vsbetterqol.client.ClientConfig;
+
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -54,7 +56,7 @@ public abstract class QuickMoveDragMixin {
 	// Drag events keep the press's modifiers, so shift is checked live. With an item on the cursor vanilla's drag-split runs instead.
 	@Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
 	private void vsbetterqol$quickMoveDragged(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> cir) {
-		if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || !Minecraft.getInstance().hasShiftDown() || !this.menu.getCarried().isEmpty()) {
+		if (!ClientConfig.SHIFT_DRAG.on || event.button() != InputConstants.MOUSE_BUTTON_LEFT || !Minecraft.getInstance().hasShiftDown() || !this.menu.getCarried().isEmpty()) {
 			return;
 		}
 		// Every slot between the last drag event and this one.

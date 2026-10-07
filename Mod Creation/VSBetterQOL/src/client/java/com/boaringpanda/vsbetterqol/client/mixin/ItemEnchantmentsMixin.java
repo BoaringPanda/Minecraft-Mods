@@ -2,6 +2,7 @@ package com.boaringpanda.vsbetterqol.client.mixin;
 
 import java.util.function.Consumer;
 
+import com.boaringpanda.vsbetterqol.client.ClientConfig;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -43,7 +44,7 @@ public abstract class ItemEnchantmentsMixin {
 			@Local Holder<Enchantment> enchantment, @Local(argsOnly = true) DataComponentGetter components) {
 		original.call(consumer, name);
 		String key = vsbetterqol$descriptionKey(enchantment);
-		if (key == null || !this.vsbetterqol$isBook(components) || !Minecraft.getInstance().hasShiftDown()) {
+		if (key == null || !ClientConfig.ENCHANTED_BOOK_INFO.on || !this.vsbetterqol$isBook(components) || !Minecraft.getInstance().hasShiftDown()) {
 			return;
 		}
 		for (FormattedText line : Minecraft.getInstance().font.getSplitter()
@@ -55,7 +56,7 @@ public abstract class ItemEnchantmentsMixin {
 	@Inject(method = "addToTooltip", at = @At("TAIL"))
 	private void vsbetterqol$addShiftHint(Item.TooltipContext context, Consumer<Component> consumer, TooltipFlag flag,
 			DataComponentGetter components, CallbackInfo ci) {
-		if (this.vsbetterqol$isBook(components) && !Minecraft.getInstance().hasShiftDown()
+		if (ClientConfig.ENCHANTED_BOOK_INFO.on && this.vsbetterqol$isBook(components) && !Minecraft.getInstance().hasShiftDown()
 				&& ((ItemEnchantments) (Object) this).keySet().stream().anyMatch(e -> vsbetterqol$descriptionKey(e) != null)) {
 			consumer.accept(Component.translatable("tooltip.vsbetterqol.hold_shift").withStyle(ChatFormatting.DARK_GRAY));
 		}
