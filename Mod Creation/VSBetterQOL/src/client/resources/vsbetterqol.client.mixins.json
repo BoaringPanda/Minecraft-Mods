@@ -4,11 +4,14 @@
 	"compatibilityLevel": "JAVA_25",
 	"client": [
 		"AbstractContainerScreenAccessor",
+		"ArmorBarMixin",
+		"CreativeModeInventoryScreenInvoker",
 		"HudMixin",
 		"ItemEnchantmentsMixin",
 		"ItemStackMixin",
 		"ItemStackTooltipMixin",
-		"LocalPlayerMixin"
+		"LocalPlayerMixin",
+		"QuickMoveDragMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

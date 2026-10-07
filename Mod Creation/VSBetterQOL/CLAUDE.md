@@ -180,6 +180,32 @@ inventory). Needs the mod on the server (the button only shows if it can send th
   it every frame from `client/mixin/AbstractContainerScreenAccessor` (`leftPos`/`topPos`), because the recipe book moves the GUI without
   a re-init.
 
+## Shift-drag quick-move (Dylan, 2026-10-07)
+Holding shift and dragging the left mouse across slots quick-moves each one, as if each was shift-clicked (Mouse Tweaks style). Every
+container screen. A slot moves each time the cursor enters it (not while it stays inside), so dragging back over where the items went
+moves them back without letting go (Dylan, 2026-10-07; it was once per drag before).
+Creative: works on the Survival Inventory tab; the item list is skipped (a single shift-click there is still vanilla's full stack on the
+cursor), and the hotbar on item tabs gets cleared like vanilla shift-click does there (Dylan's pick). Client only.
+- `client/mixin/QuickMoveDragMixin` on `AbstractContainerScreen`: `mouseClicked` HEAD starts a drag (the pressed slot is vanilla's own
+  shift-click). `mouseDragged` HEAD, when left button + live `Minecraft.hasShiftDown()` (drag events keep the press's modifiers) + empty
+  cursor: walks from the last position to this one in 4px steps (fast swipes skip nothing) and calls the overridable
+  `slotClicked(slot, slot.index, 0, QUICK_MOVE)` for each slot it enters (`lastSlot` changes).
+- **26.x input is SDL:** left mouse is `InputConstants.MOUSE_BUTTON_LEFT` = 1 (right = 3), not GLFW's 0. The container-click button passed
+  to `slotClicked` is still 0 = left (vanilla's `getContainerClickButton` maps it).
+- `client/mixin/CreativeModeInventoryScreenInvoker`: calls private `isCreativeSlot` to skip the item list.
+
+## Coloured armor bar (Dylan, 2026-10-07)
+Each worn armor piece colours the armor points it gives (1 armor = half an icon) in its material's colour, helmet first from the left
+like vanilla fills the bar: leather brown (dye ignored, Dylan's pick), chainmail, iron (vanilla's colour), gold, diamond, netherite, turtle,
+copper. Points from anything else (modded armor, `/attribute`) stay vanilla. Client only.
+- `client/mixin/ArmorBarMixin`: TAIL of private static `Hud.extractArmor` (same x/y maths as vanilla). Points per piece = the item's
+  `ADD_VALUE` `Attributes.ARMOR` modifiers for its slot (`ItemStack.forEachModifier`); colour from `Equippable.assetId()` → `COLORS`.
+- Sprites `hud/armor_left.png` / `armor_right.png`: vanilla's armor icon halves (columns 0-4 / 5-8) with a white body, grey shade and no
+  highlight (Dylan didn't want the shine), tinted with the ARGB `blitSprite`. Made with a one-off Java program.
+- The armor attribute is only recalculated on the server, so after equipping, the client's armor value lags a tick or two behind the
+  worn items. The mixin keeps the last colours until the value catches up (or 500 ms pass), so the colours change in the same frame as
+  vanilla's bar instead of flashing.
+
 ## Saturation display (Dylan, 2026-10-07)
 Saturation (hidden in vanilla) shows as a bright green outline around the hunger shanks, AppleSkin-style: 1 saturation = half a shank,
 right to left like the shanks. Hovering a food shows two rows of icons under its name: hunger shanks, then saturation as green-outlined empty
