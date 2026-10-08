@@ -3,7 +3,7 @@ package com.boaringpanda.vsbetterqol.config;
 import org.jspecify.annotations.Nullable;
 
 // One setting in a config file (ConfigFile): its key, the comment written above it, and its value.
-public abstract sealed class Setting permits Option, Slider {
+public abstract sealed class Setting permits Option, Slider, Choice {
 	public final String key;
 	final String comment;
 

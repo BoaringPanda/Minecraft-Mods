@@ -11,11 +11,14 @@
 		"EnchantingTableBlockEntityMixin",
 		"EnchantmentMenuMixin",
 		"FarmlandBlockMixin",
+		"FireworkRocketEntityMixin",
+		"FireworkRocketItemMixin",
 		"FollowTemptationMixin",
 		"ItemStackMixin",
 		"LeavesBlockMixin",
 		"LevelChunkMixin",
 		"LivingEntityMixin",
+		"MerchantMenuAccessor",
 		"PlayerMixin",
 		"SensorAccessor",
 		"StonecutterBlockMixin",
@@ -24,7 +27,8 @@
 		"ServerGamePacketListenerImplInvoker",
 		"ServerGamePacketListenerImplMixin",
 		"TemptGoalMixin",
-		"TemptingSensorMixin"
+		"TemptingSensorMixin",
+		"VillagerInvoker"
 	],
 	"injectors": {
 		"defaultRequire": 1

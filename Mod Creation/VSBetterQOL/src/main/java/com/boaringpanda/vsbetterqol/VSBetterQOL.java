@@ -17,6 +17,7 @@ public class VSBetterQOL implements ModInitializer {
 		Carrying.register();
 		CarriedBrewing.register();
 		StonecutterStorage.register();
+		VillagerReroll.register();
 	}
 
 	public static Identifier id(String path) {

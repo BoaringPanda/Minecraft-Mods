@@ -22,8 +22,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.food.FoodProperties;
 
-// Saturation shows on the hunger bar as a bright green outline around the shanks (1 saturation = half a shank), right to left like
-// the shanks. Saturation is never above the food level, so the outlines always sit on filled shanks. Holding food that can be eaten
+// Saturation shows on the hunger bar as an outline around the shanks (1 saturation = half a shank), right to left like the shanks,
+// in the player's colour (ClientConfig.SATURATION_COLOR; the sprites are white, tinted when drawn). Saturation is never above the food level, so the outlines always sit on filled shanks. Holding food that can be eaten
 // slowly flashes the shanks and outlines eating it would add.
 @Mixin(Hud.class)
 public abstract class HudMixin {
@@ -51,10 +51,11 @@ public abstract class HudMixin {
 		FoodData foodData = player.getFoodData();
 		int food = foodData.getFoodLevel();
 		float saturation = foodData.getSaturationLevel();
+		int rgb = ClientConfig.SATURATION_COLOR.value.getValue();
 		for (int i = 0; i < 10; i++) {
 			Identifier sprite = vsbetterqol$sprite(saturation, i, SATURATION_FULL, SATURATION_HALF);
 			if (sprite != null) {
-				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, xRight - i * 8 - 9, yLineBase, 9, 9);
+				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, xRight - i * 8 - 9, yLineBase, 9, 9, 0xFF000000 | rgb);
 			}
 		}
 
@@ -70,7 +71,7 @@ public abstract class HudMixin {
 		int newFood = Math.min(food + eaten.nutrition(), 20);
 		float newSaturation = Math.min(saturation + eaten.saturation(), newFood);
 		float pulse = (Mth.sin(Util.getMillis() * Mth.TWO_PI / FLASH_PERIOD_MS) + 1.0F) / 2.0F;
-		int color = ((int) ((0.2F + 0.6F * pulse) * 255.0F) << 24) | 0xFFFFFF;
+		int alpha = (int) ((0.2F + 0.6F * pulse) * 255.0F) << 24;
 		boolean hunger = player.hasEffect(MobEffects.HUNGER);
 		Identifier full = hunger ? FOOD_FULL_HUNGER : FOOD_FULL;
 		Identifier half = hunger ? FOOD_HALF_HUNGER : FOOD_HALF;
@@ -78,11 +79,11 @@ public abstract class HudMixin {
 			int x = xRight - i * 8 - 9;
 			Identifier shank = vsbetterqol$sprite(newFood, i, full, half);
 			if (shank != vsbetterqol$sprite(food, i, full, half) && shank != null) {
-				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, shank, x, yLineBase, 9, 9, color);
+				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, shank, x, yLineBase, 9, 9, alpha | 0xFFFFFF);
 			}
 			Identifier outline = vsbetterqol$sprite(newSaturation, i, SATURATION_FULL, SATURATION_HALF);
 			if (outline != vsbetterqol$sprite(saturation, i, SATURATION_FULL, SATURATION_HALF) && outline != null) {
-				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, outline, x, yLineBase, 9, 9, color);
+				graphics.blitSprite(RenderPipelines.GUI_TEXTURED, outline, x, yLineBase, 9, 9, alpha | rgb);
 			}
 		}
 	}

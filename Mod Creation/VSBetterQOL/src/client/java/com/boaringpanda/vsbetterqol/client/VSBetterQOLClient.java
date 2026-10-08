@@ -1,6 +1,7 @@
 package com.boaringpanda.vsbetterqol.client;
 
 import com.boaringpanda.vsbetterqol.Carrying;
+import com.boaringpanda.vsbetterqol.ElytraRockets;
 import com.boaringpanda.vsbetterqol.ServerConfig;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -12,7 +13,10 @@ import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegist
 
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.entity.player.Player;
 
 public class VSBetterQOLClient implements ClientModInitializer {
 	@Override
@@ -38,6 +42,24 @@ public class VSBetterQOLClient implements ClientModInitializer {
 				blockKeys(options.keyHotbarSlots);
 			}
 		});
+		// Rockets with an elytra (ElytraRockets): after the rocket hop from the ground, the glide starts as soon as the player is in the air.
+		ElytraRockets.clientStartGliding = VSBetterQOLClient::startGliding;
+		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			if (ElytraRockets.clientLaunchTicks > 0) {
+				ElytraRockets.clientLaunchTicks--;
+				if (client.player != null && !client.player.onGround()) {
+					startGliding(client.player);
+					ElytraRockets.clientLaunchTicks = 0;
+				}
+			}
+		});
+	}
+
+	// What vanilla's jump key does in the air (LocalPlayer.aiStep). The server checks it again with its own tryToStartFallFlying.
+	private static void startGliding(Player player) {
+		if (player instanceof LocalPlayer localPlayer && localPlayer.tryToStartFallFlying()) {
+			localPlayer.connection.send(new ServerboundPlayerCommandPacket(localPlayer, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
+		}
 	}
 
 	private static void blockKeys(KeyMapping... keys) {

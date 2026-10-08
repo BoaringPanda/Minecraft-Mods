@@ -25,7 +25,8 @@ Run from this folder (where `gradlew` is), not the repo root. `JAVA_HOME` must p
 Two files: the player's own client settings (with a Mod Menu screen) and the world/server settings (file only). Everything not listed
 is always on (Dylan: nobody wants those off, e.g. blast furnace recipes).
 - Shared code in `config/`: sealed `Setting` (key + English comment) with `Option` (on/off, default on; `false`/`no`/`off` = off,
-  anything else = on) and `Slider` (a percentage: min/max/step/default; clamped and rounded to a step, junk keeps the value).
+  anything else = on), `Slider` (a percentage: min/max/step/default; clamped and rounded to a step, junk keeps the value) and
+  `Choice<T>` (one of a list, written by name via a name function; unknown names keep the value).
   `ConfigFile` reads with `java.util.Properties` and re-saves after every load (new settings appear after updates; not saved over if
   the read failed), written by hand with a header and a comment per setting so it reads well in Notepad.
 
@@ -48,22 +49,34 @@ restart). Singleplayer uses the player's own file; on a server only the server's
   swords there).
 
 ### Client config
-- `client/ClientConfig`: the client `Option`s/`Slider` and their `ALL` order (two per row on screen, so the effect column and its size
-  share a row), `config/vsbetterqol-client.properties`. Each feature checks its setting every call, so changes apply instantly.
+- `client/ClientConfig`: the client settings and their `ALL` order (two per row on screen, so the saturation bar + its colour and the
+  effect column + its size share a row), `config/vsbetterqol-client.properties`. Each feature checks its setting every call, so changes apply instantly.
 - `client/ClientConfigScreen`: extends vanilla's `OptionsSubScreen` (Video Settings look), one widget per setting, two per row,
   tooltip `option.vsbetterqol.<key>.tooltip`: `OptionInstance.createBoolean` ON/OFF button, or for a `Slider` an `OptionInstance`
   over `IntRange(min/step, max/step).xmap(×step)` (vanilla's Max Framerate pattern; `xmap` has no codec, so `Codec.intRange` is passed)
   labelled with vanilla's `options.percent_value`. `removed()` saves our file instead of options.txt.
+- Saturation colour dropdown (Dylan's drawing, 2026-10-08; replaced a cycle button): `client/ColorDropdown` (`AbstractButton`: name, a
+  box of the current colour, ▼) shares the first row with `saturation_bar` (`list.addSmall(widget, optionInstance, dropdown)`, so
+  `applyUnsavedChanges` still finds the switch); the rest go through `addSmall(OptionInstance...)`. Clicking opens a panel of 2 rows of 8
+  colour boxes (Dylan's pick) under the button (above if no room), placed from the button's current position each frame. The screen draws
+  it after `nextStratum()`, hides the mouse from widgets under it, and while it's open every click closes it (a colour box picks first),
+  Esc closes it before the screen, scrolling closes it. Hover = the colour's name (`option.vsbetterqol.saturation_color.<name>`).
 - `client/ModMenuIntegration` (`ModMenuApi`, `"modmenu"` entrypoint): Mods → VS Better QOL → settings. Mod Menu is optional for
   players (no `depends`). Dev: `implementation("com.terraformersmc:modmenu:21.0.0") { transitive = false }` from
   `https://maven.terraformersmc.com/` (its POM only lists Fabric API modules we already have), so runClient has it and it's not in our jar.
   Dylan approved this download; ask before adding any other dependency.
-- Options and where they're checked: `saturation_bar` (`HudMixin`), `food_tooltip` (`ItemStackTooltipMixin`), `effect_column`
+- Settings and where they're checked: `saturation_bar` (`HudMixin`), `saturation_color` (`Choice<TextColor>` of the 16 named text
+  colours, default green = the original `#55FF55`; Dylan 2026-10-08: `HudMixin` + `ClientFoodTooltip` tint), `food_tooltip` (`ItemStackTooltipMixin`), `effect_column`
   (`EffectHudMixin` + `EffectsInInventoryMixin`: off = vanilla HUD icons and the inventory effect list is back), `effect_column_size`
   (slider 50-200%, step 10, default 100 = the original look; Dylan 2026-10-07, for players who can't see small icons well:
   `EffectHudMixin` multiplies `ICON_SCALE`/`TEXT_SCALE` by it and works the box/row size out from that), `armor_bar_colors`
   (`ArmorBarMixin`), `durability_tooltip` (client `ItemStackMixin`: off = vanilla, F3+H only), `enchanted_book_info`
-  (`ItemEnchantmentsMixin`), `shift_drag` (`QuickMoveDragMixin`).
+  (`ItemEnchantmentsMixin`), `lower_shield` (`FirstPersonHandsAndItemsRendererMixin`), `lower_fire` (`ScreenEffectRendererMixin`),
+  `elytra_speed` + `elytra_speed_size` + `elytra_speed_position` (`Choice<ClientConfig.SpeedBarPosition>`, `ElytraSpeedHudMixin`),
+  `shift_drag` (`QuickMoveDragMixin`).
+- `ClientConfigScreen.widget`: a `Choice` other than the saturation colour gets a vanilla cycle button (`OptionInstance.Enum`,
+  `Codec.stringResolver`) labelled `option.vsbetterqol.<key>.<name>`.
+- 26.3 has no colours in `ChatFormatting` any more: the 16 named colours are `TextColor` constants (`serialize()` = name, `getValue()` = rgb).
 - New client feature → add an `Option` to `ClientConfig.ALL`, its two lang keys, and a check in the feature.
 - Mod icon (Dylan's art, 2026-10-07): `assets/vsbetterqol/icon.png` (`"icon"` in fabric.mod.json), shrunk from his 2000×2000 original to
   512×512 (107 KB) so the jar stays small; the full-size original is for Modrinth.
@@ -245,20 +258,73 @@ copper. Points from anything else (modded armor, `/attribute`) stay vanilla. Cli
   vanilla's bar instead of flashing.
 
 ## Saturation display (Dylan, 2026-10-07)
-Saturation (hidden in vanilla) shows as a bright green outline around the hunger shanks, AppleSkin-style: 1 saturation = half a shank,
-right to left like the shanks. Hovering a food shows two rows of icons under its name: hunger shanks, then saturation as green-outlined empty
-shanks (rounded to the nearest half; Dylan picked icons over numbers). If saturation rounds to 0 (cookie, pufferfish...) there's only the
+Saturation (hidden in vanilla) shows as a bright green outline (colour picked in the client config since 2026-10-08) around the hunger
+shanks, AppleSkin-style: 1 saturation = half a shank, right to left like the shanks. Hovering a food shows two rows of icons under its name:
+hunger shanks, then saturation as outlined empty shanks (rounded to the nearest half; Dylan picked icons over numbers). If saturation rounds to 0 (cookie, pufferfish...) there's only the
 hunger row, and no empty space for the other. Holding food you can eat (main hand, else offhand; `player.canEat(canAlwaysEat)`) slowly flashes
 the shanks and outlines eating it would add (alpha 0.2-0.8, 2 s sine), using vanilla's `FoodData.add` maths: food capped at 20, saturation at the new
 food level. Client only.
 - Sprites `textures/gui/sprites/hud/saturation_full.png` / `saturation_half.png`: vanilla's `hud/food_empty` black border pixels turned
-  #55FF55. Half = the border pixels with x + y >= 8 (the lower-right part, like vanilla's half shank), made with a one-off Java program.
+  #55FF55, then white (2026-10-08) so the ARGB `blitSprite` tints them with `saturation_color` (outline, eating flash, tooltip). Half = the
+  border pixels with x + y >= 8 (the lower-right part, like vanilla's half shank), made with a one-off Java program.
 - `client/mixin/HudMixin`: TAIL of `Hud.extractFood` draws them at vanilla's shank spots (`xRight - i*8 - 9`, `yLineBase`). Shanks only
   jiggle at 0 saturation, when there's nothing to draw. The eating preview is drawn in the same inject with the ARGB `blitSprite` overload,
   only where the "after" sprite differs from the current one (Hunger effect sprites when the player has Hunger).
 - Tooltip: `client/mixin/ItemStackTooltipMixin` `@ModifyReturnValue`s `ItemStack.getTooltipImage` to `client/FoodTooltip` for anything with
   `DataComponents.FOOD`, unless it already has an image. `ClientTooltipComponentCallback` (in `VSBetterQOLClient`) maps it to
   `client/ClientFoodTooltip`, drawn with the HUD sprites. Vanilla puts the image right under the name.
+
+## Rockets with an elytra (Dylan, 2026-10-08)
+Wearing an elytra, a rocket works without jumping first: on the ground you hop up and the glide starts, falling it starts the glide at
+once (Dylan's pick). Swimming in water with an elytra on (Dylan's pick), a rocket boosts you the way you look, while you keep swimming.
+Looking at a block still sets off a firework on it (vanilla's `useOn` comes first), so look into the air. Always on, no switch. Needs the
+mod on the server; on a server without it the client stays vanilla (`ServerConfig.clientServerHasMod()`).
+- `ElytraRockets`: `canLaunch` = vanilla's glide rules minus "not on ground" (not gliding/creative-flying/in liquid/riding, no
+  Levitation, a working glider via `LivingEntity.canGlideUsing`), `canSwimBoost` = `isSwimming()` + a glider.
+- `mixin/FireworkRocketItemMixin`: `@ModifyExpressionValue` on `isFallFlying()` in `FireworkRocketItem.use` → also true for either, so
+  vanilla's own branch fires the attached rocket. Client side, launching: on the ground `jumpFromGround()` + `clientLaunchTicks = 10`,
+  in the air `clientStartGliding` (set by `VSBetterQOLClient`: `tryToStartFallFlying` + `START_FALL_FLYING` packet, vanilla's jump-key
+  way; it goes out before the use packet, so the server is already gliding). `VSBetterQOLClient` `END_CLIENT_TICK` starts the glide once
+  the hop leaves the ground. The server re-checks with its own `tryToStartFallFlying`.
+- `mixin/FireworkRocketEntityMixin`: `@ModifyExpressionValue` on `attachedToEntity.isFallFlying()` in `FireworkRocketEntity.tick` → also
+  true for `canSwimBoost`, so vanilla's boost applies underwater. A `@WrapOperation` on the player's `setDeltaMovement` there scales the
+  change by `SWIM_BOOST` (1.3) when not gliding (Dylan 2026-10-08: "a little bit stronger"); gliding is untouched.
+
+## Elytra speed bar (Dylan, 2026-10-08)
+While gliding, a bar above the hearts shows the speed in blocks per second (written inside it, Dylan's pick: bar with the number inside),
+filling up and fading green → yellow → red. Colours follow vanilla's wall-crash damage (`LivingEntity.handleFallFlyingCollisions`:
+speed lost in blocks/tick × 10 - 3): green up to 6 b/s (a crash does nothing), red and full from 46 b/s (20 damage). Client switch
+`elytra_speed` + size slider `elytra_speed_size` (50-200 %) + spot `elytra_speed_position` (Dylan 2026-10-08: above the hotbar by
+default, top left/middle/right, bottom left/right; 4 px from the edges, the slider scales it from that corner/edge). Client only.
+- `client/mixin/ElytraSpeedHudMixin`: TAIL of `Hud.extractHotbarAndDecorations`. Speed = last tick's movement (`x - xo` …) × 20. 91×11
+  bar drawn around its bottom-centre (text at `-HEIGHT + 1`, moved up 1 px by Dylan to sit centred), 1 px above the armor row (vanilla's heart-row maths from `extractPlayerHealth`), scaled by the
+  slider. Text = `hud.vsbetterqol.elytra_speed` ("%s b/s"). While it shows above the hotbar (and hearts show), the held item name (constant 59 in
+  `extractSelectedItemName`) and action bar (68 in `extractOverlayMessage`) move up just above it (`@ModifyExpressionValue` on the constants).
+
+## Villager re-roll button (Dylan, 2026-10-08)
+A small ⟳ button right after the "Trades" label (Dylan's symbol and final spot, 2026-10-08; it was by the villager's name first), label and
+button centred together over the trade list, re-rolls its trades, so there's no need to close the screen and
+break/replace the workstation. Fair: only when vanilla would let the workstation trick work (Novice and never traded with,
+`villagerXp == 0 && level <= 1`, vanilla's `ResetProfession` rule), and at most every 3 s per villager (was 5 s, Dylan 2026-10-08). Otherwise
+it's greyed out with the reason / "Ready in Ns" on hover (Dylan's pick). Hidden for wandering traders and on servers without the mod.
+- `VillagerReroll`: serverbound `RerollPayload` (`vsbetterqol:reroll_trades`, empty). The server re-checks: open `MerchantMenu` whose
+  trader (`mixin/MerchantMenuAccessor`) is a `Villager` trading with this player, `canReroll`, 60 ticks since that villager's last
+  re-roll (`WeakHashMap<Villager, Long>` of game time). Then `setOffers(new MerchantOffers())` + vanilla's `updateTrades`
+  (`mixin/VillagerInvoker`; re-applies special prices), `menu.updateSellItem()`, `sendMerchantOffers` (vanilla's update), "yes" sound.
+- `client/mixin/MerchantScreenMixin`: `init` TAIL adds a 12×12 `Button` "⟳" (sends the payload, resets `shopItem`/`scrollOff`, notes the
+  press time, static so reopening keeps the wait). HEAD of `extractBackground` places it and sets visible/active/tooltip. `@ModifyArg`
+  on the x of the 4th `text` call in `extractLabels` (ordinal 3, "Trades"; the title's two branches and "Inventory" come first) moves
+  the label left while the button shows: label + 3 px + button centred on vanilla's x 53.
+
+## Lower shield and fire (Dylan, 2026-10-08)
+In first person a held shield (either hand) sits lower, blocking too (Dylan's pick), and the on-fire flames sit lower, so neither takes
+over the screen (Dylan: "lower by half"). Each has a client switch (`lower_shield`, `lower_fire`). Client only.
+- Shield: `client/mixin/FirstPersonHandsAndItemsRendererMixin` injects after the `pushPose` at the top of private `submitArmWithItem` and
+  translates down by `SHIELD_DROP` for a `ShieldItem` (vanilla's own shield check there). Only the view-bob tilt is applied at that point,
+  so it's straight down the screen; vanilla's swap/swing/blocking moves still happen on top. The method's `popPose` undoes it.
+- Fire: `client/mixin/ScreenEffectRendererMixin` `@WrapOperation`s the `submitFire` call in `ScreenEffectRenderer.submit` with a
+  `pushPose`/`translate(0, -FIRE_DROP, 0)`/`popPose` (`submitFire` copies the pose into both flame quads). Only the first-person overlay.
+- `SHIELD_DROP`/`FIRE_DROP` are constants at the top of each mixin, tuned by eye.
 
 ## Enchanted book descriptions (Dylan, 2026-10-06)
 Hovering an enchanted book shows "Hold Shift for info". Holding Shift shows what each enchantment does, under its name (dark gray, wrapped at

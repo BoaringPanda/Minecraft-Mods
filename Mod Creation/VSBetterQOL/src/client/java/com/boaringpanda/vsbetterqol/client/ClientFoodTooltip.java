@@ -8,8 +8,8 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
-// Two rows of shanks under a food's name: what it fills on the hunger bar, then its saturation as green-outlined empty shanks
-// (rounded to the nearest half shank), drawn with the HUD's own sprites.
+// Two rows of shanks under a food's name: what it fills on the hunger bar, then its saturation as outlined empty shanks (rounded to
+// the nearest half shank), drawn with the HUD's own sprites in the player's saturation colour.
 public record ClientFoodTooltip(int hunger, int saturation) implements ClientTooltipComponent {
 	private static final Identifier FOOD_EMPTY = Identifier.withDefaultNamespace("hud/food_empty");
 	private static final Identifier FOOD_HALF = Identifier.withDefaultNamespace("hud/food_half");
@@ -39,10 +39,11 @@ public record ClientFoodTooltip(int hunger, int saturation) implements ClientToo
 			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, FOOD_EMPTY, x + i * 8, y, 9, 9);
 			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, i * 2 + 2 <= this.hunger ? FOOD_FULL : FOOD_HALF, x + i * 8, y, 9, 9);
 		}
+		int color = 0xFF000000 | ClientConfig.SATURATION_COLOR.value.getValue();
 		for (int i = 0; i < icons(this.saturation); i++) {
 			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, FOOD_EMPTY, x + i * 8, y + ROW_HEIGHT, 9, 9);
 			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, i * 2 + 2 <= this.saturation ? SATURATION_FULL : SATURATION_HALF,
-					x + i * 8, y + ROW_HEIGHT, 9, 9);
+					x + i * 8, y + ROW_HEIGHT, 9, 9, color);
 		}
 	}
 
